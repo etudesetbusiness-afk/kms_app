@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : 127.0.0.1
--- Généré le : sam. 13 déc. 2025 à 08:48
+-- Généré le : sam. 13 déc. 2025 à 14:08
 -- Version du serveur : 10.4.32-MariaDB
 -- Version de PHP : 8.2.12
 
@@ -20,6 +20,20 @@ SET time_zone = "+00:00";
 --
 -- Base de données : `kms_gestion`
 --
+
+DELIMITER $$
+--
+-- Procédures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `cleanup_sms_codes` ()   BEGIN
+    DELETE FROM sms_2fa_codes 
+    WHERE expire_a < DATE_SUB(NOW(), INTERVAL 1 DAY);
+    
+    DELETE FROM sms_tracking 
+    WHERE envoye_a < DATE_SUB(NOW(), INTERVAL 30 DAY);
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -74,6 +88,47 @@ INSERT INTO `achats_lignes` (`id`, `achat_id`, `produit_id`, `quantite`, `prix_u
 (7, 1, 1, 5.000, 2000.00, 1000.00, 9000.00),
 (8, 2, 2, 25.000, 50000.00, 0.00, 1250000.00),
 (9, 3, 3, 25.000, 50000.00, 0.00, 1250000.00);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `audit_log`
+--
+
+CREATE TABLE `audit_log` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `utilisateur_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'NULL si action syst??me',
+  `action` varchar(100) NOT NULL COMMENT 'Type action: LOGIN, LOGOUT, CREATE, UPDATE, DELETE',
+  `module` varchar(50) NOT NULL COMMENT 'Module concern??: PRODUITS, VENTES, CAISSE, etc.',
+  `entite_type` varchar(50) DEFAULT NULL COMMENT 'Type entit??: produit, vente, client',
+  `entite_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'ID de l''entit??',
+  `details` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'D??tails de l''action' CHECK (json_valid(`details`)),
+  `ancienne_valeur` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Valeur avant modification' CHECK (json_valid(`ancienne_valeur`)),
+  `nouvelle_valeur` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Valeur apr??s modification' CHECK (json_valid(`nouvelle_valeur`)),
+  `ip_address` varchar(45) NOT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `date_action` datetime DEFAULT current_timestamp(),
+  `niveau` enum('INFO','WARNING','ERROR','CRITICAL') DEFAULT 'INFO'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Journal d''audit complet du syst??me';
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `blocages_ip`
+--
+
+CREATE TABLE `blocages_ip` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `raison` varchar(255) NOT NULL,
+  `type_blocage` enum('TEMPORAIRE','PERMANENT') DEFAULT 'TEMPORAIRE',
+  `tentatives_echouees` int(10) UNSIGNED DEFAULT 0,
+  `date_blocage` datetime DEFAULT current_timestamp(),
+  `date_expiration` datetime DEFAULT NULL COMMENT 'NULL si permanent',
+  `debloque_par` int(10) UNSIGNED DEFAULT NULL COMMENT 'Admin qui a d??bloqu??',
+  `date_deblocage` datetime DEFAULT NULL,
+  `actif` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Liste des adresses IP bloqu??es';
 
 -- --------------------------------------------------------
 
@@ -176,8 +231,8 @@ INSERT INTO `canaux_vente` (`id`, `code`, `libelle`) VALUES
 (1, 'SHOWROOM', 'Vente showroom'),
 (2, 'TERRAIN', 'Vente terrain'),
 (3, 'DIGITAL', 'Vente digital / en ligne'),
-(4, 'HOTEL', 'Vente liée à l’’hôtel'),
-(5, 'FORMATION', 'Vente liée aux formations');
+(4, 'HOTEL', 'Vente li??e ?? l??????h??tel'),
+(5, 'FORMATION', 'Vente li??e aux formations');
 
 -- --------------------------------------------------------
 
@@ -294,7 +349,7 @@ CREATE TABLE `chambres` (
 
 INSERT INTO `chambres` (`id`, `code`, `description`, `tarif_nuite`, `actif`) VALUES
 (1, 'CH-101', 'Chambre standard lit double', 20000.00, 1),
-(2, 'APP-201', 'Appartement meublé 2 pièces', 35000.00, 1);
+(2, 'APP-201', 'Appartement meubl?? 2 pi??ces', 35000.00, 1);
 
 -- --------------------------------------------------------
 
@@ -320,9 +375,9 @@ CREATE TABLE `clients` (
 
 INSERT INTO `clients` (`id`, `nom`, `type_client_id`, `telephone`, `email`, `adresse`, `source`, `statut`, `date_creation`) VALUES
 (1, 'Client Showroom Test', 1, '+237650000001', 'client.showroom@test.local', 'Douala', 'Showroom', 'CLIENT', '2025-11-18 11:00:22'),
-(2, 'Client Terrain Test', 2, '+237650000002', 'client.terrain@test.local', 'Bonabéri', 'Terrain', 'PROSPECT', '2025-11-18 11:00:22'),
-(3, 'Client Digital Test', 3, '+237650000003', 'client.digital@test.local', 'Yaoundé', 'Facebook', 'CLIENT', '2025-11-18 11:00:22'),
-(4, 'Client Hôtel Test', 4, '+237650000004', 'client.hotel@test.local', 'Douala', 'Réservation directe', 'HOTE', '2025-11-18 11:00:22'),
+(2, 'Client Terrain Test', 2, '+237650000002', 'client.terrain@test.local', 'Bonab??ri', 'Terrain', 'PROSPECT', '2025-11-18 11:00:22'),
+(3, 'Client Digital Test', 3, '+237650000003', 'client.digital@test.local', 'Yaound??', 'Facebook', 'CLIENT', '2025-11-18 11:00:22'),
+(4, 'Client H??tel Test', 4, '+237650000004', 'client.hotel@test.local', 'Douala', 'R??servation directe', 'HOTE', '2025-11-18 11:00:22'),
 (5, 'Apprenant Formation', 5, '+237650000005', 'apprenant@test.local', 'Bafoussam', 'WhatsApp', 'APPRENANT', '2025-11-18 11:00:22'),
 (6, 'romy', 5, '695657613', 'cm@kennemulti-services.com', NULL, 'facebook', 'PROSPECT', '2025-11-20 09:02:31');
 
@@ -364,103 +419,103 @@ INSERT INTO `compta_comptes` (`id`, `numero_compte`, `libelle`, `classe`, `est_a
 (10, '707', 'Ventes de marchandises', '7', 0, NULL, 'PRODUIT', 'VENTE', 1, NULL, '2025-12-10 15:28:25', '2025-12-10 15:28:25'),
 (11, '401', 'Fournisseurs', '4', 0, NULL, 'PASSIF', 'DETTE', 1, NULL, '2025-12-10 15:46:34', '2025-12-11 16:15:37'),
 (12, '607', 'Achats de marchandises', '6', 0, NULL, 'CHARGE', 'CHARGE_VARIABLE', 1, NULL, '2025-12-10 15:46:34', '2025-12-10 15:46:34'),
-(15, '110', 'Réserves', '1', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
+(15, '110', 'R??serves', '1', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
 (16, '150', 'Provisions', '1', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
 (17, '200', 'Amortissements', '1', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
-(18, '301', 'Matières premières', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
+(18, '301', 'Mati??res premi??res', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
 (19, '512', 'Banque', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:14:24'),
-(20, '571', 'Caisse siège social', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 15:45:09'),
-(21, '601', 'Achats de matières premières', '6', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
+(20, '571', 'Caisse si??ge social', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 15:45:09'),
+(21, '601', 'Achats de mati??res premi??res', '6', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
 (22, '608', 'Frais de transport', '6', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
-(23, '622', 'Rémunérations du personnel', '6', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
-(24, '631', 'Impôts et taxes', '6', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
+(23, '622', 'R??mun??rations du personnel', '6', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
+(24, '631', 'Imp??ts et taxes', '6', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
 (25, '701', 'Ventes de produits finis', '7', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
 (26, '708', 'Revenus annexes', '7', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
 (27, '10', 'Capital', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(28, '11', 'Réserves', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(29, '12', 'Report à nouveau', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(30, '13', 'Résultat net de l\'exercice', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(28, '11', 'R??serves', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(29, '12', 'Report ?? nouveau', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(30, '13', 'R??sultat net de l\'exercice', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (31, '14', 'Subventions d\'investissement', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(32, '15', 'Provisions réglementées', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(33, '16', 'Emprunts et dettes assimilées', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(32, '15', 'Provisions r??glement??es', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(33, '16', 'Emprunts et dettes assimil??es', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (34, '17', 'Dettes de location-acquisition', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(35, '18', 'Dettes liées à des participations', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(36, '19', 'Provisions financières pour risques et charges', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(37, '20', 'Charges immobilisées', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(35, '18', 'Dettes li??es ?? des participations', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(36, '19', 'Provisions financi??res pour risques et charges', '1', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(37, '20', 'Charges immobilis??es', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (38, '21', 'Immobilisations incorporelles', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (39, '22', 'Terrains', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(40, '23', 'Bâtiments, installations techniques et agencements', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(41, '24', 'Matériel, mobilier et actifs biologiques', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(42, '25', 'Avances et acomptes versés sur immobilisations', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(40, '23', 'B??timents, installations techniques et agencements', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(41, '24', 'Mat??riel, mobilier et actifs biologiques', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(42, '25', 'Avances et acomptes vers??s sur immobilisations', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (43, '26', 'Titres de participation', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(44, '27', 'Autres immobilisations financières', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(44, '27', 'Autres immobilisations financi??res', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (45, '28', 'Amortissements', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(46, '29', 'Provisions pour dépréciation des immobilisations', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(46, '29', 'Provisions pour d??pr??ciation des immobilisations', '2', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (47, '31', 'Marchandises', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(48, '32', 'Matières premières et fournitures liées', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(48, '32', 'Mati??res premi??res et fournitures li??es', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (49, '33', 'Autres approvisionnements', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (50, '34', 'Produits en cours', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (51, '35', 'Services en cours', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (52, '36', 'Produits finis', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(53, '37', 'Produits intermédiaires et résiduels', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(54, '38', 'Stocks en cours de route, en consignation ou en dépôt', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(55, '39', 'Dépréciations des stocks', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(56, '40', 'Fournisseurs et comptes rattachés', '4', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(57, '41', 'Clients et comptes rattachés', '4', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(53, '37', 'Produits interm??diaires et r??siduels', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(54, '38', 'Stocks en cours de route, en consignation ou en d??p??t', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(55, '39', 'D??pr??ciations des stocks', '3', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(56, '40', 'Fournisseurs et comptes rattach??s', '4', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(57, '41', 'Clients et comptes rattach??s', '4', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (58, '42', 'Personnel', '4', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (59, '43', 'Organismes sociaux', '4', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(60, '44', 'État et collectivités publiques', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(60, '44', '??tat et collectivit??s publiques', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (61, '45', 'Organismes internationaux', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(62, '46', 'Associés et groupe', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(63, '47', 'Débiteurs et créditeurs divers', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(64, '48', 'Créances et dettes hors activités ordinaires', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(65, '49', 'Dépréciations et risques provisionnés', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(62, '46', 'Associ??s et groupe', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(63, '47', 'D??biteurs et cr??diteurs divers', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(64, '48', 'Cr??ances et dettes hors activit??s ordinaires', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(65, '49', 'D??pr??ciations et risques provisionn??s', '4', 0, NULL, 'MIXTE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (66, '50', 'Titres de placement', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(67, '51', 'Valeurs à encaisser', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(68, '52', 'Banques, établissements financiers et assimilés', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(69, '53', 'Établissements financiers et assimilés', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(70, '54', 'Instruments de trésorerie', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(71, '56', 'Crédits de trésorerie', '5', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(67, '51', 'Valeurs ?? encaisser', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(68, '52', 'Banques, ??tablissements financiers et assimil??s', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(69, '53', '??tablissements financiers et assimil??s', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(70, '54', 'Instruments de tr??sorerie', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(71, '56', 'Cr??dits de tr??sorerie', '5', 0, NULL, 'PASSIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (72, '57', 'Caisse', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(73, '58', 'Régies d\'avances, accréditifs et virements internes', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(74, '59', 'Dépréciations et risques provisionnés', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(73, '58', 'R??gies d\'avances, accr??ditifs et virements internes', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(74, '59', 'D??pr??ciations et risques provisionn??s', '5', 0, NULL, 'ACTIF', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (75, '60', 'Achats et variations de stocks', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (76, '61', 'Transports', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(77, '62', 'Services extérieurs A', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(78, '63', 'Autres services extérieurs B', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(79, '64', 'Impôts et taxes', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(77, '62', 'Services ext??rieurs A', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(78, '63', 'Autres services ext??rieurs B', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(79, '64', 'Imp??ts et taxes', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (80, '65', 'Autres charges', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (81, '66', 'Charges de personnel', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(82, '67', 'Frais financiers et charges assimilées', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(82, '67', 'Frais financiers et charges assimil??es', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (83, '68', 'Dotations aux amortissements', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (84, '69', 'Dotations aux provisions', '6', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (85, '70', 'Ventes', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (86, '71', 'Subventions d\'exploitation', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(87, '72', 'Production immobilisée', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(87, '72', 'Production immobilis??e', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (88, '73', 'Variations des stocks de biens et de services produits', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (89, '75', 'Autres produits', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(90, '77', 'Revenus financiers et produits assimilés', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(90, '77', 'Revenus financiers et produits assimil??s', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (91, '78', 'Transferts de charges', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (92, '79', 'Reprises de provisions', '7', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (93, '81', 'Valeurs comptables des cessions d\'immobilisations', '8', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (94, '82', 'Produits des cessions d\'immobilisations', '8', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(95, '83', 'Charges hors activités ordinaires', '8', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(96, '84', 'Produits hors activités ordinaires', '8', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(97, '85', 'Dotations hors activités ordinaires', '8', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(98, '86', 'Reprises hors activités ordinaires', '8', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(95, '83', 'Charges hors activit??s ordinaires', '8', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(96, '84', 'Produits hors activit??s ordinaires', '8', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(97, '85', 'Dotations hors activit??s ordinaires', '8', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(98, '86', 'Reprises hors activit??s ordinaires', '8', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (99, '87', 'Participations des travailleurs', '8', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(100, '88', 'Subventions d\'équilibre', '8', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(101, '89', 'Impôts sur le résultat', '8', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(102, '90', 'Engagements donnés ou reçus', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(100, '88', 'Subventions d\'??quilibre', '8', 0, NULL, 'PRODUIT', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(101, '89', 'Imp??ts sur le r??sultat', '8', 0, NULL, 'CHARGE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(102, '90', 'Engagements donn??s ou re??us', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (103, '91', 'Contrepartie des engagements', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(104, '92', 'Comptes réfléchis du bilan', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(105, '93', 'Comptes réfléchis de gestion', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(104, '92', 'Comptes r??fl??chis du bilan', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(105, '93', 'Comptes r??fl??chis de gestion', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (106, '94', 'Comptes de stocks', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(107, '95', 'Comptes de coûts', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(108, '96', 'Comptes d\'écarts sur coûts', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(109, '97', 'Comptes de résultats analytiques', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(107, '95', 'Comptes de co??ts', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(108, '96', 'Comptes d\'??carts sur co??ts', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
+(109, '97', 'Comptes de r??sultats analytiques', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
 (110, '98', 'Comptes de liaisons internes', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56'),
-(111, '99', 'Comptes de l\'activité', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56');
+(111, '99', 'Comptes de l\'activit??', '9', 0, NULL, 'ANALYTIQUE', 'AUTRE', 1, NULL, '2025-12-11 15:26:56', '2025-12-11 15:26:56');
 
 -- --------------------------------------------------------
 
@@ -510,32 +565,32 @@ INSERT INTO `compta_ecritures` (`id`, `piece_id`, `compte_id`, `libelle_ecriture
 (20, 10, 11, 'Fournisseur facture AC-20251126-170544', 0.00, 1250000.00, NULL, NULL, NULL, 2, NULL, '2025-12-10 15:49:48'),
 (21, 11, 12, 'Achat articles facture AC-20251202-154014', 1250000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-10 15:49:48'),
 (22, 11, 11, 'Fournisseur facture AC-20251202-154014', 0.00, 1250000.00, NULL, NULL, NULL, 2, NULL, '2025-12-10 15:49:48'),
-(23, 12, 2, 'Stock initial valorisé', 9485000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:08:27'),
-(24, 12, 28, 'Stock initial valorisé', 0.00, 9485000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:08:27'),
-(25, 13, 9, 'Vente mobilier décoration', 3500000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:03'),
-(26, 13, 25, 'Vente mobilier décoration', 0.00, 3500000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:03'),
+(23, 12, 2, 'Stock initial valoris??', 9485000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:08:27'),
+(24, 12, 28, 'Stock initial valoris??', 0.00, 9485000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:08:27'),
+(25, 13, 9, 'Vente mobilier d??coration', 3500000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:03'),
+(26, 13, 25, 'Vente mobilier d??coration', 0.00, 3500000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:03'),
 (27, 14, 9, 'Vente accessoires', 2100000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:03'),
 (28, 14, 25, 'Vente accessoires', 0.00, 2100000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:03'),
 (29, 15, 9, 'Vente panneaux', 1850000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:04'),
 (30, 15, 25, 'Vente panneaux', 0.00, 1850000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:04'),
-(31, 16, 12, 'Achat matières premières', 1500000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:04'),
-(32, 16, 11, 'Achat matières premières', 0.00, 1500000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:04'),
+(31, 16, 12, 'Achat mati??res premi??res', 1500000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:04'),
+(32, 16, 11, 'Achat mati??res premi??res', 0.00, 1500000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:04'),
 (33, 17, 12, 'Achat accessoires', 900000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:04'),
 (34, 17, 11, 'Achat accessoires', 0.00, 900000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:04'),
 (35, 18, 19, 'Paiement fournisseurs', 2509000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:04'),
 (36, 18, 11, 'Paiement fournisseurs', 0.00, 2509000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:04'),
 (37, 19, 19, 'Encaissement clients', 3000000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:04'),
 (38, 19, 9, 'Encaissement clients', 0.00, 3000000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:04'),
-(39, 20, 23, 'Salaires décembre', 450000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:04'),
-(40, 20, 20, 'Salaires décembre', 0.00, 450000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:04'),
+(39, 20, 23, 'Salaires d??cembre', 450000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:04'),
+(40, 20, 20, 'Salaires d??cembre', 0.00, 450000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:04'),
 (41, 21, 23, 'Frais de transport', 150000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:04'),
 (42, 21, 20, 'Frais de transport', 0.00, 150000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:04'),
 (45, 23, 19, 'Encaissement partiel clients', 2000000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:46'),
 (46, 23, 9, 'Encaissement partiel clients', 0.00, 2000000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:46'),
 (47, 24, 19, 'Encaissement clients', 1500000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:10:46'),
 (48, 24, 9, 'Encaissement clients', 0.00, 1500000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:10:46'),
-(51, 22, 19, 'Capital social apporté', 10000000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:11:30'),
-(52, 22, 27, 'Capital social apporté', 0.00, 10000000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:11:30'),
+(51, 22, 19, 'Capital social apport??', 10000000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:11:30'),
+(52, 22, 27, 'Capital social apport??', 0.00, 10000000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:11:30'),
 (53, 25, 19, 'Solde initial banque', 2000000.00, 0.00, NULL, NULL, NULL, 1, NULL, '2025-12-11 05:11:30'),
 (54, 25, 28, 'Solde initial banque', 0.00, 2000000.00, NULL, NULL, NULL, 2, NULL, '2025-12-11 05:11:30'),
 (55, 26, 9, 'Client facture V-20251126-170324', 89437.50, 0.00, 2, NULL, NULL, 1, NULL, '2025-12-11 12:40:06'),
@@ -643,14 +698,14 @@ CREATE TABLE `compta_operations_trace` (
 --
 
 INSERT INTO `compta_operations_trace` (`id`, `source_type`, `source_id`, `piece_id`, `status`, `messages`, `executed_at`, `created_at`) VALUES
-(1, 'VENTE', 1, 1, 'success', 'Mapping VENTE/VENTE_PRODUITS non configuré', NULL, '2025-12-10 15:24:17'),
-(2, 'VENTE', 2, 2, 'success', 'Mapping VENTE/VENTE_PRODUITS non configuré', NULL, '2025-12-10 15:24:17'),
-(3, 'VENTE', 3, 3, 'success', 'Mapping VENTE/VENTE_PRODUITS non configuré', NULL, '2025-12-10 15:24:17'),
-(4, 'VENTE', 4, 4, 'success', 'Mapping VENTE/VENTE_PRODUITS non configuré', NULL, '2025-12-10 15:24:17'),
-(5, 'VENTE', 16, 5, 'success', 'Mapping VENTE/VENTE_PRODUITS non configuré', NULL, '2025-12-10 15:24:17'),
-(6, 'VENTE', 17, 6, 'success', 'Mapping VENTE/VENTE_PRODUITS non configuré', NULL, '2025-12-10 15:24:17'),
-(7, 'VENTE', 19, 7, 'success', 'Mapping VENTE/VENTE_PRODUITS non configuré', NULL, '2025-12-10 15:24:17'),
-(8, 'VENTE', 20, 26, 'success', 'Mapping VENTE/VENTE_PRODUITS non configuré', NULL, '2025-12-10 15:24:17'),
+(1, 'VENTE', 1, 1, 'success', 'Mapping VENTE/VENTE_PRODUITS non configur??', NULL, '2025-12-10 15:24:17'),
+(2, 'VENTE', 2, 2, 'success', 'Mapping VENTE/VENTE_PRODUITS non configur??', NULL, '2025-12-10 15:24:17'),
+(3, 'VENTE', 3, 3, 'success', 'Mapping VENTE/VENTE_PRODUITS non configur??', NULL, '2025-12-10 15:24:17'),
+(4, 'VENTE', 4, 4, 'success', 'Mapping VENTE/VENTE_PRODUITS non configur??', NULL, '2025-12-10 15:24:17'),
+(5, 'VENTE', 16, 5, 'success', 'Mapping VENTE/VENTE_PRODUITS non configur??', NULL, '2025-12-10 15:24:17'),
+(6, 'VENTE', 17, 6, 'success', 'Mapping VENTE/VENTE_PRODUITS non configur??', NULL, '2025-12-10 15:24:17'),
+(7, 'VENTE', 19, 7, 'success', 'Mapping VENTE/VENTE_PRODUITS non configur??', NULL, '2025-12-10 15:24:17'),
+(8, 'VENTE', 20, 26, 'success', 'Mapping VENTE/VENTE_PRODUITS non configur??', NULL, '2025-12-10 15:24:17'),
 (17, 'ACHAT', 1, 9, 'success', NULL, NULL, '2025-12-10 15:49:48'),
 (18, 'ACHAT', 2, 10, 'success', NULL, NULL, '2025-12-10 15:49:48'),
 (19, 'ACHAT', 3, 11, 'success', NULL, NULL, '2025-12-10 15:49:48');
@@ -682,32 +737,32 @@ CREATE TABLE `compta_pieces` (
 --
 
 INSERT INTO `compta_pieces` (`id`, `exercice_id`, `journal_id`, `numero_piece`, `date_piece`, `reference_type`, `reference_id`, `tiers_client_id`, `tiers_fournisseur_id`, `observations`, `est_validee`, `created_at`, `updated_at`) VALUES
-(1, 2, 1, 'XX-2025-00001', '2025-11-18', 'VENTE', 1, 3, NULL, 'Facture vente n° V-20251118-114131', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:14'),
-(2, 2, 1, 'VE-2025-00002', '2025-11-18', 'VENTE', 2, 2, NULL, 'Facture vente n° V-20251118-122137', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:14'),
-(3, 2, 1, 'VE-2025-00003', '2025-11-18', 'VENTE', 3, 5, NULL, 'Facture vente n° V-20251118-135949', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:15'),
-(4, 2, 1, 'VE-2025-00004', '2025-11-18', 'VENTE', 4, 5, NULL, 'Facture vente n° V-20251118-151825', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:15'),
-(5, 2, 1, 'VE-2025-00005', '2025-11-20', 'VENTE', 16, 2, NULL, 'Facture vente n° V-20251120-122303', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:15'),
-(6, 2, 1, 'VE-2025-00006', '2025-11-21', 'VENTE', 17, 6, NULL, 'Facture vente n° V-20251121-112325', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:16'),
-(7, 2, 1, 'VE-2025-00007', '2025-11-26', 'VENTE', 19, 6, NULL, 'Facture vente n° V-20251126-154749', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:16'),
-(8, 2, 1, 'VE-2025-00008', '2025-11-26', 'VENTE', 20, 2, NULL, 'Facture vente n° V-20251126-170324', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:16'),
-(9, 2, 2, 'XX-2025-00001', '2025-11-21', 'ACHAT', 1, NULL, NULL, 'Facture achat n° ACH-20251121-162559', 1, '2025-12-10 15:49:48', '2025-12-11 04:58:16'),
-(10, 2, 2, 'AC-2025-00002', '2025-11-26', 'ACHAT', 2, NULL, NULL, 'Facture achat n° AC-20251126-170544', 1, '2025-12-10 15:49:48', '2025-12-11 04:58:16'),
-(11, 2, 2, 'AC-2025-00003', '2025-12-02', 'ACHAT', 3, NULL, NULL, 'Facture achat n° AC-20251202-154014', 1, '2025-12-10 15:49:48', '2025-12-11 04:58:16'),
-(12, 2, 4, 'INV-2025-00001', '2025-12-11', NULL, NULL, NULL, NULL, 'Stock initial valorisé', 1, '2025-12-11 05:07:51', '2025-12-11 05:08:59'),
-(13, 2, 1, 'VE-2025-00009', '2025-12-05', NULL, NULL, NULL, NULL, 'Vente mobilier décoration', 1, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
+(1, 2, 1, 'XX-2025-00001', '2025-11-18', 'VENTE', 1, 3, NULL, 'Facture vente n?? V-20251118-114131', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:14'),
+(2, 2, 1, 'VE-2025-00002', '2025-11-18', 'VENTE', 2, 2, NULL, 'Facture vente n?? V-20251118-122137', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:14'),
+(3, 2, 1, 'VE-2025-00003', '2025-11-18', 'VENTE', 3, 5, NULL, 'Facture vente n?? V-20251118-135949', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:15'),
+(4, 2, 1, 'VE-2025-00004', '2025-11-18', 'VENTE', 4, 5, NULL, 'Facture vente n?? V-20251118-151825', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:15'),
+(5, 2, 1, 'VE-2025-00005', '2025-11-20', 'VENTE', 16, 2, NULL, 'Facture vente n?? V-20251120-122303', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:15'),
+(6, 2, 1, 'VE-2025-00006', '2025-11-21', 'VENTE', 17, 6, NULL, 'Facture vente n?? V-20251121-112325', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:16'),
+(7, 2, 1, 'VE-2025-00007', '2025-11-26', 'VENTE', 19, 6, NULL, 'Facture vente n?? V-20251126-154749', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:16'),
+(8, 2, 1, 'VE-2025-00008', '2025-11-26', 'VENTE', 20, 2, NULL, 'Facture vente n?? V-20251126-170324', 1, '2025-12-10 15:32:08', '2025-12-11 04:58:16'),
+(9, 2, 2, 'XX-2025-00001', '2025-11-21', 'ACHAT', 1, NULL, NULL, 'Facture achat n?? ACH-20251121-162559', 1, '2025-12-10 15:49:48', '2025-12-11 04:58:16'),
+(10, 2, 2, 'AC-2025-00002', '2025-11-26', 'ACHAT', 2, NULL, NULL, 'Facture achat n?? AC-20251126-170544', 1, '2025-12-10 15:49:48', '2025-12-11 04:58:16'),
+(11, 2, 2, 'AC-2025-00003', '2025-12-02', 'ACHAT', 3, NULL, NULL, 'Facture achat n?? AC-20251202-154014', 1, '2025-12-10 15:49:48', '2025-12-11 04:58:16'),
+(12, 2, 4, 'INV-2025-00001', '2025-12-11', NULL, NULL, NULL, NULL, 'Stock initial valoris??', 1, '2025-12-11 05:07:51', '2025-12-11 05:08:59'),
+(13, 2, 1, 'VE-2025-00009', '2025-12-05', NULL, NULL, NULL, NULL, 'Vente mobilier d??coration', 1, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
 (14, 2, 1, 'VE-2025-00010', '2025-12-06', NULL, NULL, NULL, NULL, 'Vente accessoires', 1, '2025-12-11 05:10:03', '2025-12-11 05:10:03'),
 (15, 2, 1, 'VE-2025-00011', '2025-12-07', NULL, NULL, NULL, NULL, 'Vente panneaux', 1, '2025-12-11 05:10:04', '2025-12-11 05:10:04'),
-(16, 2, 2, 'AC-2025-00004', '2025-12-03', NULL, NULL, NULL, NULL, 'Achat matières premières', 1, '2025-12-11 05:10:04', '2025-12-11 05:10:04'),
+(16, 2, 2, 'AC-2025-00004', '2025-12-03', NULL, NULL, NULL, NULL, 'Achat mati??res premi??res', 1, '2025-12-11 05:10:04', '2025-12-11 05:10:04'),
 (17, 2, 2, 'AC-2025-00005', '2025-12-04', NULL, NULL, NULL, NULL, 'Achat accessoires', 1, '2025-12-11 05:10:04', '2025-12-11 05:10:04'),
 (18, 2, 3, 'TR-2025-00001', '2025-12-05', NULL, NULL, NULL, NULL, 'Paiement fournisseurs', 1, '2025-12-11 05:10:04', '2025-12-11 05:10:04'),
 (19, 2, 3, 'TR-2025-00002', '2025-12-08', NULL, NULL, NULL, NULL, 'Encaissement clients', 1, '2025-12-11 05:10:04', '2025-12-11 05:10:04'),
-(20, 2, 4, 'CH-2025-00001', '2025-12-06', NULL, NULL, NULL, NULL, 'Salaires décembre', 1, '2025-12-11 05:10:04', '2025-12-11 05:10:04'),
+(20, 2, 4, 'CH-2025-00001', '2025-12-06', NULL, NULL, NULL, NULL, 'Salaires d??cembre', 1, '2025-12-11 05:10:04', '2025-12-11 05:10:04'),
 (21, 2, 4, 'CH-2025-00002', '2025-12-08', NULL, NULL, NULL, NULL, 'Frais de transport', 1, '2025-12-11 05:10:04', '2025-12-11 05:10:04'),
 (22, 2, 4, 'CAP-2025-00001', '2025-01-01', NULL, NULL, NULL, NULL, 'Capital social initial', 1, '2025-12-11 05:10:46', '2025-12-11 05:10:46'),
 (23, 2, 3, 'TR-2025-00003', '2025-12-09', NULL, NULL, NULL, NULL, 'Encaissement partiel clients', 1, '2025-12-11 05:10:46', '2025-12-11 05:10:46'),
 (24, 2, 3, 'TR-2025-00004', '2025-12-10', NULL, NULL, NULL, NULL, 'Encaissement clients', 1, '2025-12-11 05:10:46', '2025-12-11 05:10:46'),
 (25, 2, 3, 'BNQ-2025-00001', '2025-01-01', NULL, NULL, NULL, NULL, 'Solde initial banque', 1, '2025-12-11 05:10:46', '2025-12-11 05:10:46'),
-(26, 2, 1, 'VE-2025-00012', '2025-11-26', 'VENTE', 20, 2, NULL, 'Facture vente n° V-20251126-170324', 0, '2025-12-11 12:40:06', '2025-12-11 12:40:06');
+(26, 2, 1, 'VE-2025-00012', '2025-11-26', 'VENTE', 20, 2, NULL, 'Facture vente n?? V-20251126-170324', 0, '2025-12-11 12:40:06', '2025-12-11 12:40:06');
 
 -- --------------------------------------------------------
 
@@ -765,7 +820,9 @@ INSERT INTO `connexions_utilisateur` (`id`, `utilisateur_id`, `date_connexion`, 
 (33, 1, '2025-12-11 12:51:55', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 1),
 (34, 1, '2025-12-12 15:03:13', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 1),
 (35, 1, '2025-12-12 15:26:26', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 1),
-(36, 1, '2025-12-13 00:32:49', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 1);
+(36, 1, '2025-12-13 00:32:49', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 1),
+(37, 1, '2025-12-13 12:24:50', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 1),
+(38, 1, '2025-12-13 12:37:18', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 1);
 
 -- --------------------------------------------------------
 
@@ -863,10 +920,10 @@ CREATE TABLE `familles_produits` (
 --
 
 INSERT INTO `familles_produits` (`id`, `nom`) VALUES
-(1, 'Meubles & aménagements intérieurs'),
+(1, 'Meubles & am??nagements int??rieurs'),
 (2, 'Accessoires & quincaillerie de menuiserie'),
-(3, 'Machines & équipements de menuiserie'),
-(4, 'Panneaux & matériaux d’’agencement');
+(3, 'Machines & ??quipements de menuiserie'),
+(4, 'Panneaux & mat??riaux d??????agencement');
 
 -- --------------------------------------------------------
 
@@ -887,7 +944,7 @@ CREATE TABLE `formations` (
 
 INSERT INTO `formations` (`id`, `nom`, `description`, `tarif_total`) VALUES
 (1, 'Menuiserie moderne', 'Formation pratique en menuiserie et agencement', 150000.00),
-(2, 'Agencement intérieur', 'Techniques d’agencement et décoration intérieure', 180000.00);
+(2, 'Agencement int??rieur', 'Techniques d???agencement et d??coration int??rieure', 180000.00);
 
 -- --------------------------------------------------------
 
@@ -909,8 +966,8 @@ CREATE TABLE `fournisseurs` (
 --
 
 INSERT INTO `fournisseurs` (`id`, `nom`, `contact`, `telephone`, `email`, `adresse`) VALUES
-(1, 'Fournisseur Général KMS', 'Service commercial', '+237600000001', 'fournisseur@kms.local', 'Douala'),
-(2, 'Import Matériaux Pro', 'Responsable achat', '+237600000002', 'imports@kms.local', 'Douala - Zone industrielle');
+(1, 'Fournisseur G??n??ral KMS', 'Service commercial', '+237600000001', 'fournisseur@kms.local', 'Douala'),
+(2, 'Import Mat??riaux Pro', 'Responsable achat', '+237600000002', 'imports@kms.local', 'Douala - Zone industrielle');
 
 -- --------------------------------------------------------
 
@@ -968,10 +1025,10 @@ CREATE TABLE `journal_caisse` (
 --
 
 INSERT INTO `journal_caisse` (`id`, `date_operation`, `numero_piece`, `nature_operation`, `client_id`, `fournisseur_id`, `sens`, `montant`, `mode_paiement_id`, `vente_id`, `reservation_id`, `inscription_formation_id`, `responsable_encaissement_id`, `observations`, `est_annule`, `date_annulation`, `annule_par_id`) VALUES
-(1, '2025-11-18', 'RES-1', 'Encaissement réservation hôtel', NULL, NULL, 'RECETTE', 35000.00, 4, NULL, 1, NULL, 1, '', 0, NULL, NULL),
-(2, '2025-11-18', '011', 'règlement fournissuer', NULL, NULL, 'RECETTE', 10000.00, 1, NULL, NULL, NULL, 1, NULL, 0, NULL, NULL),
+(1, '2025-11-18', 'RES-1', 'Encaissement r??servation h??tel', NULL, NULL, 'RECETTE', 35000.00, 4, NULL, 1, NULL, 1, '', 0, NULL, NULL),
+(2, '2025-11-18', '011', 'r??glement fournissuer', NULL, NULL, 'RECETTE', 10000.00, 1, NULL, NULL, NULL, 1, NULL, 0, NULL, NULL),
 (3, '2025-11-19', 'INSCR-1', 'Encaissement inscription formation', NULL, NULL, 'RECETTE', 50000.00, 3, NULL, NULL, 1, 1, NULL, 0, NULL, NULL),
-(4, '2025-11-20', '5', 'règlement fournissuer', NULL, NULL, 'RECETTE', 10000.00, 4, NULL, NULL, NULL, 1, NULL, 0, NULL, NULL),
+(4, '2025-11-20', '5', 'r??glement fournissuer', NULL, NULL, 'RECETTE', 10000.00, 4, NULL, NULL, NULL, 1, NULL, 0, NULL, NULL),
 (5, '2025-11-20', '', 'sorepco', NULL, NULL, 'RECETTE', 100000.00, 4, NULL, NULL, NULL, 1, 'recouvrement', 1, '2025-11-20 18:53:38', 1),
 (6, '2025-11-20', '', 'versement mupeci', NULL, NULL, 'RECETTE', 1000000.00, 4, NULL, NULL, NULL, 1, 'recouvrement', 0, NULL, NULL),
 (7, '2025-11-21', '', 'recouvrement sorepco', NULL, NULL, 'RECETTE', 150000.00, 4, NULL, NULL, NULL, 1, NULL, 0, NULL, NULL);
@@ -1010,14 +1067,14 @@ CREATE TABLE `leads_digital` (
   `message_initial` text DEFAULT NULL,
   `produit_interet` varchar(255) DEFAULT NULL,
   `statut` enum('NOUVEAU','CONTACTE','QUALIFIE','DEVIS_ENVOYE','CONVERTI','PERDU') NOT NULL DEFAULT 'NOUVEAU',
-  `score_prospect` int(11) DEFAULT 0 COMMENT 'Score 0-100 selon intérêt/qualité',
+  `score_prospect` int(11) DEFAULT 0 COMMENT 'Score 0-100 selon int??r??t/qualit??',
   `date_dernier_contact` datetime DEFAULT NULL,
   `prochaine_action` varchar(255) DEFAULT NULL,
   `date_prochaine_action` date DEFAULT NULL,
-  `client_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'Rempli après conversion',
+  `client_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'Rempli apr??s conversion',
   `utilisateur_responsable_id` int(10) UNSIGNED DEFAULT NULL,
   `campagne` varchar(150) DEFAULT NULL COMMENT 'Nom de la campagne publicitaire',
-  `cout_acquisition` decimal(15,2) DEFAULT 0.00 COMMENT 'Coût pub si applicable',
+  `cout_acquisition` decimal(15,2) DEFAULT 0.00 COMMENT 'Co??t pub si applicable',
   `observations` text DEFAULT NULL,
   `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
   `date_conversion` datetime DEFAULT NULL
@@ -1040,10 +1097,10 @@ CREATE TABLE `modes_paiement` (
 --
 
 INSERT INTO `modes_paiement` (`id`, `code`, `libelle`) VALUES
-(1, 'CASH', 'Espèces'),
+(1, 'CASH', 'Esp??ces'),
 (2, 'VIREMENT', 'Virement bancaire'),
 (3, 'MOBILE_MONEY', 'Mobile Money'),
-(4, 'CHEQUE', 'Chèque');
+(4, 'CHEQUE', 'Ch??que');
 
 -- --------------------------------------------------------
 
@@ -1070,9 +1127,9 @@ CREATE TABLE `mouvements_stock_backup_20251209_161710` (
 
 INSERT INTO `mouvements_stock_backup_20251209_161710` (`id`, `date_mouvement`, `type_mouvement`, `produit_id`, `quantite`, `source_module`, `source_id`, `utilisateur_id`, `commentaire`, `date_creation`) VALUES
 (1, '2025-11-21', 'ENTREE', 1, 22, 'ACHAT', 55222, NULL, NULL, '2025-11-21 12:50:59'),
-(3, '2025-11-26', 'SORTIE', 3, 3, 'VENTE', 20, NULL, 'Sortie suite à la vente V-20251126-170324', '2025-11-26 17:04:15'),
-(4, '2025-11-26', 'ENTREE', 2, 25, 'ACHAT', 2, NULL, 'Entrée suite à l’achat AC-20251126-170544', '2025-11-26 17:05:44'),
-(5, '2025-12-02', 'ENTREE', 3, 25, 'ACHAT', 3, NULL, 'Entrée suite à l’achat AC-20251202-154014', '2025-12-02 15:40:14');
+(3, '2025-11-26', 'SORTIE', 3, 3, 'VENTE', 20, NULL, 'Sortie suite ?? la vente V-20251126-170324', '2025-11-26 17:04:15'),
+(4, '2025-11-26', 'ENTREE', 2, 25, 'ACHAT', 2, NULL, 'Entr??e suite ?? l???achat AC-20251126-170544', '2025-11-26 17:05:44'),
+(5, '2025-12-02', 'ENTREE', 3, 25, 'ACHAT', 3, NULL, 'Entr??e suite ?? l???achat AC-20251202-154014', '2025-12-02 15:40:14');
 
 -- --------------------------------------------------------
 
@@ -1117,7 +1174,7 @@ CREATE TABLE `ordres_preparation` (
   `magasinier_id` int(10) UNSIGNED DEFAULT NULL,
   `date_preparation_effectuee` datetime DEFAULT NULL,
   `date_creation` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Ordres de préparation (liaison marketing-magasin)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Ordres de pr??paration (liaison marketing-magasin)';
 
 --
 -- Déchargement des données de la table `ordres_preparation`
@@ -1145,6 +1202,45 @@ CREATE TABLE `ordres_preparation_lignes` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `parametres_securite`
+--
+
+CREATE TABLE `parametres_securite` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `cle` varchar(100) NOT NULL,
+  `valeur` text NOT NULL,
+  `type` enum('STRING','INT','BOOL','JSON') DEFAULT 'STRING',
+  `description` text DEFAULT NULL,
+  `modifie_par` int(10) UNSIGNED DEFAULT NULL,
+  `date_modification` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Configuration de s??curit?? globale';
+
+--
+-- Déchargement des données de la table `parametres_securite`
+--
+
+INSERT INTO `parametres_securite` (`id`, `cle`, `valeur`, `type`, `description`, `modifie_par`, `date_modification`) VALUES
+(1, '2fa_obligatoire_admin', '1', 'BOOL', 'Forcer 2FA pour tous les administrateurs', NULL, '2025-12-13 12:40:26'),
+(2, '2fa_obligatoire_tous', '0', 'BOOL', 'Forcer 2FA pour tous les utilisateurs', NULL, '2025-12-13 12:40:26'),
+(3, 'session_timeout_minutes', '120', 'INT', 'Dur??e de session inactive en minutes', NULL, '2025-12-13 12:40:26'),
+(4, 'max_sessions_simultanees', '3', 'INT', 'Nombre max de sessions simultan??es par utilisateur', NULL, '2025-12-13 12:40:26'),
+(5, 'login_max_attempts', '5', 'INT', 'Tentatives de connexion max avant blocage', NULL, '2025-12-13 12:40:26'),
+(6, 'login_block_duration_minutes', '60', 'INT', 'Dur??e de blocage apr??s ??checs r??p??t??s', NULL, '2025-12-13 12:40:26'),
+(7, 'password_min_length', '8', 'INT', 'Longueur minimale du mot de passe', NULL, '2025-12-13 12:40:26'),
+(8, 'password_require_special', '1', 'BOOL', 'Exiger caract??res sp??ciaux dans mot de passe', NULL, '2025-12-13 12:40:26'),
+(9, 'password_require_number', '1', 'BOOL', 'Exiger chiffres dans mot de passe', NULL, '2025-12-13 12:40:26'),
+(10, 'password_require_uppercase', '1', 'BOOL', 'Exiger majuscules dans mot de passe', NULL, '2025-12-13 12:40:26'),
+(11, 'password_expiration_days', '90', 'INT', 'Expiration mot de passe (0 = jamais)', NULL, '2025-12-13 12:40:26'),
+(12, 'audit_retention_days', '365', 'INT', 'Dur??e conservation logs audit', NULL, '2025-12-13 12:40:26'),
+(13, 'redis_enabled', '1', 'BOOL', 'Activer le cache Redis', NULL, '2025-12-13 12:40:26'),
+(14, 'rate_limit_enabled', '1', 'BOOL', 'Activer le rate limiting', NULL, '2025-12-13 12:40:26'),
+(15, 'sms_provider', 'mock', 'STRING', 'Provider SMS (twilio, vonage, mock)', NULL, '2025-12-13 12:52:56'),
+(16, 'sms_max_tentatives_jour', '10', 'STRING', 'Nombre max de codes SMS par jour et par utilisateur', NULL, '2025-12-13 12:52:56'),
+(17, 'sms_delai_renvoi_secondes', '60', 'STRING', 'D??lai minimum entre 2 envois de code (en secondes)', NULL, '2025-12-13 12:52:56');
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `permissions`
 --
 
@@ -1160,27 +1256,27 @@ CREATE TABLE `permissions` (
 
 INSERT INTO `permissions` (`id`, `code`, `description`) VALUES
 (1, 'PRODUITS_LIRE', 'Consulter le catalogue produits et les stocks'),
-(2, 'PRODUITS_CREER', 'Créer de nouveaux produits'),
+(2, 'PRODUITS_CREER', 'Cr??er de nouveaux produits'),
 (3, 'PRODUITS_MODIFIER', 'Modifier les produits existants'),
 (4, 'PRODUITS_SUPPRIMER', 'Supprimer des produits'),
 (5, 'CLIENTS_LIRE', 'Consulter les clients / prospects'),
-(6, 'CLIENTS_CREER', 'Créer ou modifier des clients'),
+(6, 'CLIENTS_CREER', 'Cr??er ou modifier des clients'),
 (7, 'DEVIS_LIRE', 'Lister et consulter les devis'),
-(8, 'DEVIS_CREER', 'Créer des devis'),
+(8, 'DEVIS_CREER', 'Cr??er des devis'),
 (9, 'DEVIS_MODIFIER', 'Modifier le statut ou le contenu des devis'),
 (10, 'VENTES_LIRE', 'Consulter les ventes et bons de livraison'),
-(11, 'VENTES_CREER', 'Créer des ventes'),
+(11, 'VENTES_CREER', 'Cr??er des ventes'),
 (12, 'VENTES_VALIDER', 'Valider des ventes / livraisons'),
 (13, 'CAISSE_LIRE', 'Consulter le journal de caisse'),
-(14, 'CAISSE_ECRIRE', 'Enregistrer des opérations de caisse'),
-(15, 'PROMOTIONS_GERER', 'Créer et gérer les promotions'),
-(16, 'HOTEL_GERER', 'Gérer les réservations hôtel et upsell'),
-(17, 'FORMATION_GERER', 'Gérer les formations et inscriptions'),
-(18, 'REPORTING_LIRE', 'Accéder aux tableaux de bord et reporting'),
-(19, 'SATISFACTION_GERER', 'Gérer les enquêtes de satisfaction client'),
-(20, 'ACHATS_GERER', 'Gérer les achats et approvisionnements'),
-(21, 'COMPTABILITE_LIRE', 'Consulter le module comptabilité'),
-(22, 'COMPTABILITE_ECRIRE', 'Enregistrer des écritures comptables'),
+(14, 'CAISSE_ECRIRE', 'Enregistrer des op??rations de caisse'),
+(15, 'PROMOTIONS_GERER', 'Cr??er et g??rer les promotions'),
+(16, 'HOTEL_GERER', 'G??rer les r??servations h??tel et upsell'),
+(17, 'FORMATION_GERER', 'G??rer les formations et inscriptions'),
+(18, 'REPORTING_LIRE', 'Acc??der aux tableaux de bord et reporting'),
+(19, 'SATISFACTION_GERER', 'G??rer les enqu??tes de satisfaction client'),
+(20, 'ACHATS_GERER', 'G??rer les achats et approvisionnements'),
+(21, 'COMPTABILITE_LIRE', 'Consulter le module comptabilit??'),
+(22, 'COMPTABILITE_ECRIRE', 'Enregistrer des ??critures comptables'),
 (23, 'UTILISATEURS_GERER', NULL);
 
 -- --------------------------------------------------------
@@ -1215,12 +1311,12 @@ CREATE TABLE `produits` (
 
 INSERT INTO `produits` (`id`, `code_produit`, `famille_id`, `sous_categorie_id`, `designation`, `caracteristiques`, `description`, `fournisseur_id`, `localisation`, `prix_achat`, `prix_vente`, `stock_actuel`, `seuil_alerte`, `image_path`, `actif`, `date_creation`, `date_modification`) VALUES
 (1, 'MEU-CH-001', 1, 1, 'Lit 2 places avec chevets', 'Dimensions 160x200', 'Lit moderne pour chambre parentale', 1, 'Showroom Douala', 120000.00, 180000.00, 21, 2, '/assets/img/produits/MEU-CH-001.png', 1, '2025-11-18 11:00:22', '2025-12-02 15:58:23'),
-(2, 'MEU-SAL-001', 1, 2, 'Salon 5 places', 'Structure bois, mousse haute densité', 'Salon complet 3+1+1', 1, 'Showroom Douala', 200000.00, 280000.00, 27, 1, NULL, 1, '2025-11-18 11:00:22', NULL),
+(2, 'MEU-SAL-001', 1, 2, 'Salon 5 places', 'Structure bois, mousse haute densit??', 'Salon complet 3+1+1', 1, 'Showroom Douala', 200000.00, 280000.00, 27, 1, NULL, 1, '2025-11-18 11:00:22', NULL),
 (3, 'ACC-VIS-001', 2, 3, 'Lot de visserie menuiserie', 'Assortiment vis bois', 'Accessoires pour montage de meubles', 2, 'Magasin PK12', 15000.00, 25000.00, 68, 10, NULL, 1, '2025-11-18 11:00:22', NULL),
-(4, 'PAN-MEL-001', 4, 5, 'Panneau mélaminé blanc 18mm', '2,75m x 1,83m', 'Panneau pour agencement intérieur', 2, 'Magasin PK12', 25000.00, 38000.00, 12, 5, NULL, 1, '2025-11-18 11:00:22', NULL),
+(4, 'PAN-MEL-001', 4, 5, 'Panneau m??lamin?? blanc 18mm', '2,75m x 1,83m', 'Panneau pour agencement int??rieur', 2, 'Magasin PK12', 25000.00, 38000.00, 12, 5, NULL, 1, '2025-11-18 11:00:22', NULL),
 (15, 'PAN-FOR-001', 2, 3, 'Panneau formica blanc 18mm', NULL, NULL, 2, 'Magasin PK12', 500.00, 2000.00, 10, 2, '/assets/img/produits/PAN-FOR-001.png', 1, '2025-12-06 12:32:22', NULL),
 (16, 'PAN-MDF', 4, 5, 'Panneau MDFblanc 18mm', NULL, NULL, 2, 'Magasin PK12', 10000.00, 500000.00, 24, 2, '/kms_app/assets/img/produits/PAN-MDF.jpg', 1, '2025-12-10 11:45:00', NULL),
-(17, 'TEST-PRD-001', 1, NULL, 'Produit test automatisÃ©', NULL, NULL, NULL, NULL, 0.00, 1500.00, 3, 0, NULL, 0, '2025-12-10 13:09:46', NULL);
+(17, 'TEST-PRD-001', 1, NULL, 'Produit test automatis????', NULL, NULL, NULL, NULL, 0.00, 1500.00, 3, 0, NULL, 0, '2025-12-10 13:09:46', NULL);
 
 -- --------------------------------------------------------
 
@@ -1278,9 +1374,9 @@ CREATE TABLE `prospections_terrain` (
 --
 
 INSERT INTO `prospections_terrain` (`id`, `date_prospection`, `heure_prospection`, `prospect_nom`, `secteur`, `latitude`, `longitude`, `adresse_gps`, `besoin_identifie`, `action_menee`, `resultat`, `prochaine_etape`, `client_id`, `commercial_id`) VALUES
-(1, '2025-12-11', '12:26:30', 'MR Yves', 'Pindo', 4.05880337, 9.78497912, 'Pindo, Douala III, Communauté urbaine de Douala, Wouri, Région du Littoral, Cameroun', 'Deligneuse', 'Prospection et remise de la fiche produit', 'Intéressé - À recontacter', 'relancer', NULL, 1),
-(2, '2025-12-12', '15:17:00', 'Zoboo', 'Ndogmbe', 4.04000000, 9.75000000, 'Ndogmbe, Douala III, Communauté urbaine de Douala, Wouri, Littoral, Cameroon', 'machines de ménuiserie', 'prospection et prise de rendez-vous au centre commercial', 'À rappeler plus tard', 'Relancer dans une semaine', NULL, 1),
-(3, '2025-12-12', '15:24:38', 'Kossi', 'Non renseigné', 4.04000000, 9.75000000, NULL, 'efezfe', 'fezfzeefd', 'Devis demandé', 'zerfzfze', NULL, 1);
+(1, '2025-12-11', '12:26:30', 'MR Yves', 'Pindo', 4.05880337, 9.78497912, 'Pindo, Douala III, Communaut?? urbaine de Douala, Wouri, R??gion du Littoral, Cameroun', 'Deligneuse', 'Prospection et remise de la fiche produit', 'Int??ress?? - ?? recontacter', 'relancer', NULL, 1),
+(2, '2025-12-12', '15:17:00', 'Zoboo', 'Ndogmbe', 4.04000000, 9.75000000, 'Ndogmbe, Douala III, Communaut?? urbaine de Douala, Wouri, Littoral, Cameroon', 'machines de m??nuiserie', 'prospection et prise de rendez-vous au centre commercial', '?? rappeler plus tard', 'Relancer dans une semaine', NULL, 1),
+(3, '2025-12-12', '15:24:38', 'Kossi', 'Non renseign??', 4.04000000, 9.75000000, NULL, 'efezfe', 'fezfzeefd', 'Devis demand??', 'zerfzfze', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -1410,7 +1506,7 @@ CREATE TABLE `roles` (
 --
 
 INSERT INTO `roles` (`id`, `code`, `nom`, `description`) VALUES
-(1, 'ADMIN', 'Administrateur', 'Accès complet à toute l’’application'),
+(1, 'ADMIN', 'Administrateur', 'Acc??s complet ?? toute l??????application'),
 (2, 'SHOWROOM', 'Commercial Showroom', 'Gestion des visiteurs, devis et ventes en showroom'),
 (3, 'TERRAIN', 'Commercial Terrain', 'Prospection terrain, devis et ventes terrain'),
 (4, 'MAGASINIER', 'Magasinier', 'Gestion des stocks, livraisons, ruptures'),
@@ -1503,14 +1599,14 @@ CREATE TABLE `ruptures_signalees` (
   `produit_id` int(10) UNSIGNED NOT NULL,
   `seuil_alerte` decimal(15,3) NOT NULL,
   `stock_actuel` decimal(15,3) NOT NULL,
-  `impact_commercial` text DEFAULT NULL COMMENT 'Ventes perdues, clients mécontents, etc.',
-  `action_proposee` text DEFAULT NULL COMMENT 'Réappro urgent, promotion, produit alternatif',
+  `impact_commercial` text DEFAULT NULL COMMENT 'Ventes perdues, clients m??contents, etc.',
+  `action_proposee` text DEFAULT NULL COMMENT 'R??appro urgent, promotion, produit alternatif',
   `magasinier_id` int(10) UNSIGNED NOT NULL,
   `statut_traitement` enum('SIGNALE','EN_COURS','RESOLU','ABANDONNE') DEFAULT 'SIGNALE',
   `date_resolution` datetime DEFAULT NULL,
   `commentaire_resolution` text DEFAULT NULL,
   `date_creation` datetime NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Alertes ruptures stock (magasin → marketing)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Alertes ruptures stock (magasin ??? marketing)';
 
 -- --------------------------------------------------------
 
@@ -1552,7 +1648,67 @@ CREATE TABLE `satisfaction_clients` (
 
 INSERT INTO `satisfaction_clients` (`id`, `date_satisfaction`, `client_id`, `nom_client`, `service_utilise`, `note`, `commentaire`, `utilisateur_id`) VALUES
 (1, '2025-11-19', NULL, 'apprenant', 'FORMATION', 4, '', 1),
-(2, '2025-11-20', 4, 'Client Hôtel Test', 'FORMATION', 2, 'grincheux et deçu', 1);
+(2, '2025-11-20', 4, 'Client H??tel Test', 'FORMATION', 2, 'grincheux et de??u', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `sessions_actives`
+--
+
+CREATE TABLE `sessions_actives` (
+  `id` varchar(128) NOT NULL COMMENT 'Session ID',
+  `utilisateur_id` int(10) UNSIGNED NOT NULL,
+  `ip_address` varchar(45) NOT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `device_fingerprint` varchar(64) DEFAULT NULL COMMENT 'Empreinte du device',
+  `pays` varchar(2) DEFAULT NULL COMMENT 'Code pays ISO',
+  `ville` varchar(100) DEFAULT NULL,
+  `date_creation` datetime DEFAULT current_timestamp(),
+  `date_derniere_activite` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `date_expiration` datetime NOT NULL,
+  `actif` tinyint(1) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Sessions actives avec tracking d??taill??';
+
+--
+-- Déchargement des données de la table `sessions_actives`
+--
+
+INSERT INTO `sessions_actives` (`id`, `utilisateur_id`, `ip_address`, `user_agent`, `device_fingerprint`, `pays`, `ville`, `date_creation`, `date_derniere_activite`, `date_expiration`, `actif`) VALUES
+('nr7ld1kfh8rh8i9hr40f2db8te', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0', NULL, NULL, NULL, '2025-12-13 13:03:12', '2025-12-13 13:03:12', '2025-12-13 15:03:12', 1),
+('u78v44an2rnvh1vjml3r74u03m', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, NULL, NULL, '2025-12-13 13:26:22', '2025-12-13 13:26:22', '2025-12-13 15:26:22', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `sms_2fa_codes`
+--
+
+CREATE TABLE `sms_2fa_codes` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `utilisateur_id` int(11) NOT NULL,
+  `code_hash` varchar(255) NOT NULL COMMENT 'Hash du code ?? 6 chiffres',
+  `telephone` varchar(20) NOT NULL COMMENT 'Num??ro au format international',
+  `expire_a` datetime NOT NULL COMMENT 'Date d''expiration (5 min)',
+  `utilise` tinyint(1) DEFAULT 0 COMMENT '0 = non utilis??, 1 = utilis??',
+  `utilise_a` datetime DEFAULT NULL COMMENT 'Date d''utilisation',
+  `cree_a` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Codes SMS temporaires pour authentification 2FA';
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `sms_tracking`
+--
+
+CREATE TABLE `sms_tracking` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `utilisateur_id` int(11) NOT NULL,
+  `telephone` varchar(20) NOT NULL,
+  `envoye_a` timestamp NOT NULL DEFAULT current_timestamp(),
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Historique d''envoi des SMS pour d??tection d''abus';
 
 -- --------------------------------------------------------
 
@@ -1571,11 +1727,11 @@ CREATE TABLE `sous_categories_produits` (
 --
 
 INSERT INTO `sous_categories_produits` (`id`, `famille_id`, `nom`) VALUES
-(1, 1, 'Chambres à coucher'),
+(1, 1, 'Chambres ?? coucher'),
 (2, 1, 'Salons'),
 (3, 2, 'Quincaillerie standard'),
-(4, 3, 'Machines de découpe'),
-(5, 4, 'Panneaux mélaminés');
+(4, 3, 'Machines de d??coupe'),
+(5, 4, 'Panneaux m??lamin??s');
 
 -- --------------------------------------------------------
 
@@ -1613,17 +1769,46 @@ INSERT INTO `stocks_mouvements` (`id`, `produit_id`, `date_mouvement`, `type_mou
 (11, 4, '2025-11-21 11:23:46', 'SORTIE', 15, 'VENTE', 17, 'Sortie via BL BL-20251121-112346', 1),
 (12, 1, '2025-12-06 12:30:51', 'ENTREE', 2, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
 (13, 1, '2025-12-06 12:31:08', 'SORTIE', 2, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(14, 15, '2025-12-06 12:32:22', 'ENTREE', 10, 'INVENTAIRE', NULL, 'Stock initial à la création du produit', 1),
+(14, 15, '2025-12-06 12:32:22', 'ENTREE', 10, 'INVENTAIRE', NULL, 'Stock initial ?? la cr??ation du produit', 1),
 (15, 1, '2025-11-21 12:50:59', 'ENTREE', 22, 'ACHAT', 55222, NULL, 1),
-(17, 2, '2025-11-26 17:05:44', 'ENTREE', 25, 'ACHAT', 2, 'Entrée suite à l’achat AC-20251126-170544', 1),
-(18, 3, '2025-12-02 15:40:14', 'ENTREE', 25, 'ACHAT', 3, 'Entrée suite à l’achat AC-20251202-154014', 1),
+(17, 2, '2025-11-26 17:05:44', 'ENTREE', 25, 'ACHAT', 2, 'Entr??e suite ?? l???achat AC-20251126-170544', 1),
+(18, 3, '2025-12-02 15:40:14', 'ENTREE', 25, 'ACHAT', 3, 'Entr??e suite ?? l???achat AC-20251202-154014', 1),
 (19, 1, '2025-12-10 11:43:34', 'SORTIE', 1, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
 (20, 1, '2025-12-10 11:43:43', 'SORTIE', 1, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(21, 16, '2025-12-10 11:45:00', 'ENTREE', 25, 'INVENTAIRE', NULL, 'Stock initial à la création du produit', 1),
+(21, 16, '2025-12-10 11:45:00', 'ENTREE', 25, 'INVENTAIRE', NULL, 'Stock initial ?? la cr??ation du produit', 1),
 (22, 16, '2025-12-10 11:45:31', 'SORTIE', 1, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(27, 17, '2025-12-10 13:09:46', 'ENTREE', 5, 'INVENTAIRE', NULL, 'Stock initial à la création du produit', 1),
+(27, 17, '2025-12-10 13:09:46', 'ENTREE', 5, 'INVENTAIRE', NULL, 'Stock initial ?? la cr??ation du produit', 1),
 (28, 17, '2025-12-10 13:09:46', 'SORTIE', 2, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(29, 3, '2025-11-26 00:00:00', 'SORTIE', 3, 'VENTE', 20, 'Sortie suite à la vente V-20251126-170324', 1);
+(29, 3, '2025-11-26 00:00:00', 'SORTIE', 3, 'VENTE', 20, 'Sortie suite ?? la vente V-20251126-170324', 1);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `tentatives_connexion`
+--
+
+CREATE TABLE `tentatives_connexion` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `login_attempt` varchar(100) NOT NULL COMMENT 'Login tent??',
+  `utilisateur_id` int(10) UNSIGNED DEFAULT NULL COMMENT 'NULL si login invalide',
+  `ip_address` varchar(45) NOT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `methode_2fa` varchar(20) DEFAULT NULL COMMENT 'TOTP, RECOVERY, NONE',
+  `succes` tinyint(1) NOT NULL,
+  `raison_echec` varchar(200) DEFAULT NULL COMMENT 'Mot de passe incorrect, 2FA invalide, compte bloqu??',
+  `pays` varchar(2) DEFAULT NULL,
+  `ville` varchar(100) DEFAULT NULL,
+  `date_tentative` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Historique d??taill?? des tentatives de connexion';
+
+--
+-- Déchargement des données de la table `tentatives_connexion`
+--
+
+INSERT INTO `tentatives_connexion` (`id`, `login_attempt`, `utilisateur_id`, `ip_address`, `user_agent`, `methode_2fa`, `succes`, `raison_echec`, `pays`, `ville`, `date_tentative`) VALUES
+(1, 'admin', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0', NULL, 0, 'Mot de passe incorrect', NULL, NULL, '2025-12-13 13:03:02'),
+(2, 'admin', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, 0, 'Mot de passe incorrect', NULL, NULL, '2025-12-13 13:18:28'),
+(3, 'admin', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'EMAIL', 1, NULL, NULL, NULL, '2025-12-13 13:26:22');
 
 -- --------------------------------------------------------
 
@@ -1644,8 +1829,8 @@ CREATE TABLE `types_client` (
 INSERT INTO `types_client` (`id`, `code`, `libelle`) VALUES
 (1, 'SHOWROOM', 'Client / prospect showroom'),
 (2, 'TERRAIN', 'Client / prospect terrain'),
-(3, 'DIGITAL', 'Client issu du digital (réseaux sociaux, site, CRM)'),
-(4, 'HOTEL', 'Client hébergement / hôtel'),
+(3, 'DIGITAL', 'Client issu du digital (r??seaux sociaux, site, CRM)'),
+(4, 'HOTEL', 'Client h??bergement / h??tel'),
 (5, 'FORMATION', 'Apprenant / client formation');
 
 -- --------------------------------------------------------
@@ -1676,28 +1861,78 @@ CREATE TABLE `utilisateurs` (
   `telephone` varchar(50) DEFAULT NULL,
   `actif` tinyint(1) NOT NULL DEFAULT 1,
   `date_creation` datetime NOT NULL DEFAULT current_timestamp(),
-  `date_derniere_connexion` datetime DEFAULT NULL
+  `date_derniere_connexion` datetime DEFAULT NULL,
+  `date_changement_mdp` datetime DEFAULT NULL COMMENT 'Date dernier changement mot de passe',
+  `mdp_expire` tinyint(1) DEFAULT 0 COMMENT 'Mot de passe expir??',
+  `force_changement_mdp` tinyint(1) DEFAULT 0 COMMENT 'Forcer changement au prochain login',
+  `compte_verrouille` tinyint(1) DEFAULT 0 COMMENT 'Compte verrouill?? (manuel)',
+  `raison_verrouillage` text DEFAULT NULL,
+  `date_verrouillage` datetime DEFAULT NULL,
+  `sessions_simultanees_actuelles` int(11) DEFAULT 0 COMMENT 'Compteur sessions actives'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Déchargement des données de la table `utilisateurs`
 --
 
-INSERT INTO `utilisateurs` (`id`, `login`, `mot_de_passe_hash`, `nom_complet`, `email`, `telephone`, `actif`, `date_creation`, `date_derniere_connexion`) VALUES
-(1, 'admin', '$2b$10$j6YYUX.QLOxOoBn9eB4rJu8/ye4/NOEXPvRjcYhUY4mBiaZZFUrTi', 'Administrateur KMS', 'admin@kms.local', NULL, 1, '2025-11-18 10:59:28', '2025-12-13 00:32:49'),
-(2, 'admin2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Administrateur Système', 'admin2@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(3, 'showroom1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Marie Kouadio', 'marie.kouadio@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(4, 'showroom2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Yao Kouassi', 'yao.kouassi@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(5, 'terrain1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Konan Yao', 'konan.yao@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(6, 'terrain2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Aya N\'Guessan', 'aya.nguessan@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(7, 'magasin1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Ibrahim Traoré', 'ibrahim.traore@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(8, 'magasin2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Moussa Diallo', 'moussa.diallo@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(9, 'caisse1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Aminata Koné', 'aminata.kone@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(10, 'caisse2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Fatou Camara', 'fatou.camara@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(11, 'direction1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Directeur Général', 'dg@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(12, 'direction2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Directeur Adjoint', 'da@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL),
-(13, 'Tatiana', '$2y$10$PI9HMfk.ET49yrr31htsKOHMhnZSNaITlwbcbcL5lJawUzejgOm7a', 'Naoussi Tatiana', 'naoussitatiana@gmail.com', '695657613', 1, '2025-12-11 12:07:02', NULL),
-(14, 'Gislaine', '$2y$10$WwVYPLCm6FFKjE/CY4QLh.sN1gc3y2J3KsgHoLGh9u33r/b72mHKW', 'Gislaine', NULL, NULL, 1, '2025-12-11 12:09:27', NULL);
+INSERT INTO `utilisateurs` (`id`, `login`, `mot_de_passe_hash`, `nom_complet`, `email`, `telephone`, `actif`, `date_creation`, `date_derniere_connexion`, `date_changement_mdp`, `mdp_expire`, `force_changement_mdp`, `compte_verrouille`, `raison_verrouillage`, `date_verrouillage`, `sessions_simultanees_actuelles`) VALUES
+(1, 'admin', '$2b$10$j6YYUX.QLOxOoBn9eB4rJu8/ye4/NOEXPvRjcYhUY4mBiaZZFUrTi', 'Administrateur KMS', 'admin@kms.local', NULL, 1, '2025-11-18 10:59:28', '2025-12-13 13:26:22', NULL, 0, 0, 0, NULL, NULL, 0),
+(2, 'admin2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Administrateur Syst??me', 'admin2@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(3, 'showroom1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Marie Kouadio', 'marie.kouadio@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(4, 'showroom2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Yao Kouassi', 'yao.kouassi@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(5, 'terrain1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Konan Yao', 'konan.yao@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(6, 'terrain2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Aya N\'Guessan', 'aya.nguessan@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(7, 'magasin1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Ibrahim Traor??', 'ibrahim.traore@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(8, 'magasin2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Moussa Diallo', 'moussa.diallo@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(9, 'caisse1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Aminata Kon??', 'aminata.kone@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(10, 'caisse2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Fatou Camara', 'fatou.camara@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(11, 'direction1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Directeur G??n??ral', 'dg@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(12, 'direction2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Directeur Adjoint', 'da@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(13, 'Tatiana', '$2y$10$PI9HMfk.ET49yrr31htsKOHMhnZSNaITlwbcbcL5lJawUzejgOm7a', 'Naoussi Tatiana', 'naoussitatiana@gmail.com', '695657613', 1, '2025-12-11 12:07:02', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
+(14, 'Gislaine', '$2y$10$WwVYPLCm6FFKjE/CY4QLh.sN1gc3y2J3KsgHoLGh9u33r/b72mHKW', 'Gislaine', NULL, NULL, 1, '2025-12-11 12:09:27', NULL, NULL, 0, 0, 0, NULL, NULL, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `utilisateurs_2fa`
+--
+
+CREATE TABLE `utilisateurs_2fa` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `utilisateur_id` int(10) UNSIGNED NOT NULL,
+  `secret` varchar(255) NOT NULL COMMENT 'Secret TOTP encod??',
+  `actif` tinyint(1) DEFAULT 0,
+  `date_activation` datetime DEFAULT NULL,
+  `date_desactivation` datetime DEFAULT NULL,
+  `methode` enum('TOTP','SMS','EMAIL') DEFAULT 'TOTP',
+  `telephone_backup` varchar(50) DEFAULT NULL,
+  `email_backup` varchar(150) DEFAULT NULL,
+  `date_creation` datetime DEFAULT current_timestamp(),
+  `methode_2fa` enum('totp','sms') DEFAULT 'totp' COMMENT 'M??thode 2FA: TOTP ou SMS',
+  `telephone` varchar(20) DEFAULT NULL COMMENT 'Num??ro de t??l??phone au format international'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Configuration 2FA par utilisateur';
+
+--
+-- Déchargement des données de la table `utilisateurs_2fa`
+--
+
+INSERT INTO `utilisateurs_2fa` (`id`, `utilisateur_id`, `secret`, `actif`, `date_activation`, `date_desactivation`, `methode`, `telephone_backup`, `email_backup`, `date_creation`, `methode_2fa`, `telephone`) VALUES
+(1, 1, '', 1, '2025-12-13 13:17:56', NULL, 'EMAIL', NULL, 'peghiembouoromial@gmail.com', '2025-12-13 13:17:56', 'totp', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `utilisateurs_2fa_recovery`
+--
+
+CREATE TABLE `utilisateurs_2fa_recovery` (
+  `id` int(10) UNSIGNED NOT NULL,
+  `utilisateur_id` int(10) UNSIGNED NOT NULL,
+  `code_hash` varchar(255) NOT NULL COMMENT 'Hash du code de r??cup??ration',
+  `utilise` tinyint(1) DEFAULT 0,
+  `date_creation` datetime DEFAULT current_timestamp(),
+  `date_utilisation` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Codes de r??cup??ration 2FA (backup)';
 
 -- --------------------------------------------------------
 
@@ -1928,6 +2163,27 @@ ALTER TABLE `achats_lignes`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_achats_lignes_achat` (`achat_id`),
   ADD KEY `fk_achats_lignes_produit` (`produit_id`);
+
+--
+-- Index pour la table `audit_log`
+--
+ALTER TABLE `audit_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_audit_user` (`utilisateur_id`),
+  ADD KEY `idx_audit_date` (`date_action`),
+  ADD KEY `idx_audit_module` (`module`),
+  ADD KEY `idx_audit_action` (`action`),
+  ADD KEY `idx_audit_niveau` (`niveau`),
+  ADD KEY `idx_audit_entite` (`entite_type`,`entite_id`);
+
+--
+-- Index pour la table `blocages_ip`
+--
+ALTER TABLE `blocages_ip`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_ip` (`ip_address`),
+  ADD KEY `idx_blocage_actif` (`actif`),
+  ADD KEY `idx_blocage_expiration` (`date_expiration`);
 
 --
 -- Index pour la table `bons_livraison`
@@ -2207,6 +2463,14 @@ ALTER TABLE `ordres_preparation_lignes`
   ADD KEY `fk_ordres_lignes_produit` (`produit_id`);
 
 --
+-- Index pour la table `parametres_securite`
+--
+ALTER TABLE `parametres_securite`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `cle` (`cle`),
+  ADD KEY `modifie_par` (`modifie_par`);
+
+--
 -- Index pour la table `permissions`
 --
 ALTER TABLE `permissions`
@@ -2338,6 +2602,33 @@ ALTER TABLE `satisfaction_clients`
   ADD KEY `idx_satisfaction_date` (`date_satisfaction`);
 
 --
+-- Index pour la table `sessions_actives`
+--
+ALTER TABLE `sessions_actives`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_session_user` (`utilisateur_id`),
+  ADD KEY `idx_session_expiration` (`date_expiration`),
+  ADD KEY `idx_session_actif` (`actif`);
+
+--
+-- Index pour la table `sms_2fa_codes`
+--
+ALTER TABLE `sms_2fa_codes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_utilisateur` (`utilisateur_id`),
+  ADD KEY `idx_expiration` (`expire_a`),
+  ADD KEY `idx_utilise` (`utilise`);
+
+--
+-- Index pour la table `sms_tracking`
+--
+ALTER TABLE `sms_tracking`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_utilisateur` (`utilisateur_id`),
+  ADD KEY `idx_telephone` (`telephone`),
+  ADD KEY `idx_date` (`envoye_a`);
+
+--
 -- Index pour la table `sous_categories_produits`
 --
 ALTER TABLE `sous_categories_produits`
@@ -2352,6 +2643,16 @@ ALTER TABLE `stocks_mouvements`
   ADD KEY `fk_mouvements_produit` (`produit_id`),
   ADD KEY `fk_mouvements_utilisateur` (`utilisateur_id`),
   ADD KEY `idx_mouvements_date` (`date_mouvement`);
+
+--
+-- Index pour la table `tentatives_connexion`
+--
+ALTER TABLE `tentatives_connexion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_tentative_date` (`date_tentative`),
+  ADD KEY `idx_tentative_ip` (`ip_address`),
+  ADD KEY `idx_tentative_succes` (`succes`),
+  ADD KEY `idx_tentative_user` (`utilisateur_id`);
 
 --
 -- Index pour la table `types_client`
@@ -2372,7 +2673,26 @@ ALTER TABLE `upsell_hotel`
 --
 ALTER TABLE `utilisateurs`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `login` (`login`);
+  ADD UNIQUE KEY `login` (`login`),
+  ADD KEY `idx_compte_verrouille` (`compte_verrouille`),
+  ADD KEY `idx_mdp_expire` (`mdp_expire`);
+
+--
+-- Index pour la table `utilisateurs_2fa`
+--
+ALTER TABLE `utilisateurs_2fa`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_user_2fa` (`utilisateur_id`),
+  ADD KEY `idx_2fa_actif` (`actif`),
+  ADD KEY `idx_methode` (`methode_2fa`);
+
+--
+-- Index pour la table `utilisateurs_2fa_recovery`
+--
+ALTER TABLE `utilisateurs_2fa_recovery`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_recovery_user` (`utilisateur_id`),
+  ADD KEY `idx_recovery_utilise` (`utilise`);
 
 --
 -- Index pour la table `utilisateur_role`
@@ -2434,6 +2754,18 @@ ALTER TABLE `achats`
 --
 ALTER TABLE `achats_lignes`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT pour la table `audit_log`
+--
+ALTER TABLE `audit_log`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT pour la table `blocages_ip`
+--
+ALTER TABLE `blocages_ip`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `bons_livraison`
@@ -2529,7 +2861,7 @@ ALTER TABLE `compta_pieces`
 -- AUTO_INCREMENT pour la table `connexions_utilisateur`
 --
 ALTER TABLE `connexions_utilisateur`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=37;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT pour la table `conversions_pipeline`
@@ -2622,6 +2954,12 @@ ALTER TABLE `ordres_preparation_lignes`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT pour la table `parametres_securite`
+--
+ALTER TABLE `parametres_securite`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+
+--
 -- AUTO_INCREMENT pour la table `permissions`
 --
 ALTER TABLE `permissions`
@@ -2700,6 +3038,18 @@ ALTER TABLE `satisfaction_clients`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT pour la table `sms_2fa_codes`
+--
+ALTER TABLE `sms_2fa_codes`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT pour la table `sms_tracking`
+--
+ALTER TABLE `sms_tracking`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT pour la table `sous_categories_produits`
 --
 ALTER TABLE `sous_categories_produits`
@@ -2710,6 +3060,12 @@ ALTER TABLE `sous_categories_produits`
 --
 ALTER TABLE `stocks_mouvements`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+
+--
+-- AUTO_INCREMENT pour la table `tentatives_connexion`
+--
+ALTER TABLE `tentatives_connexion`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT pour la table `types_client`
@@ -2728,6 +3084,18 @@ ALTER TABLE `upsell_hotel`
 --
 ALTER TABLE `utilisateurs`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
+-- AUTO_INCREMENT pour la table `utilisateurs_2fa`
+--
+ALTER TABLE `utilisateurs_2fa`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT pour la table `utilisateurs_2fa_recovery`
+--
+ALTER TABLE `utilisateurs_2fa_recovery`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `ventes`
@@ -2769,6 +3137,12 @@ ALTER TABLE `achats`
 ALTER TABLE `achats_lignes`
   ADD CONSTRAINT `fk_achats_lignes_achat` FOREIGN KEY (`achat_id`) REFERENCES `achats` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_achats_lignes_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `audit_log`
+--
+ALTER TABLE `audit_log`
+  ADD CONSTRAINT `audit_log_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE SET NULL;
 
 --
 -- Contraintes pour la table `bons_livraison`
@@ -2921,6 +3295,12 @@ ALTER TABLE `ordres_preparation_lignes`
   ADD CONSTRAINT `fk_ordres_lignes_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Contraintes pour la table `parametres_securite`
+--
+ALTER TABLE `parametres_securite`
+  ADD CONSTRAINT `parametres_securite_ibfk_1` FOREIGN KEY (`modifie_par`) REFERENCES `utilisateurs` (`id`) ON DELETE SET NULL;
+
+--
 -- Contraintes pour la table `produits`
 --
 ALTER TABLE `produits`
@@ -3010,6 +3390,12 @@ ALTER TABLE `satisfaction_clients`
   ADD CONSTRAINT `fk_satisfaction_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
+-- Contraintes pour la table `sessions_actives`
+--
+ALTER TABLE `sessions_actives`
+  ADD CONSTRAINT `sessions_actives_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE;
+
+--
 -- Contraintes pour la table `sous_categories_produits`
 --
 ALTER TABLE `sous_categories_produits`
@@ -3023,10 +3409,28 @@ ALTER TABLE `stocks_mouvements`
   ADD CONSTRAINT `fk_mouvements_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
+-- Contraintes pour la table `tentatives_connexion`
+--
+ALTER TABLE `tentatives_connexion`
+  ADD CONSTRAINT `tentatives_connexion_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE SET NULL;
+
+--
 -- Contraintes pour la table `upsell_hotel`
 --
 ALTER TABLE `upsell_hotel`
   ADD CONSTRAINT `fk_upsell_reservation` FOREIGN KEY (`reservation_id`) REFERENCES `reservations_hotel` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Contraintes pour la table `utilisateurs_2fa`
+--
+ALTER TABLE `utilisateurs_2fa`
+  ADD CONSTRAINT `utilisateurs_2fa_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE;
+
+--
+-- Contraintes pour la table `utilisateurs_2fa_recovery`
+--
+ALTER TABLE `utilisateurs_2fa_recovery`
+  ADD CONSTRAINT `utilisateurs_2fa_recovery_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE;
 
 --
 -- Contraintes pour la table `utilisateur_role`
