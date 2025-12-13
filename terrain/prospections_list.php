@@ -139,97 +139,291 @@ include __DIR__ . '/../partials/sidebar.php';
 ?>
 
 <style>
-/* Optimisation mobile */
-@media (max-width: 768px) {
-    .container-fluid {
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-    }
-    .card {
-        margin-bottom: 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .form-label {
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-    }
-    .form-control, .form-select {
-        font-size: 1rem;
-        padding: 0.75rem;
-    }
-    textarea.form-control {
-        min-height: 80px;
-    }
-    .btn-lg-mobile {
-        padding: 1rem;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-    .stat-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 1rem;
-        border-radius: 0.75rem;
-        margin-bottom: 1rem;
-    }
-    .stat-value {
-        font-size: 2rem;
-        font-weight: bold;
-    }
-    .prospect-card {
-        border-left: 4px solid #667eea;
-        margin-bottom: 1rem;
-        padding: 1rem;
-        background: #f8f9fa;
-        border-radius: 0.5rem;
-    }
-    .prospect-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        margin-bottom: 0.75rem;
-    }
-    .prospect-name {
-        font-weight: 600;
-        font-size: 1.1rem;
-        color: #2d3748;
-    }
-    .prospect-meta {
-        font-size: 0.85rem;
-        color: #718096;
-    }
-    .location-badge {
-        background: #e6fffa;
-        color: #047857;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.75rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
+/* Global improvements */
+.container-fluid {
+    max-width: 1400px;
 }
 
-.geoloc-status {
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.9rem;
+/* Stats cards */
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1.25rem;
+    border-radius: 1rem;
     margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    font-weight: 500;
+}
+
+/* Cards enhancement */
+.filter-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.filter-card .card-header {
+    background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+    border: none;
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+}
+
+.filter-card .card-body {
+    padding: 1.5rem;
+}
+
+/* Form improvements */
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #334155;
+}
+
+.form-control, .form-select {
+    border: 2px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+textarea.form-control {
+    min-height: 90px;
+}
+
+/* Buttons */
+.btn-lg-mobile {
+    padding: 1rem 1.5rem;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    transition: all 0.2s;
+}
+
+.btn-lg-mobile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+/* Prospect cards */
+.prospect-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #667eea;
+    margin-bottom: 1rem;
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: all 0.2s;
+}
+
+.prospect-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.prospect-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.prospect-name {
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.prospect-meta {
+    font-size: 0.8125rem;
+    color: #64748b;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.prospect-meta i {
+    color: #94a3b8;
+}
+
+.location-badge {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.location-badge:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
+}
+
+.prospect-field {
+    margin-bottom: 0.875rem;
+    padding: 0.75rem;
+    background: #f8fafc;
+    border-radius: 0.5rem;
+}
+
+.prospect-field:last-child {
+    margin-bottom: 0;
+}
+
+.field-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-bottom: 0.375rem;
+}
+
+.field-value {
+    font-size: 0.9375rem;
+    color: #334155;
+    line-height: 1.5;
+}
+
+.result-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    display: inline-block;
+}
+
+.badge.bg-info {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+}
+
+/* Geolocation status */
+.geoloc-status {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+}
+
 .geoloc-loading {
-    background: #fff3cd;
-    color: #856404;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #fbbf24;
 }
+
 .geoloc-success {
-    background: #d1e7dd;
-    color: #0f5132;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+    border: 1px solid #10b981;
 }
+
 .geoloc-error {
-    background: #f8d7da;
-    color: #842029;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+/* Section titles */
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.count-badge {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: #94a3b8;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+    }
+    
+    .prospect-name {
+        font-size: 1rem;
+    }
+    
+    .prospect-meta {
+        font-size: 0.75rem;
+    }
 }
 </style>
 
@@ -240,7 +434,7 @@ include __DIR__ . '/../partials/sidebar.php';
             <h1 class="list-page-title h3">
                 <i class="bi bi-geo-alt-fill me-2"></i>
                 Prospections terrain
-                <span class="count-badge ms-2">{{ count }}</span>
+                <span class="count-badge ms-2"><?= count($prospections) ?></span>
             </h1>
             <p class="text-muted small mb-0">Commercial : <?= htmlspecialchars($utilisateur['nom_complet']) ?></p>
         </div>
@@ -266,17 +460,34 @@ include __DIR__ . '/../partials/sidebar.php';
     <?php endif; ?>
 
     <!-- Stats du jour -->
-    <div class="row g-2 mb-3">
-        <div class="col-6">
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
             <div class="stat-card">
                 <div class="stat-value"><?= $stats['total_today'] ?></div>
-                <div class="small">Prospections aujourd'hui</div>
+                <div class="stat-label">Prospections aujourd'hui</div>
             </div>
         </div>
-        <div class="col-6">
-            <div class="stat-card">
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
                 <div class="stat-value"><?= $stats['prospects_unique'] ?></div>
-                <div class="small">Prospects contactés</div>
+                <div class="stat-label">Prospects contactés</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="stat-value"><?= count($prospections) ?></div>
+                <div class="stat-label">Total période</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                <div class="stat-value">
+                    <?php 
+                    $taux = $stats['total_today'] > 0 ? round(($stats['prospects_unique'] / $stats['total_today']) * 100) : 0;
+                    echo $taux . '%';
+                    ?>
+                </div>
+                <div class="stat-label">Taux de conversion</div>
             </div>
         </div>
     </div>
@@ -385,70 +596,93 @@ include __DIR__ . '/../partials/sidebar.php';
 
     <!-- Liste des prospections -->
     <div class="mb-3">
-        <h5 class="mb-3">📋 Historique (<?= count($prospections) ?>)</h5>
+        <h5 class="section-title">
+            <i class="bi bi-list-ul"></i> Historique
+            <span class="count-badge"><?= count($prospections) ?></span>
+        </h5>
         <?php if (empty($prospections)): ?>
-            <div class="card">
-                <div class="card-body text-center text-muted py-4">
-                    <i class="bi bi-inbox fs-1"></i>
-                    <p class="mb-0 mt-2">Aucune prospection pour cette période</p>
+            <div class="card filter-card">
+                <div class="card-body empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p class="mb-0">Aucune prospection pour cette période</p>
+                    <small class="text-muted">Commencez par enregistrer une nouvelle prospection</small>
                 </div>
             </div>
         <?php else: ?>
             <?php foreach ($prospections as $p): ?>
                 <div class="prospect-card">
                     <div class="prospect-card-header">
-                        <div>
-                            <div class="prospect-name"><?= htmlspecialchars($p['prospect_nom']) ?></div>
+                        <div style="flex: 1;">
+                            <div class="prospect-name">
+                                <i class="bi bi-person-circle me-2" style="color: #667eea;"></i>
+                                <?= htmlspecialchars($p['prospect_nom']) ?>
+                            </div>
                             <div class="prospect-meta">
-                                <i class="bi bi-calendar"></i> <?= date('d/m/Y', strtotime($p['date_prospection'])) ?>
+                                <span><i class="bi bi-calendar3"></i> <?= date('d/m/Y', strtotime($p['date_prospection'])) ?></span>
                                 <?php if ($p['heure_prospection']): ?>
-                                    <i class="bi bi-clock ms-2"></i> <?= date('H:i', strtotime($p['heure_prospection'])) ?>
+                                    <span><i class="bi bi-clock"></i> <?= date('H:i', strtotime($p['heure_prospection'])) ?></span>
                                 <?php endif; ?>
                             </div>
                         </div>
                         <?php if ($p['latitude'] && $p['longitude']): ?>
                             <a href="https://www.google.com/maps?q=<?= $p['latitude'] ?>,<?= $p['longitude'] ?>" 
                                target="_blank" class="location-badge">
-                                <i class="bi bi-geo-alt-fill"></i> GPS
+                                <i class="bi bi-geo-alt-fill"></i> Voir carte
                             </a>
                         <?php endif; ?>
                     </div>
                     
-                    <?php if ($p['secteur'] && $p['secteur'] != 'Non renseigné'): ?>
-                        <div class="mb-2">
-                            <strong class="small">📍 Secteur :</strong> 
-                            <span class="small"><?= htmlspecialchars($p['secteur']) ?></span>
+                    <div class="row g-2">
+                        <?php if ($p['secteur'] && $p['secteur'] != 'Non renseigné'): ?>
+                            <div class="col-md-6">
+                                <div class="prospect-field">
+                                    <div class="field-label"><i class="bi bi-geo me-1"></i> Secteur</div>
+                                    <div class="field-value"><?= htmlspecialchars($p['secteur']) ?></div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <?php if ($p['adresse_gps']): ?>
+                            <div class="col-md-6">
+                                <div class="prospect-field">
+                                    <div class="field-label"><i class="bi bi-map me-1"></i> Localisation</div>
+                                    <div class="field-value small"><?= htmlspecialchars($p['adresse_gps']) ?></div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                        
+                        <div class="col-12">
+                            <div class="prospect-field">
+                                <div class="field-label"><i class="bi bi-lightbulb me-1"></i> Besoin identifié</div>
+                                <div class="field-value"><?= nl2br(htmlspecialchars($p['besoin_identifie'])) ?></div>
+                            </div>
                         </div>
-                    <?php endif; ?>
-                    
-                    <?php if ($p['adresse_gps']): ?>
-                        <div class="mb-2">
-                            <strong class="small">🗺️ Adresse :</strong> 
-                            <span class="small"><?= htmlspecialchars($p['adresse_gps']) ?></span>
+                        
+                        <div class="col-12">
+                            <div class="prospect-field">
+                                <div class="field-label"><i class="bi bi-check-circle me-1"></i> Action menée</div>
+                                <div class="field-value"><?= nl2br(htmlspecialchars($p['action_menee'])) ?></div>
+                            </div>
                         </div>
-                    <?php endif; ?>
-                    
-                    <div class="mb-2">
-                        <strong class="small">💡 Besoin :</strong> 
-                        <span class="small"><?= nl2br(htmlspecialchars($p['besoin_identifie'])) ?></span>
-                    </div>
-                    
-                    <div class="mb-2">
-                        <strong class="small">✅ Action :</strong> 
-                        <span class="small"><?= nl2br(htmlspecialchars($p['action_menee'])) ?></span>
-                    </div>
-                    
-                    <div class="mb-2">
-                        <strong class="small">📊 Résultat :</strong> 
-                        <span class="badge bg-info"><?= htmlspecialchars($p['resultat']) ?></span>
-                    </div>
-                    
-                    <?php if ($p['prochaine_etape']): ?>
-                        <div>
-                            <strong class="small">➡️ Suite :</strong> 
-                            <span class="small"><?= nl2br(htmlspecialchars($p['prochaine_etape'])) ?></span>
+                        
+                        <div class="col-md-6">
+                            <div class="prospect-field">
+                                <div class="field-label"><i class="bi bi-clipboard-data me-1"></i> Résultat</div>
+                                <div class="field-value">
+                                    <span class="result-badge bg-info"><?= htmlspecialchars($p['resultat']) ?></span>
+                                </div>
+                            </div>
                         </div>
-                    <?php endif; ?>
+                        
+                        <?php if ($p['prochaine_etape']): ?>
+                            <div class="col-md-6">
+                                <div class="prospect-field">
+                                    <div class="field-label"><i class="bi bi-arrow-right-circle me-1"></i> Prochaine étape</div>
+                                    <div class="field-value"><?= nl2br(htmlspecialchars($p['prochaine_etape'])) ?></div>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             <?php endforeach; ?>
         <?php endif; ?>

@@ -9,6 +9,28 @@
 **Début:** Novembre 2025  
 **Status:** En production
 
+---
+
+## 🎯 Outils de Démonstration (Décembre 2025)
+
+**Générateur de données cohérentes** - Système complet pour créer des jeux de données réalistes
+
+📄 **Fichiers clés:**
+- `generer_donnees_demo_final.php` - Générateur principal (30 clients, 13 produits, 25 devis, 30 ventes, 20 livraisons, 17 encaissements)
+- `nettoyer_donnees_demo.php` - Script de nettoyage avant régénération
+- `verifier_donnees_demo.php` - Page web de vérification/validation des données
+- `menu_donnees_demo.bat` - Menu interactif Windows pour gérer les données
+- `README_DONNEES_DEMO.md` - Documentation complète d'utilisation
+- `RAPPORT_GENERATION_DONNEES.md` - Rapport détaillé de génération
+
+🔗 **Accès rapides:**
+- Génération: `php generer_donnees_demo_final.php`
+- Nettoyage: `php nettoyer_donnees_demo.php`
+- Vérification web: http://localhost/kms_app/verifier_donnees_demo.php
+- Menu Windows: `menu_donnees_demo.bat`
+
+---
+
 ## Stack Technique
 
 **Backend:**
@@ -503,7 +525,197 @@ git push origin main
 
 ---
 
-**Dernière mise à jour:** 13 décembre 2025  
-**Version:** 1.0.0  
+---
+
+## 🔗 Intégration Multi-Canal (13 décembre 2025)
+
+**Objectif:** Unifier les flux de trésorerie (ventes menuiserie + hôtel + formation) dans le dashboard et la caisse.
+
+### Problème Initial
+- ❌ Réservations hôtel enregistrées mais **sans impact caisse**
+- ❌ Inscriptions formation avec paiements **isolés du système financier**
+- ❌ Dashboard affichant **uniquement CA ventes menuiserie**
+- ❌ Bilan comptable avec **écarts stock -16%, produits vendus -61%**
+- ❌ Aucune visibilité consolidée sur l'activité totale
+
+### Solutions Implémentées
+
+**1. Triggers MySQL Automatiques**
+```sql
+-- Hôtel → Caisse
+CREATE TRIGGER after_reservation_hotel_insert
+AFTER INSERT ON reservations_hotel
+FOR EACH ROW
+BEGIN
+    IF NEW.montant_total > 0 THEN
+        INSERT INTO caisse_journal (date_ecriture, montant, sens, source_type, source_id, utilisateur_id, commentaire)
+        VALUES (NEW.date_reservation, NEW.montant_total, 'ENTREE', 'reservation_hotel', NEW.id, 
+                COALESCE(NEW.concierge_id, 1), CONCAT('Réservation hôtel #', NEW.id));
+    END IF;
+END;
+
+-- Formation → Caisse
+CREATE TRIGGER after_inscription_formation_insert
+AFTER INSERT ON inscriptions_formation
+FOR EACH ROW
+BEGIN
+    IF NEW.montant_paye > 0 THEN
+        INSERT INTO caisse_journal (date_ecriture, montant, sens, source_type, source_id, utilisateur_id, commentaire)
+        VALUES (NEW.date_inscription, NEW.montant_paye, 'ENTREE', 'inscription_formation', NEW.id, 
+                1, CONCAT('Inscription formation #', NEW.id));
+    END IF;
+END;
+```
+
+**2. Dashboard Multi-Canal** (index.php)
+
+**AVANT:**
+```php
+// CA uniquement ventes
+$stmt = $pdo->prepare("SELECT SUM(montant_total_ttc) FROM ventes WHERE DATE(date_vente) = CURDATE()");
+$ca_jour = $stmt->fetch()['total'] ?? 0;
+```
+
+**APRÈS:**
+```php
+// CA consolidé ventes + hôtel + formation
+$stmt = $pdo->prepare("
+    SELECT 
+        SUM(CASE WHEN source_type = 'vente' THEN montant ELSE 0 END) as ca_ventes,
+        SUM(CASE WHEN source_type = 'reservation_hotel' THEN montant ELSE 0 END) as ca_hotel,
+        SUM(CASE WHEN source_type = 'inscription_formation' THEN montant ELSE 0 END) as ca_formation,
+        SUM(montant) as ca_total
+    FROM caisse_journal 
+    WHERE DATE(date_ecriture) = CURDATE() AND sens = 'ENTREE'
+");
+```
+
+**3. Seed Data Étendu** (generer_donnees_demo_final.php)
+
+Ajout génération automatique :
+- 8 réservations hôtel (20k-50k FCFA/nuit, 1-5 nuits)
+- 10 inscriptions formation (80k-200k FCFA, paiements complets/partiels)
+- Enregistrement automatique en caisse via triggers
+
+**4. Migration Données Existantes** (integrer_hotel_formation_caisse.php)
+
+Script exécuté pour :
+- ✅ Migrer 3 réservations hôtel existantes → caisse (125k FCFA)
+- ✅ Migrer 3 inscriptions formation existantes → caisse (280k FCFA)
+- ✅ Créer 4 triggers automatiques (INSERT/UPDATE hôtel + formation)
+- ✅ Valider intégrité caisse_journal
+
+### Résultats Mesurés
+
+**Caisse Consolidée (après régénération):**
+```
++-----------------------+----+-------------+
+| source_type           | nb | total       |
++-----------------------+----+-------------+
+| vente                 | 10 | 21,884,550  |
+| reservation_hotel     |  8 |    749,563  |
+| inscription_formation | 10 |  1,059,903  |
++-----------------------+----+-------------+
+| TOTAL GÉNÉRAL         | 28 | 23,694,016  |
++-----------------------+----+-------------+
+```
+
+**Seed Data Généré:**
+- 30 clients
+- 14 produits menuiserie (stock valorisé 7.92M FCFA)
+- 25 devis
+- 31 ventes (21.88M FCFA)
+- 17 livraisons avec sorties stock
+- 8 réservations hôtel (749k FCFA)
+- 10 inscriptions formation (1.06M FCFA)
+- 10 encaissements ventes
+
+**Dashboard Impact:**
+- ✅ KPI "CA Total" affiche ventes + hôtel + formation
+- ✅ Détails par canal visibles (breakdown sous le montant)
+- ✅ Statistiques 7 jours multi-canal
+- ✅ Occupation hôtel (taux % + chambres occupées/totales)
+
+### Bilan Comptable - Constat Technique
+
+Le bilan OHADA (compta/balance.php) calcule depuis les **écritures comptables**, pas les données opérationnelles :
+
+**État actuel:**
+- Classe 3 (Stocks) : 0 écritures → bilan affiche 0 FCFA (réel : 7.92M)
+- Classe 7 (Produits) : écritures auto des ventes via lib/compta.php
+- Classe 4 (Tiers) : créances clients cohérentes
+
+**Explication:**
+Le seed génère des données opérationnelles cohérentes (produits, ventes, stock), mais la traduction comptable OHADA est partielle. Pour corriger :
+- Option 1 : Inventaire permanent (écriture classe 3 à chaque mouvement stock)
+- Option 2 : Procédure valorisation stock mensuelle
+- Actuellement hors scope (focus : flux trésorerie multi-canal)
+
+### Fichiers Modifiés/Créés
+
+**Nouveaux:**
+- `integrer_hotel_formation_caisse.php` - Migration + création triggers
+- `INTEGRATION_MULTI_CANAL.md` - Documentation complète
+
+**Modifiés:**
+- `index.php` (lignes 24-41, 88-103) - Requêtes CA multi-canal
+- `generer_donnees_demo_final.php` (lignes 292-347) - Ajout hôtel/formation
+- `historique.md` - Ce document
+
+**Base de Données:**
+- 4 triggers MySQL créés (after_*_insert, after_*_update)
+- Table `caisse_journal` enrichie (3 source_type au lieu de 1)
+
+### Validation Tests
+
+**Test 1 : Nouvelle réservation hôtel**
+```sql
+INSERT INTO reservations_hotel (date_reservation, client_id, chambre_id, date_debut, date_fin, 
+                                  nb_nuits, montant_total, statut, concierge_id)
+VALUES ('2025-12-13', 1, 1, '2025-12-20', '2025-12-22', 2, 70000, 'CONFIRMEE', 1);
+
+-- Vérification automatique :
+SELECT * FROM caisse_journal WHERE source_type='reservation_hotel' ORDER BY id DESC LIMIT 1;
+-- Résultat attendu : 1 ligne avec montant=70000, créée par trigger
+```
+
+**Test 2 : Nouvelle inscription formation**
+```sql
+INSERT INTO inscriptions_formation (date_inscription, apprenant_nom, client_id, formation_id, 
+                                      montant_paye, solde_du)
+VALUES ('2025-12-13', 'Kouassi Jean', 5, 1, 150000, 30000);
+
+-- Vérification automatique :
+SELECT * FROM caisse_journal WHERE source_type='inscription_formation' ORDER BY id DESC LIMIT 1;
+-- Résultat attendu : 1 ligne avec montant=150000, créée par trigger
+```
+
+**Test 3 : Dashboard multi-canal**
+- ✅ Ouvrir index.php → KPI "CA Total du jour" affiche somme consolidée
+- ✅ Survol/détails montrent breakdown ventes/hôtel/formation
+- ✅ Section "7 derniers jours" inclut tous les canaux
+
+### Impact Business
+
+**Visibilité Trésorerie:**
+- ✅ CA total consolidé en temps réel
+- ✅ Breakdown par canal d'activité
+- ✅ Détection opportunités cross-sell (client menuiserie → formation pose)
+
+**Automatisation:**
+- ✅ Zéro saisie manuelle (triggers auto)
+- ✅ Cohérence garantie (caisse = source de vérité)
+- ✅ Audit trail complet (source_type + source_id)
+
+**Évolutions Recommandées:**
+1. Widget graphique "Répartition CA par canal" (camembert/barres)
+2. Page "Synthèse Multi-Canal" (reporting/synthese_activite.php)
+3. Écritures comptables auto hôtel/formation (classes 707x, 708x)
+4. Alertes cross-sell (chambre occupée > 90%, formation débutant → upsell matériel)
+
+---
+
+**Dernière mise à jour:** 13 décembre 2025 (17h45)  
+**Version:** 1.1.0 (Multi-Canal)  
 **Statut:** Production
 

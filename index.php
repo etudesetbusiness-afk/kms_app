@@ -28,9 +28,21 @@ $stmt->execute();
 $ventes_jour = $stmt->fetch()['total'] ?? 0;
 
 // CA du jour
-$stmt = $pdo->prepare("SELECT SUM(montant_total_ttc) as total FROM ventes WHERE DATE(date_vente) = CURDATE() AND statut != 'ANNULEE'");
+$stmt = $pdo->prepare("
+    SELECT 
+        SUM(CASE WHEN source_type = 'vente' THEN montant ELSE 0 END) as ca_ventes,
+        SUM(CASE WHEN source_type = 'reservation_hotel' THEN montant ELSE 0 END) as ca_hotel,
+        SUM(CASE WHEN source_type = 'inscription_formation' THEN montant ELSE 0 END) as ca_formation,
+        SUM(montant) as ca_total
+    FROM caisse_journal 
+    WHERE DATE(date_ecriture) = CURDATE() AND sens = 'ENTREE'
+");
 $stmt->execute();
-$ca_jour = $stmt->fetch()['total'] ?? 0;
+$ca_data = $stmt->fetch();
+$ca_jour = $ca_data['ca_total'] ?? 0;
+$ca_ventes = $ca_data['ca_ventes'] ?? 0;
+$ca_hotel = $ca_data['ca_hotel'] ?? 0;
+$ca_formation = $ca_data['ca_formation'] ?? 0;
 
 // Taux occupation hôtel
 $stmt = $pdo->prepare("
@@ -85,13 +97,20 @@ $pieces_valider = $stmt->fetch()['total'] ?? 0;
 
 // CA 7 derniers jours
 $stmt = $pdo->prepare("
-    SELECT SUM(montant_total_ttc) as total 
-    FROM ventes 
-    WHERE date_vente >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) 
-    AND statut != 'ANNULEE'
+    SELECT 
+        SUM(CASE WHEN source_type = 'vente' THEN montant ELSE 0 END) as ca_ventes,
+        SUM(CASE WHEN source_type = 'reservation_hotel' THEN montant ELSE 0 END) as ca_hotel,
+        SUM(CASE WHEN source_type = 'inscription_formation' THEN montant ELSE 0 END) as ca_formation,
+        SUM(montant) as ca_total
+    FROM caisse_journal 
+    WHERE date_ecriture >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) AND sens = 'ENTREE'
 ");
 $stmt->execute();
-$ca_7j = $stmt->fetch()['total'] ?? 0;
+$ca_7j_data = $stmt->fetch();
+$ca_7j = $ca_7j_data['ca_total'] ?? 0;
+$ca_7j_ventes = $ca_7j_data['ca_ventes'] ?? 0;
+$ca_7j_hotel = $ca_7j_data['ca_hotel'] ?? 0;
+$ca_7j_formation = $ca_7j_data['ca_formation'] ?? 0;
 
 // Nouveaux clients (7j)
 $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM clients WHERE date_creation >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
@@ -483,17 +502,19 @@ include __DIR__ . '/partials/sidebar.php';
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="flex-grow-1">
                             <div class="text-muted text-uppercase small fw-semibold mb-2" style="letter-spacing: 0.5px;">
-                                <i class="bi bi-cart-check me-1"></i>
-                                Ventes du jour
+                                <i class="bi bi-cash-coin me-1"></i>
+                                CA Total du jour
                             </div>
-                            <div class="kpi-value mb-1"><?= $ventes_jour ?></div>
+                            <div class="kpi-value mb-1"><?= number_format($ca_jour, 0, ',', ' ') ?> F</div>
                             <small class="text-success fw-semibold d-flex align-items-center">
-                                <i class="bi bi-arrow-up-circle-fill me-1"></i> 
-                                <?= number_format($ca_jour, 0, ',', ' ') ?> F
+                                <i class="bi bi-graph-up me-1"></i> 
+                                <?= $ventes_jour ?> ventes
+                                <?php if ($ca_hotel > 0): ?> • <?= number_format($ca_hotel, 0, ',', ' ') ?> F hôtel<?php endif; ?>
+                                <?php if ($ca_formation > 0): ?> • <?= number_format($ca_formation, 0, ',', ' ') ?> F formation<?php endif; ?>
                             </small>
                         </div>
                         <div class="bg-success bg-opacity-10 rounded-3 p-3 kpi-icon">
-                            <i class="bi bi-cart-check fs-1 text-success"></i>
+                            <i class="bi bi-cash-coin fs-1 text-success"></i>
                         </div>
                     </div>
                 </div>

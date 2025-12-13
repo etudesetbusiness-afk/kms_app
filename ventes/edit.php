@@ -339,9 +339,29 @@ include __DIR__ . '/../partials/sidebar.php';
         <h1 class="h4 mb-0">
             <?= $isEdit ? 'Modifier une vente' : 'Nouvelle vente directe' ?>
         </h1>
-        <a href="<?= url_for('ventes/list.php') ?>" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i> Retour à la liste
-        </a>
+        <div class="d-flex gap-2">
+            <?php if ($isEdit): ?>
+                <!-- Navigation rapide vers modules liés -->
+                <a href="<?= url_for('coordination/ordres_preparation_edit.php?vente_id=' . $id) ?>" 
+                   class="btn btn-sm btn-outline-info"
+                   title="Créer un ordre de préparation">
+                    <i class="bi bi-box-seam"></i> Ordre préparation
+                </a>
+                <a href="<?= url_for('livraisons/create.php?vente_id=' . $id) ?>" 
+                   class="btn btn-sm btn-outline-success"
+                   title="Créer un bon de livraison">
+                    <i class="bi bi-truck"></i> Créer livraison
+                </a>
+                <a href="<?= url_for('coordination/dashboard.php?vente_id=' . $id) ?>" 
+                   class="btn btn-sm btn-outline-primary"
+                   title="Voir dans coordination">
+                    <i class="bi bi-diagram-3"></i> Coordination
+                </a>
+            <?php endif; ?>
+            <a href="<?= url_for('ventes/list.php') ?>" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Retour à la liste
+            </a>
+        </div>
     </div>
 
     <?php if (!empty($errors)): ?>

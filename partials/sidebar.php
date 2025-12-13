@@ -119,18 +119,27 @@ function is_active($page, $dir = null): bool {
                         <span>Ajustement stock</span>
                     </a>
                 <?php endif; ?>
-                <?php if (peut('VENTES_LIRE')): ?>
-                    <a href="<?= url_for('coordination/ordres_preparation.php') ?>" class="sidebar-item <?= is_active('ordres_preparation.php', 'coordination') ? 'active' : '' ?>">
-                        <i class="bi bi-list-check"></i>
-                        <span>Ordres de préparation</span>
-                    </a>
-                    <a href="<?= url_for('coordination/litiges.php') ?>" class="sidebar-item <?= is_active('litiges.php', 'coordination') ? 'active' : '' ?>">
-                        <i class="bi bi-arrow-left-right"></i>
-                        <span>Retours & litiges</span>
-                    </a>
-                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+        
+        <!-- COORDINATION VENTES-LIVRAISONS -->
+        <?php if (peut('VENTES_LIRE')): ?>
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Coordination</div>
+                <a href="<?= url_for('coordination/dashboard.php') ?>" class="sidebar-item <?= is_active('dashboard.php', 'coordination') ? 'active' : '' ?>">
+                    <i class="bi bi-diagram-3-fill"></i>
+                    <span>Dashboard coordination</span>
+                </a>
+                <a href="<?= url_for('coordination/ordres_preparation.php') ?>" class="sidebar-item sidebar-item-nested <?= is_active('ordres_preparation.php', 'coordination') ? 'active' : '' ?>">
+                    <i class="bi bi-list-check"></i>
+                    <span>Ordres de préparation</span>
+                </a>
+                <a href="<?= url_for('coordination/litiges.php') ?>" class="sidebar-item sidebar-item-nested <?= is_active('litiges.php', 'coordination') ? 'active' : '' ?>">
+                    <i class="bi bi-arrow-left-right"></i>
+                    <span>Retours & litiges</span>
+                </a>
                 <?php if (peut('PRODUITS_LIRE')): ?>
-                    <a href="<?= url_for('coordination/ruptures.php') ?>" class="sidebar-item <?= is_active('ruptures.php', 'coordination') ? 'active' : '' ?>">
+                    <a href="<?= url_for('coordination/ruptures.php') ?>" class="sidebar-item sidebar-item-nested <?= is_active('ruptures.php', 'coordination') ? 'active' : '' ?>">
                         <i class="bi bi-exclamation-circle"></i>
                         <span>Ruptures signalées</span>
                     </a>

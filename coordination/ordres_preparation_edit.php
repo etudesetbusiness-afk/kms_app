@@ -49,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $instructions = $_POST['instructions'] ?? null;
     $date_livraison_souhaitee = $_POST['date_livraison_souhaitee'] ?? null;
     $adresse_livraison = $_POST['adresse_livraison'] ?? null;
+    $magasinier_id = $_POST['magasinier_id'] ?? null;
     
     // Validation
     if (empty($vente_id)) {
@@ -76,8 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare("
                     INSERT INTO ordres_preparation 
                     (vente_id, client_id, numero_ordre, date_ordre, commercial_responsable_id, priorite,
-                     statut, observations, date_preparation_demandee, date_creation)
-                    VALUES (?, ?, ?, CURDATE(), ?, ?, 'EN_ATTENTE', ?, ?, NOW())
+                     statut, observations, date_preparation_demandee, magasinier_id, date_creation)
+                    VALUES (?, ?, ?, CURDATE(), ?, ?, 'EN_ATTENTE', ?, ?, ?, NOW())
                 ");
                 
                 $utilisateur = utilisateurConnecte();
@@ -88,7 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $utilisateur['id'], 
                     $type_demande,
                     $instructions,
-                    $date_livraison_souhaitee
+                    $date_livraison_souhaitee,
+                    $magasinier_id
                 ]);
                 
                 $_SESSION['flash_success'] = "Ordre de préparation $numero_ordre créé avec succès";
@@ -140,6 +142,10 @@ if ($mode === 'creation') {
     ");
     $ventes_disponibles = $stmtVentes->fetchAll();
 }
+
+// Liste des préparateurs (magasiniers/utilisateurs actifs)
+$stmtPreparateurs = $pdo->query("SELECT id, nom_complet FROM utilisateurs WHERE actif = 1 ORDER BY nom_complet");
+$preparateurs = $stmtPreparateurs->fetchAll();
 
 include __DIR__ . '/../partials/header.php';
 include __DIR__ . '/../partials/sidebar.php';
@@ -288,6 +294,20 @@ include __DIR__ . '/../partials/sidebar.php';
                         <input type="date" name="date_livraison_souhaitee" class="form-control" 
                                value="<?= $mode === 'edition' ? ($ordre['date_preparation_demandee'] ?? '') : '' ?>">
                     </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-person-badge"></i> Préparateur / Magasinier</label>
+                    <select name="magasinier_id" class="form-select">
+                        <option value="">-- Attribuer plus tard --</option>
+                        <?php foreach ($preparateurs as $prep): ?>
+                            <option value="<?= $prep['id'] ?>" 
+                                <?= ($mode === 'edition' && isset($ordre['magasinier_id']) && $ordre['magasinier_id'] == $prep['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($prep['nom_complet']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <small class="text-muted">Personne qui effectuera la préparation</small>
                 </div>
                 
                 <div class="mb-3">
