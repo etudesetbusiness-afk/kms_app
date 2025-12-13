@@ -2,10 +2,10 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Hôte : 127.0.0.1
--- Généré le : sam. 13 déc. 2025 à 14:08
--- Version du serveur : 10.4.32-MariaDB
--- Version de PHP : 8.2.12
+-- Host: 127.0.0.1
+-- Generation Time: Dec 13, 2025 at 05:41 PM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,12 +18,12 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Base de données : `kms_gestion`
+-- Database: `kms_gestion`
 --
 
 DELIMITER $$
 --
--- Procédures
+-- Procedures
 --
 CREATE DEFINER=`root`@`localhost` PROCEDURE `cleanup_sms_codes` ()   BEGIN
     DELETE FROM sms_2fa_codes 
@@ -38,7 +38,7 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Structure de la table `achats`
+-- Table structure for table `achats`
 --
 
 CREATE TABLE `achats` (
@@ -55,19 +55,10 @@ CREATE TABLE `achats` (
   `date_creation` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Déchargement des données de la table `achats`
---
-
-INSERT INTO `achats` (`id`, `numero`, `date_achat`, `fournisseur_nom`, `fournisseur_contact`, `montant_total_ht`, `montant_total_ttc`, `statut`, `utilisateur_id`, `commentaires`, `date_creation`) VALUES
-(1, 'ACH-20251121-162559', '2025-11-21', 'China.com', '+235555555', 9000.00, 9000.00, 'EN_COURS', 1, NULL, '2025-11-21 16:25:59'),
-(2, 'AC-20251126-170544', '2025-11-26', 'SORA', '+235555556', 1250000.00, 1250000.00, 'VALIDE', 1, NULL, '2025-11-26 17:05:44'),
-(3, 'AC-20251202-154014', '2025-12-02', 'SORA', '+235555556', 1250000.00, 1250000.00, 'EN_COURS', 1, NULL, '2025-12-02 15:40:14');
-
 -- --------------------------------------------------------
 
 --
--- Structure de la table `achats_lignes`
+-- Table structure for table `achats_lignes`
 --
 
 CREATE TABLE `achats_lignes` (
@@ -80,19 +71,10 @@ CREATE TABLE `achats_lignes` (
   `montant_ligne_ht` decimal(15,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
---
--- Déchargement des données de la table `achats_lignes`
---
-
-INSERT INTO `achats_lignes` (`id`, `achat_id`, `produit_id`, `quantite`, `prix_unitaire`, `remise`, `montant_ligne_ht`) VALUES
-(7, 1, 1, 5.000, 2000.00, 1000.00, 9000.00),
-(8, 2, 2, 25.000, 50000.00, 0.00, 1250000.00),
-(9, 3, 3, 25.000, 50000.00, 0.00, 1250000.00);
-
 -- --------------------------------------------------------
 
 --
--- Structure de la table `audit_log`
+-- Table structure for table `audit_log`
 --
 
 CREATE TABLE `audit_log` (
@@ -114,7 +96,7 @@ CREATE TABLE `audit_log` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `blocages_ip`
+-- Table structure for table `blocages_ip`
 --
 
 CREATE TABLE `blocages_ip` (
@@ -133,63 +115,125 @@ CREATE TABLE `blocages_ip` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `bons_livraison`
+-- Table structure for table `bons_livraison`
 --
 
 CREATE TABLE `bons_livraison` (
   `id` int(10) UNSIGNED NOT NULL,
   `numero` varchar(50) NOT NULL,
   `date_bl` date NOT NULL,
+  `date_livraison_effective` datetime DEFAULT NULL,
   `vente_id` int(10) UNSIGNED DEFAULT NULL,
+  `ordre_preparation_id` int(10) UNSIGNED DEFAULT NULL,
   `client_id` int(10) UNSIGNED NOT NULL,
   `transport_assure_par` varchar(150) DEFAULT NULL,
   `observations` text DEFAULT NULL,
   `signe_client` tinyint(1) NOT NULL DEFAULT 0,
-  `magasinier_id` int(10) UNSIGNED NOT NULL
+  `statut` enum('EN_PREPARATION','PRET','EN_COURS_LIVRAISON','LIVRE','ANNULE') DEFAULT 'EN_PREPARATION',
+  `magasinier_id` int(10) UNSIGNED NOT NULL,
+  `livreur_id` int(10) UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `bons_livraison`
+-- Dumping data for table `bons_livraison`
 --
 
-INSERT INTO `bons_livraison` (`id`, `numero`, `date_bl`, `vente_id`, `client_id`, `transport_assure_par`, `observations`, `signe_client`, `magasinier_id`) VALUES
-(1, 'BL-20251118-123629', '2025-11-18', 2, 2, NULL, NULL, 1, 1),
-(2, 'BL-20251118-123739', '2025-11-18', 1, 3, NULL, NULL, 0, 1),
-(3, 'BL-20251118-140008', '2025-11-18', 3, 5, NULL, NULL, 0, 1),
-(4, 'BL-20251118-151854', '2025-11-18', 4, 5, NULL, NULL, 0, 1),
-(5, 'BL-20251120-122339', '2025-11-20', 16, 2, NULL, NULL, 0, 1),
-(6, 'BL-20251121-112346', '2025-11-21', 17, 6, NULL, NULL, 1, 1);
+INSERT INTO `bons_livraison` (`id`, `numero`, `date_bl`, `date_livraison_effective`, `vente_id`, `ordre_preparation_id`, `client_id`, `transport_assure_par`, `observations`, `signe_client`, `statut`, `magasinier_id`, `livreur_id`) VALUES
+(45, 'BL-20251025-001', '2025-10-25', NULL, 58, NULL, 93, NULL, NULL, 1, 'LIVRE', 1, 1),
+(46, 'BL-20251113-002', '2025-11-13', NULL, 63, NULL, 71, NULL, NULL, 1, 'LIVRE', 1, 1),
+(47, 'BL-20251122-003', '2025-11-22', NULL, 66, NULL, 95, NULL, NULL, 1, 'LIVRE', 1, 1),
+(48, 'BL-20251111-004', '2025-11-11', NULL, 67, NULL, 91, NULL, NULL, 1, 'LIVRE', 1, 1),
+(49, 'BL-20251017-005', '2025-10-17', NULL, 70, NULL, 82, NULL, NULL, 1, 'LIVRE', 1, 1),
+(50, 'BL-20251215-006', '2025-12-15', NULL, 71, NULL, 67, NULL, NULL, 1, 'LIVRE', 1, 1),
+(51, 'BL-20251130-007', '2025-11-30', NULL, 72, NULL, 78, NULL, NULL, 1, 'LIVRE', 1, 1),
+(52, 'BL-20251212-008', '2025-12-12', NULL, 73, NULL, 94, NULL, NULL, 1, 'LIVRE', 1, 1),
+(53, 'BL-20251030-009', '2025-10-30', NULL, 75, NULL, 83, NULL, NULL, 1, 'LIVRE', 1, 1),
+(54, 'BL-20251202-010', '2025-12-02', NULL, 76, NULL, 93, NULL, NULL, 1, 'LIVRE', 1, 1),
+(55, 'BL-20251016-011', '2025-10-16', NULL, 79, NULL, 92, NULL, NULL, 1, 'LIVRE', 1, 1),
+(56, 'BL-20251212-012', '2025-12-12', NULL, 81, NULL, 94, NULL, NULL, 1, 'LIVRE', 1, 1),
+(57, 'BL-20251210-013', '2025-12-10', NULL, 82, NULL, 67, NULL, NULL, 1, 'LIVRE', 1, 1),
+(58, 'BL-20251115-014', '2025-11-15', NULL, 83, NULL, 86, NULL, NULL, 1, 'LIVRE', 1, 1),
+(59, 'BL-20251215-015', '2025-12-15', NULL, 84, NULL, 69, NULL, NULL, 1, 'LIVRE', 1, 1),
+(60, 'BL-20251209-016', '2025-12-09', NULL, 86, NULL, 77, NULL, NULL, 1, 'LIVRE', 1, 1),
+(61, 'BL-20251108-017', '2025-11-08', NULL, 87, NULL, 83, NULL, NULL, 1, 'LIVRE', 1, 1);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `bons_livraison_lignes`
+-- Table structure for table `bons_livraison_lignes`
 --
 
 CREATE TABLE `bons_livraison_lignes` (
   `id` int(10) UNSIGNED NOT NULL,
   `bon_livraison_id` int(10) UNSIGNED NOT NULL,
   `produit_id` int(10) UNSIGNED NOT NULL,
-  `quantite` int(11) NOT NULL
+  `quantite` int(11) NOT NULL,
+  `quantite_commandee` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `quantite_restante` decimal(10,2) NOT NULL DEFAULT 0.00
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `bons_livraison_lignes`
+-- Dumping data for table `bons_livraison_lignes`
 --
 
-INSERT INTO `bons_livraison_lignes` (`id`, `bon_livraison_id`, `produit_id`, `quantite`) VALUES
-(1, 1, 4, 2),
-(2, 2, 2, 1),
-(3, 3, 3, 2),
-(4, 4, 3, 2),
-(5, 5, 4, 1),
-(6, 6, 1, 4),
-(7, 6, 4, 15);
+INSERT INTO `bons_livraison_lignes` (`id`, `bon_livraison_id`, `produit_id`, `quantite`, `quantite_commandee`, `quantite_restante`) VALUES
+(140, 45, 69, 4, 4.00, 0.00),
+(141, 45, 64, 11, 11.00, 0.00),
+(142, 45, 60, 13, 13.00, 0.00),
+(143, 45, 72, 4, 4.00, 0.00),
+(144, 46, 62, 12, 12.00, 0.00),
+(145, 46, 59, 3, 3.00, 0.00),
+(146, 46, 65, 4, 4.00, 0.00),
+(147, 46, 59, 13, 13.00, 0.00),
+(148, 46, 62, 2, 2.00, 0.00),
+(149, 47, 61, 11, 11.00, 0.00),
+(150, 47, 69, 1, 1.00, 0.00),
+(151, 47, 71, 3, 3.00, 0.00),
+(152, 47, 61, 5, 5.00, 0.00),
+(153, 48, 72, 12, 12.00, 0.00),
+(154, 48, 68, 5, 5.00, 0.00),
+(155, 48, 71, 9, 9.00, 0.00),
+(156, 49, 69, 11, 11.00, 0.00),
+(157, 49, 71, 12, 12.00, 0.00),
+(158, 50, 72, 6, 6.00, 0.00),
+(159, 50, 59, 14, 14.00, 0.00),
+(160, 50, 68, 12, 12.00, 0.00),
+(161, 50, 70, 14, 14.00, 0.00),
+(162, 50, 70, 4, 4.00, 0.00),
+(163, 51, 64, 1, 1.00, 0.00),
+(164, 51, 61, 10, 10.00, 0.00),
+(165, 51, 69, 15, 15.00, 0.00),
+(166, 52, 70, 9, 9.00, 0.00),
+(167, 52, 71, 8, 8.00, 0.00),
+(168, 52, 67, 7, 7.00, 0.00),
+(169, 53, 59, 2, 2.00, 0.00),
+(170, 54, 72, 7, 7.00, 0.00),
+(171, 54, 70, 2, 2.00, 0.00),
+(172, 55, 64, 10, 10.00, 0.00),
+(173, 55, 67, 3, 3.00, 0.00),
+(174, 55, 67, 8, 8.00, 0.00),
+(175, 55, 60, 7, 7.00, 0.00),
+(176, 56, 69, 10, 10.00, 0.00),
+(177, 57, 63, 4, 4.00, 0.00),
+(178, 58, 64, 9, 9.00, 0.00),
+(179, 58, 65, 10, 10.00, 0.00),
+(180, 58, 72, 5, 5.00, 0.00),
+(181, 58, 68, 3, 3.00, 0.00),
+(182, 59, 68, 7, 7.00, 0.00),
+(183, 59, 71, 9, 9.00, 0.00),
+(184, 59, 70, 1, 1.00, 0.00),
+(185, 59, 63, 9, 9.00, 0.00),
+(186, 60, 70, 5, 5.00, 0.00),
+(187, 60, 69, 9, 9.00, 0.00),
+(188, 60, 61, 5, 5.00, 0.00),
+(189, 61, 64, 3, 3.00, 0.00),
+(190, 61, 61, 4, 4.00, 0.00),
+(191, 61, 65, 7, 7.00, 0.00);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `caisse_journal`
+-- Table structure for table `caisse_journal`
 --
 
 CREATE TABLE `caisse_journal` (
@@ -204,17 +248,43 @@ CREATE TABLE `caisse_journal` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Déchargement des données de la table `caisse_journal`
+-- Dumping data for table `caisse_journal`
 --
 
 INSERT INTO `caisse_journal` (`id`, `date_ecriture`, `sens`, `montant`, `source_type`, `source_id`, `commentaire`, `utilisateur_id`) VALUES
-(1, '2025-12-11 13:40:06', 'ENTREE', 89437.50, 'VENTE', 20, 'Vente ', 1),
-(2, '2025-12-12 15:11:25', 'ENTREE', 1001700.00, 'VENTE', 21, 'Vente V-20251212-151125', 1);
+(17, '2025-11-16 00:00:00', 'ENTREE', 60351.00, 'reservation_hotel', 20, 'Réservation hôtel #20', 1),
+(18, '2025-11-21 00:00:00', 'ENTREE', 161240.00, 'reservation_hotel', 21, 'Réservation hôtel #21', 1),
+(19, '2025-10-17 00:00:00', 'ENTREE', 20910.00, 'reservation_hotel', 22, 'Réservation hôtel #22', 1),
+(20, '2025-11-28 00:00:00', 'ENTREE', 89710.00, 'reservation_hotel', 23, 'Réservation hôtel #23', 1),
+(21, '2025-10-21 00:00:00', 'ENTREE', 59508.00, 'reservation_hotel', 24, 'Réservation hôtel #24', 1),
+(22, '2025-10-31 00:00:00', 'ENTREE', 50382.00, 'reservation_hotel', 25, 'Réservation hôtel #25', 1),
+(23, '2025-11-24 00:00:00', 'ENTREE', 102837.00, 'reservation_hotel', 26, 'Réservation hôtel #26', 1),
+(24, '2025-10-25 00:00:00', 'ENTREE', 204625.00, 'reservation_hotel', 27, 'Réservation hôtel #27', 1),
+(25, '2025-12-01 00:00:00', 'ENTREE', 132720.00, 'inscription_formation', 4, 'Inscription formation #4', 1),
+(26, '2025-10-15 00:00:00', 'ENTREE', 106409.00, 'inscription_formation', 5, 'Inscription formation #5', 1),
+(27, '2025-10-14 00:00:00', 'ENTREE', 94989.00, 'inscription_formation', 6, 'Inscription formation #6', 1),
+(28, '2025-10-24 00:00:00', 'ENTREE', 162388.00, 'inscription_formation', 7, 'Inscription formation #7', 1),
+(29, '2025-10-24 00:00:00', 'ENTREE', 156104.00, 'inscription_formation', 8, 'Inscription formation #8', 1),
+(30, '2025-10-31 00:00:00', 'ENTREE', 99184.00, 'inscription_formation', 9, 'Inscription formation #9', 1),
+(31, '2025-11-17 00:00:00', 'ENTREE', 107932.00, 'inscription_formation', 10, 'Inscription formation #10', 1),
+(32, '2025-11-05 00:00:00', 'ENTREE', 40173.00, 'inscription_formation', 11, 'Inscription formation #11', 1),
+(33, '2025-11-01 00:00:00', 'ENTREE', 49095.00, 'inscription_formation', 12, 'Inscription formation #12', 1),
+(34, '2025-10-21 00:00:00', 'ENTREE', 110909.00, 'inscription_formation', 13, 'Inscription formation #13', 1),
+(35, '2025-10-28 00:00:00', 'ENTREE', 5276600.00, 'vente', 58, 'Paiement vente', 1),
+(36, '2025-11-15 00:00:00', 'ENTREE', 3065800.00, 'vente', 63, 'Paiement vente', 1),
+(37, '2025-11-23 00:00:00', 'ENTREE', 512500.00, 'vente', 66, 'Paiement vente', 1),
+(38, '2025-12-21 00:00:00', 'ENTREE', 2744000.00, 'vente', 71, 'Paiement vente', 1),
+(39, '2025-12-01 00:00:00', 'ENTREE', 2095000.00, 'vente', 72, 'Paiement vente', 1),
+(40, '2025-12-05 00:00:00', 'ENTREE', 91500.00, 'vente', 76, 'Paiement vente', 1),
+(41, '2025-12-09 00:00:00', 'ENTREE', 1280000.00, 'vente', 82, 'Paiement vente', 1),
+(42, '2025-11-20 00:00:00', 'ENTREE', 4452000.00, 'vente', 83, 'Paiement vente', 1),
+(43, '2025-12-08 00:00:00', 'ENTREE', 987500.00, 'vente', 86, 'Paiement vente', 1),
+(44, '2025-11-08 00:00:00', 'ENTREE', 1379650.00, 'vente', 87, 'Paiement vente', 1);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `canaux_vente`
+-- Table structure for table `canaux_vente`
 --
 
 CREATE TABLE `canaux_vente` (
@@ -224,20 +294,20 @@ CREATE TABLE `canaux_vente` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `canaux_vente`
+-- Dumping data for table `canaux_vente`
 --
 
 INSERT INTO `canaux_vente` (`id`, `code`, `libelle`) VALUES
 (1, 'SHOWROOM', 'Vente showroom'),
 (2, 'TERRAIN', 'Vente terrain'),
 (3, 'DIGITAL', 'Vente digital / en ligne'),
-(4, 'HOTEL', 'Vente li??e ?? l??????h??tel'),
-(5, 'FORMATION', 'Vente li??e aux formations');
+(4, 'HOTEL', 'Vente liée à l\'hôtel'),
+(5, 'FORMATION', 'Vente liée aux formations');
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `catalogue_categories`
+-- Table structure for table `catalogue_categories`
 --
 
 CREATE TABLE `catalogue_categories` (
@@ -248,14 +318,14 @@ CREATE TABLE `catalogue_categories` (
   `ordre` int(11) NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `catalogue_categories`
+-- Dumping data for table `catalogue_categories`
 --
 
 INSERT INTO `catalogue_categories` (`id`, `nom`, `slug`, `actif`, `ordre`, `created_at`, `updated_at`) VALUES
-(19, 'Panneaux & Contreplaqu??s', 'panneaux', 1, 1, '2025-12-12 23:53:33', '2025-12-12 23:53:33'),
+(19, 'Panneaux & Contreplaqués', 'panneaux', 1, 1, '2025-12-12 23:53:33', '2025-12-13 16:08:56'),
 (20, 'Machines & Outils', 'machines', 1, 2, '2025-12-12 23:53:33', '2025-12-12 23:53:33'),
 (21, 'Quincaillerie', 'quincaillerie', 1, 3, '2025-12-12 23:53:33', '2025-12-12 23:53:33'),
 (22, 'Accessoires Menuiserie', 'accessoires', 1, 4, '2025-12-12 23:53:33', '2025-12-12 23:53:33'),
@@ -265,7 +335,7 @@ INSERT INTO `catalogue_categories` (`id`, `nom`, `slug`, `actif`, `ordre`, `crea
 -- --------------------------------------------------------
 
 --
--- Structure de la table `catalogue_produits`
+-- Table structure for table `catalogue_produits`
 --
 
 CREATE TABLE `catalogue_produits` (
@@ -278,61 +348,61 @@ CREATE TABLE `catalogue_produits` (
   `prix_unite` decimal(15,2) DEFAULT NULL,
   `prix_gros` decimal(15,2) DEFAULT NULL,
   `description` text DEFAULT NULL,
-  `caracteristiques_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`caracteristiques_json`)),
+  `caracteristiques_json` longtext DEFAULT NULL CHECK (json_valid(`caracteristiques_json`)),
   `image_principale` varchar(255) DEFAULT NULL,
-  `galerie_images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`galerie_images`)),
+  `galerie_images` longtext DEFAULT NULL CHECK (json_valid(`galerie_images`)),
   `actif` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `catalogue_produits`
+-- Dumping data for table `catalogue_produits`
 --
 
 INSERT INTO `catalogue_produits` (`id`, `produit_id`, `code`, `slug`, `designation`, `categorie_id`, `prix_unite`, `prix_gros`, `description`, `caracteristiques_json`, `image_principale`, `galerie_images`, `actif`, `created_at`, `updated_at`) VALUES
-(118, NULL, 'PLQ-CTBX-18', 'plaque-ctbx-18mm', 'Panneau CTBX 18 mm', 19, 29500.00, 27500.00, 'Panneau contreplaqu?? CTBX haute r??sistance, id??al pour milieux humides et int??rieurs modernes.', '{\"??paisseur\": \"18 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Essence\": \"Okoum??\", \"Classe\": \"Ext??rieur\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(119, NULL, 'PLQ-CTBX-12', 'plaque-ctbx-12mm', 'Panneau CTBX 12 mm', 19, 22000.00, 20500.00, 'Contreplaqu?? fin CTBX pour mobilier int??rieur et agencements l??gers.', '{\"??paisseur\": \"12 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Essence\": \"Okoum??\", \"Finition\": \"Brut\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(120, NULL, 'MDF-25', 'mdf-25mm', 'Panneau MDF 25 mm', 19, 18500.00, 17000.00, 'Medium Density Fiberboard, parfait pour menuiserie int??rieure, portes et placards.', '{\"??paisseur\": \"25 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Densit??\": \"730 kg/m??\", \"Usage\": \"Int??rieur\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(121, NULL, 'MDF-16', 'mdf-16mm', 'Panneau MDF 16 mm', 19, 13200.00, 12300.00, 'MDF standard pour mobilier et rev??tements int??rieurs. Facile ?? usiner et peindre.', '{\"??paisseur\": \"16 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Densit??\": \"720 kg/m??\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(122, NULL, 'HDF-3MM', 'hdf-3mm-laminate', 'Panneau HDF 3 mm lamin??', 19, 8900.00, 8200.00, 'Panneau haute densit?? avec rev??tement m??lamin?? pour plans de travail et surfaces de travail.', '{\"??paisseur\": \"3 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Rev??tement\": \"M??lamin??\", \"Finition\": \"Brillant\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(123, NULL, 'MULTIPLEX-21', 'multiplex-21mm', 'Multiplex 21 mm', 19, 24500.00, 22800.00, 'Contreplaqu?? multiplis pour construction l??g??re, ??tag??res et agencement int??rieur.', '{\"??paisseur\": \"21 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Plis\": \"13\", \"Grade\": \"BB\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(124, NULL, 'SCIE-RBT-210', 'scie-ruban-210', 'Scie ?? Ruban 210 W', 20, 185000.00, 172000.00, 'Scie ?? ruban compacte et performante pour ateliers professionnels. Coupe pr??cise bois, d??riv??s et mat??riaux composites.', '{\"Hauteur coupe\": \"210 mm\", \"Puissance\": \"1.5 kW\", \"Alimentation\": \"220V\", \"Capacit??\": \"Bois jusqu?? 150 mm\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(125, NULL, 'DECOLLET-400', 'decolleteur-400', 'D??colleteuse 400 mm', 20, 245000.00, 225000.00, 'Machine de d??coupe pr??cise pour panneaux, contreplaqu?? et composites. Guide de profondeur ajustable.', '{\"Diam??tre lame\": \"400 mm\", \"Puissance\": \"2.2 kW\", \"Vitesse\": \"42 rpm\", \"Pr??cision\": \"??0.5 mm\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(126, NULL, 'RABOTEUSE-305', 'raboteuse-305mm', 'Raboteuse 305 mm', 20, 320000.00, 295000.00, 'Raboteuse professionnelle pour lissage de pi??ces brutes. Syst??me d\'alimentation variable.', '{\"Largeur travail\": \"305 mm\", \"Puissance\": \"3 kW\", \"Capacit?? ??paisseur\": \"150 mm\", \"Rendement\": \"8 m/min\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(127, NULL, 'TOUPIE-2200', 'toupie-wood-2200', 'Toupie 2200 W', 20, 425000.00, 395000.00, 'Toupillage haute puissance pour fraisage, rainurage et profilage. Moteur brushless haute vitesse.', '{\"Puissance\": \"2200 W\", \"Vitesse\": \"8000-24000 rpm\", \"Capacit??\": \"M??ches 6-12 mm\", \"Table\": \"Acier\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(128, NULL, 'SABLEUSE-ORBITALE', 'sableuse-orbitale-225', 'Sableuse Orbitale 225 mm', 20, 48900.00, 45000.00, 'Sableuse orbitale pour finition haute qualit??. Vibration minimale et syst??me d\'aspiration int??gr??.', '{\"Disque\": \"225 mm\", \"Puissance\": \"520 W\", \"Mouvements/min\": \"4800\", \"Aspiration\": \"36 L/min\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(129, NULL, 'PERCEUSE-16', 'perceuse-percussion-16', 'Perceuse ?? Percussion 16 mm', 20, 35500.00, 32800.00, 'Perceuse-visseuse professionnelle avec mode percussion pour travaux lourds en atelier.', '{\"Capacit??\": \"16 mm\", \"Puissance\": \"900 W\", \"Couple\": \"45 Nm\", \"Vitesses\": \"Variable\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(130, NULL, 'VISSEUSE-ECO', 'visseuse-sans-fil-18v', 'Visseuse sans-fil 18V', 20, 18900.00, 17500.00, 'Visseuse compacte avec batterie Li-Ion pour assemblage et finition int??rieure.', '{\"Tension\": \"18 V\", \"Batterie\": \"Li-Ion 1.5 Ah\", \"Couple\": \"30 Nm\", \"Poids\": \"1.2 kg\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(131, NULL, 'MEULEUSE-900', 'meuleuse-125mm-900w', 'Meuleuse 125 mm 900 W', 20, 22300.00, 20500.00, 'Meuleuse d\'angle compact pour d??coupe, meulage et travaux de finition rapides.', '{\"Diam??tre disque\": \"125 mm\", \"Puissance\": \"900 W\", \"Vitesse\": \"12000 rpm\", \"Poign??e\": \"Lat??rale\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(132, NULL, 'CHARN-INOX-90', 'charniere-inox-90', 'Charni??re Inox 90??', 21, 950.00, 850.00, 'Charni??re pour portes meubles en acier inoxydable 304. Fermeture douce sans bruit.', '{\"Mati??re\": \"Inox 304\", \"Finition\": \"Bross??\", \"Angle\": \"90??\", \"Capacit??\": \"30 kg\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(133, NULL, 'CHARN-SOFT-CLOSE', 'charniere-soft-close-35', 'Charni??re Soft-Close 35 mm', 21, 2800.00, 2550.00, 'Syst??me de fermeture douce int??gr??. Fermeture progressive et silencieuse pour tous types de portes.', '{\"Type\": \"Overlay\", \"Ouverture\": \"110??\", \"Capacit??\": \"40 kg\", \"Installation\": \"Invisible\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(134, NULL, 'POIGNEE-ALU-160', 'poignee-aluminium-160', 'Poign??e Aluminium 160 mm', 21, 1200.00, 1050.00, 'Poign??e contemporaine en aluminium anodis??. Design ??pur?? pour tous styles de mobilier.', '{\"Longueur\": \"160 mm\", \"Mati??re\": \"Aluminium anodis??\", \"Finition\": \"Noir/Argent\", \"Distance trous\": \"128 mm\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(135, NULL, 'SERRURE-PUSH', 'serrure-push-open', 'Serrure Push-to-Open', 21, 3500.00, 3200.00, 'Syst??me d\'ouverture sans poign??e par simple pression. Int??gration discr??te dans le mobilier.', '{\"Tension\": \"24 V\", \"Charge\": \"60 kg\", \"Temps fermeture\": \"3 sec\", \"Installation\": \"Dissimul??e\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(136, NULL, 'GLISSIERE-TELESCOP', 'glissiere-telescopique-500', 'Glissi??re T??lescopique 500 mm', 21, 4200.00, 3850.00, 'Rails de qualit?? sup??rieure pour tiroirs professionnels. M??canisme d\'extension compl??te 100%.', '{\"Course\": \"500 mm\", \"Charge\": \"80 kg\", \"Roulements\": \"Billes\", \"Fermeture\": \"Soft-close\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(137, NULL, 'LOQUETEAUX-MAGNETI', 'loqueteau-magnetique-doux', 'Loqueteau Magn??tique Doux', 21, 680.00, 580.00, 'Fermeture magn??tique avec amortissement. Parfait pour portes vitr??es et fa??ades l??g??res.', '{\"Force\": \"5 kg\", \"Mati??re\": \"Alliage m??tallique\", \"Installation\": \"Facile\", \"Finition\": \"Chrom??\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(138, NULL, 'CLOUS-ACIER-65', 'clous-acier-zinc-65mm', 'Clous Acier Zingu?? 65 mm', 21, 450.00, 380.00, 'Clous acier galvanis?? pour assemblage robuste. R??sistance ?? la corrosion garantie.', '{\"Longueur\": \"65 mm\", \"Diam??tre\": \"3.75 mm\", \"Galvanis??\": \"Oui\", \"Emballage\": \"1 kg\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(139, NULL, 'JOINT-SILICONE', 'joint-silicone-translucide', 'Joint Silicone Translucide', 22, 890.00, 750.00, 'Scellant silicone haute flexibilit?? pour joints bois et menuiseries. Imperm??able et durable.', '{\"Volume\": \"300 ml\", \"Temps prise\": \"24 h\", \"Couleur\": \"Translucide\", \"Flexibilit??\": \"Haute\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(140, NULL, 'COLLE-WOOD-EXPRESS', 'colle-bois-rapide-500', 'Colle Bois Express 500 ml', 22, 2200.00, 1950.00, 'Colle polyur??thane pour assemblage bois professionnel. Prise rapide (15 min), r??sistance max.', '{\"Volume\": \"500 ml\", \"Prise\": \"15 minutes\", \"Temps travail\": \"8-10 min\", \"R??sistance\": \"Maximum\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(141, NULL, 'PATTE-FIXATION-ZINC', 'patte-fixation-epoxy', 'Patte de Fixation ??poxy', 22, 1100.00, 950.00, '??querre d\'assemblage en acier ??poxy pour renforcement bois. Charge 50 kg par point.', '{\"Mati??re\": \"Acier ??poxy\", \"Charge\": \"50 kg\", \"Dimensions\": \"35 x 35 mm\", \"Finition\": \"Noir mat\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(142, NULL, 'TAQUET-REGLABLE', 'taquet-reglable-18', 'Taquet R??glable 18 mm', 22, 380.00, 320.00, 'Taquet pour poteaux standards. R??glable en hauteur pour un positionnement flexible.', '{\"Adapte ??\": \"Poteaux 18 mm\", \"Charge\": \"25 kg\", \"Mati??re\": \"Zinc\", \"R??glage\": \"??15 mm\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(143, NULL, 'CACHE-TROU-ACACIA', 'cache-trou-acacia-20', 'Cache-Trou Acacia 20 mm', 22, 280.00, 240.00, 'Bouchon en bois massif pour cacher les trous de vis et chevilles. Finition naturelle.', '{\"Diam??tre\": \"20 mm\", \"Bois\": \"Acacia massif\", \"Finition\": \"Brut\", \"Bo??te\": \"100 pi??ces\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(144, NULL, 'VERROUS-S??CURIT??', 'verrou-securite-brass', 'Verrou de S??curit?? Laiton', 22, 1650.00, 1480.00, 'Verrou de bonne qualit?? pour armoires et portes sensibles. Fermeture ?? cl?? 3 positions.', '{\"Mati??re\": \"Laiton\", \"Cl??s\": \"S??curis??e\", \"Positions\": \"3\", \"Installation\": \"Externe\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(145, NULL, 'SAPIN-RABOT-27', 'sapin-rabot-27x70', 'Sapin Rabot?? 27 x 70 mm', 23, 2800.00, 2500.00, 'Bois de sapin massif rabote pour menuiserie, cadres et structures l??g??res. S??ch?? et rabot??.', '{\"Section\": \"27 x 70 mm\", \"Longueur\": \"Au m??tre\", \"Essence\": \"Sapin du Nord\", \"Humidit??\": \"R??gul??e\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(146, NULL, 'CHENE-MASSIF-35', 'chene-massif-35x150', 'Ch??ne Massif 35 x 150 mm', 23, 8500.00, 7800.00, 'Ch??ne blanc massif de belle qualit?? pour mobilier noble et agencements haut de gamme.', '{\"Section\": \"35 x 150 mm\", \"Essence\": \"Ch??ne blanc\", \"S??chage\": \"Naturel\", \"Grade\": \"S??lectionn??\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(147, NULL, 'MERISIER-LAMES', 'merisier-lames-parquet', 'Lames Merisier Parquet', 23, 6200.00, 5700.00, 'Lames de merisier pour sols, rev??tement ou agencement. Aspect chaud et naturel.', '{\"??paisseur\": \"18 mm\", \"Largeur\": \"90-140 mm\", \"Essence\": \"Merisier\", \"Finition\": \"Brut ponc??\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(148, NULL, 'TECK-EXOTIQUE-40', 'teck-exotique-40x80', 'Teck Exotique 40 x 80 mm', 23, 15500.00, 14200.00, 'Bois teck premium pour applications haut de gamme. Extr??mement durable et imputrescible.', '{\"Section\": \"40 x 80 mm\", \"Essence\": \"Teck Birmanie\", \"Durabilit??\": \"Classe 1\", \"Traitement\": \"Naturel\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(149, NULL, 'EPICEA-RABOTE-20', 'epicea-rabote-20x40', '??pic??a Rabot?? 20 x 40 mm', 23, 1500.00, 1350.00, '??pic??a blanc rabot?? pour petits travaux de menuiserie, cadres et assemblage g??n??ral.', '{\"Section\": \"20 x 40 mm\", \"Essence\": \"??pic??a blanc\", \"Longueur\": \"Au m??tre\", \"Humidit??\": \"R??gul??e\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(150, NULL, 'VERNIS-POLYURETH', 'vernis-polyur??thane-brillant', 'Vernis Polyur??thane Brillant 1L', 24, 3800.00, 3400.00, 'Vernis haute r??sistance pour bois int??rieur et ext??rieur. Finition brillante et durable.', '{\"Volume\": \"1 litre\", \"Brillance\": \"Brillant\", \"Temps s??chage\": \"6 heures\", \"Rendement\": \"8-10 m??/L\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(151, NULL, 'LASURE-BOIS-INCOLORE', 'lasure-bois-incolore', 'Lasure Bois Incolore 2.5L', 24, 4500.00, 4100.00, 'Lasure incolore pour protection bois brut ext??rieur. Laisse voir le grain naturel.', '{\"Volume\": \"2.5 litres\", \"Coloration\": \"Incolore\", \"Temps s??chage\": \"4 heures\", \"Durabilit??\": \"5-7 ans\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(152, NULL, 'PEINTURE-EPOXY', 'peinture-epoxy-gris-acier', 'Peinture ??poxy Gris Acier 1L', 24, 2600.00, 2350.00, 'Peinture ??poxy haute performance pour mobilier et surface intense. Finition lisse mat.', '{\"Volume\": \"1 litre\", \"Couleur\": \"Gris acier\", \"Brillance\": \"Mat\", \"R??sistance\": \"Extr??me\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(153, NULL, 'CIRE-BOIS-NATURELLE', 'cire-bois-naturelle-500', 'Cire Bois Naturelle 500 ml', 24, 1900.00, 1650.00, 'Cire naturelle ?? base d\'huiles essentielles pour entretien bois. Effet satin?? protecteur.', '{\"Volume\": \"500 ml\", \"Base\": \"Naturelle 100%\", \"Aspect\": \"Satin??\", \"Odeur\": \"Naturelle\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13'),
-(154, NULL, 'DECAPANT-CHIMIQUE', 'decapant-chimique-pro-1l', 'D??capant Chimique Pro 1L', 24, 3200.00, 2900.00, 'D??capant puissant pour enlever peinture et vernis ancien. ??cologique et efficace.', '{\"Volume\": \"1 litre\", \"Type\": \"Chimique non-toxique\", \"Temps action\": \"30 minutes\", \"Rendement\": \"1-2 m??\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-12 23:56:13');
+(118, 31, 'PLQ-CTBX-18', 'plaque-ctbx-18mm', 'Panneau CTBX 18 mm', 19, 29500.00, 27500.00, 'Panneau contreplaqué CTBX haute résistance, idéal pour milieux humides et intérieurs modernes.', '{\"ïpaisseur\": \"18 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Essence\": \"Okoumï\", \"Classe\": \"Extïrieur\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(119, 32, 'PLQ-CTBX-12', 'plaque-ctbx-12mm', 'Panneau CTBX 12 mm', 19, 22000.00, 20500.00, 'Contreplaqué fin CTBX pour mobilier intérieur et agencements légers.', '{\"ïpaisseur\": \"12 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Essence\": \"Okoumï\", \"Finition\": \"Brut\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(120, 32, 'MDF-25', 'mdf-25mm', 'Panneau MDF 25 mm', 19, 18500.00, 17000.00, 'Medium Density Fiberboard, parfait pour menuiserie intérieure, portes et placards.', '{\"ïpaisseur\": \"25 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Densitï\": \"730 kg/mï\", \"Usage\": \"Intïrieur\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(121, 32, 'MDF-16', 'mdf-16mm', 'Panneau MDF 16 mm', 19, 13200.00, 12300.00, 'MDF standard pour mobilier et revêtements intérieurs. Facile à usiner et peindre.', '{\"ïpaisseur\": \"16 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Densitï\": \"720 kg/mï\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(122, NULL, 'HDF-3MM', 'hdf-3mm-laminate', 'Panneau HDF 3 mm laminé', 19, 8900.00, 8200.00, 'Panneau haute densité avec revêtement mélaminé pour plans de travail et surfaces de travail.', '{\"ïpaisseur\": \"3 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Revïtement\": \"Mïlaminï\", \"Finition\": \"Brillant\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(123, 33, 'MULTIPLEX-21', 'multiplex-21mm', 'Multiplex 21 mm', 19, 24500.00, 22800.00, 'Contreplaqué multiplis pour construction légère, étagères et agencement intérieur.', '{\"ïpaisseur\": \"21 mm\", \"Dimensions\": \"1220 x 2440 mm\", \"Plis\": \"13\", \"Grade\": \"BB\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(124, 34, 'SCIE-RBT-210', 'scie-ruban-210', 'Scie à Ruban 210 W', 20, 185000.00, 172000.00, 'Scie à ruban compacte et performante pour ateliers professionnels. Coupe précise bois, dérivés et matériaux composites.', '{\"Hauteur coupe\": \"210 mm\", \"Puissance\": \"1.5 kW\", \"Alimentation\": \"220V\", \"Capacitï\": \"Bois jusquï 150 mm\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(125, NULL, 'DECOLLET-400', 'decolleteur-400', 'Décolleteur 400 mm', 20, 245000.00, 225000.00, 'Machine de découpe précise pour panneaux, contreplaqué et composites. Guide de profondeur ajustable.', '{\"Diamïtre lame\": \"400 mm\", \"Puissance\": \"2.2 kW\", \"Vitesse\": \"42 rpm\", \"Prïcision\": \"ï0.5 mm\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(126, 35, 'RABOTEUSE-305', 'raboteuse-305mm', 'Raboteuse 305 mm', 20, 320000.00, 295000.00, 'Raboteuse professionnelle pour lissage de pièces brutes. Système d\'alimentation variable.', '{\"Largeur travail\": \"305 mm\", \"Puissance\": \"3 kW\", \"Capacitï ïpaisseur\": \"150 mm\", \"Rendement\": \"8 m/min\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(127, 36, 'TOUPIE-2200', 'toupie-wood-2200', 'Toupie 2200 W', 20, 425000.00, 395000.00, 'Toupillage haute puissance pour fraisage, rainurage et profilage. Moteur brushless haute vitesse.', '{\"Puissance\": \"2200 W\", \"Vitesse\": \"8000-24000 rpm\", \"Capacitï\": \"Mïches 6-12 mm\", \"Table\": \"Acier\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(128, NULL, 'SABLEUSE-ORBITALE', 'sableuse-orbitale-225', 'Sableuse Orbitale 225 mm', 20, 48900.00, 45000.00, 'Sableuse orbitale pour finition haute qualité. Vibration minimale et système d\'aspiration intégré.', '{\"Disque\": \"225 mm\", \"Puissance\": \"520 W\", \"Mouvements/min\": \"4800\", \"Aspiration\": \"36 L/min\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(129, NULL, 'PERCEUSE-16', 'perceuse-percussion-16', 'Perceuse à Percussion 16 mm', 20, 35500.00, 32800.00, 'Perceuse-visseuse professionnelle avec mode percussion pour travaux lourds en atelier.', '{\"Capacitï\": \"16 mm\", \"Puissance\": \"900 W\", \"Couple\": \"45 Nm\", \"Vitesses\": \"Variable\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:17:22'),
+(130, NULL, 'VISSEUSE-ECO', 'visseuse-sans-fil-18v', 'Visseuse sans-fil 18V', 20, 18900.00, 17500.00, 'Visseuse compacte avec batterie Li-Ion pour assemblage et finition intérieure.', '{\"Tension\": \"18 V\", \"Batterie\": \"Li-Ion 1.5 Ah\", \"Couple\": \"30 Nm\", \"Poids\": \"1.2 kg\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(131, NULL, 'MEULEUSE-900', 'meuleuse-125mm-900w', 'Meuleuse 125 mm 900 W', 20, 22300.00, 20500.00, 'Meuleuse d\'angle compact pour découpe, meulage et travaux de finition rapides.', '{\"Diamïtre disque\": \"125 mm\", \"Puissance\": \"900 W\", \"Vitesse\": \"12000 rpm\", \"Poignïe\": \"Latïrale\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(132, 37, 'CHARN-INOX-90', 'charniere-inox-90', 'Charnière Inox 90°', 21, 950.00, 850.00, 'Charnière pour portes meubles en acier inoxydable 304. Fermeture douce sans bruit.', '{\"Matiïre\": \"Inox 304\", \"Finition\": \"Brossï\", \"Angle\": \"90ï\", \"Capacitï\": \"30 kg\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(133, NULL, 'CHARN-SOFT-CLOSE', 'charniere-soft-close-35', 'Charnière Soft-Close 35 mm', 21, 2800.00, 2550.00, 'Système de fermeture douce intégré. Fermeture progressive et silencieuse pour tous types de portes.', '{\"Type\": \"Overlay\", \"Ouverture\": \"110ï\", \"Capacitï\": \"40 kg\", \"Installation\": \"Invisible\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(134, 39, 'POIGNEE-ALU-160', 'poignee-aluminium-160', 'Poignée Aluminium 160 mm', 21, 1200.00, 1050.00, 'Poignée contemporaine en aluminium anodisé. Design épuré pour tous styles de mobilier.', '{\"Longueur\": \"160 mm\", \"Matiïre\": \"Aluminium anodisï\", \"Finition\": \"Noir/Argent\", \"Distance trous\": \"128 mm\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(135, NULL, 'SERRURE-PUSH', 'serrure-push-open', 'Serrure Push-to-Open', 21, 3500.00, 3200.00, 'Système d\'ouverture sans poignée par simple pression. Intégration discrète dans le mobilier.', '{\"Tension\": \"24 V\", \"Charge\": \"60 kg\", \"Temps fermeture\": \"3 sec\", \"Installation\": \"Dissimulïe\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(136, 38, 'GLISSIERE-TELESCOP', 'glissiere-telescopique-500', 'Glissière Télescopique 500 mm', 21, 4200.00, 3850.00, 'Rails de qualité supérieure pour tiroirs professionnels. Mécanisme d\'extension complète 100%.', '{\"Course\": \"500 mm\", \"Charge\": \"80 kg\", \"Roulements\": \"Billes\", \"Fermeture\": \"Soft-close\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:18:29'),
+(137, NULL, 'LOQUETEAUX-MAGNETI', 'loqueteau-magnetique-doux', 'Loqueteau Magnïtique Doux', 21, 680.00, 580.00, 'Fermeture magnïtique avec amortissement. Parfait pour portes vitrïes et faïades lïgïres.', '{\"Force\": \"5 kg\", \"Matiïre\": \"Alliage mïtallique\", \"Installation\": \"Facile\", \"Finition\": \"Chromï\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(138, NULL, 'CLOUS-ACIER-65', 'clous-acier-zinc-65mm', 'Clous Acier Zinguï 65 mm', 21, 450.00, 380.00, 'Clous acier galvanisï pour assemblage robuste. Rïsistance ï la corrosion garantie.', '{\"Longueur\": \"65 mm\", \"Diamïtre\": \"3.75 mm\", \"Galvanisï\": \"Oui\", \"Emballage\": \"1 kg\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(139, NULL, 'JOINT-SILICONE', 'joint-silicone-translucide', 'Joint Silicone Translucide', 22, 890.00, 750.00, 'Scellant silicone haute flexibilitï pour joints bois et menuiseries. Impermïable et durable.', '{\"Volume\": \"300 ml\", \"Temps prise\": \"24 h\", \"Couleur\": \"Translucide\", \"Flexibilitï\": \"Haute\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(140, NULL, 'COLLE-WOOD-EXPRESS', 'colle-bois-rapide-500', 'Colle Bois Express 500 ml', 22, 2200.00, 1950.00, 'Colle polyurïthane pour assemblage bois professionnel. Prise rapide (15 min), rïsistance max.', '{\"Volume\": \"500 ml\", \"Prise\": \"15 minutes\", \"Temps travail\": \"8-10 min\", \"Rïsistance\": \"Maximum\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(141, NULL, 'PATTE-FIXATION-ZINC', 'patte-fixation-epoxy', 'Patte de Fixation ïpoxy', 22, 1100.00, 950.00, 'ïquerre d\'assemblage en acier ïpoxy pour renforcement bois. Charge 50 kg par point.', '{\"Matiïre\": \"Acier ïpoxy\", \"Charge\": \"50 kg\", \"Dimensions\": \"35 x 35 mm\", \"Finition\": \"Noir mat\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(142, NULL, 'TAQUET-REGLABLE', 'taquet-reglable-18', 'Taquet Rïglable 18 mm', 22, 380.00, 320.00, 'Taquet pour poteaux standards. Rïglable en hauteur pour un positionnement flexible.', '{\"Adapte ï\": \"Poteaux 18 mm\", \"Charge\": \"25 kg\", \"Matiïre\": \"Zinc\", \"Rïglage\": \"ï15 mm\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(143, NULL, 'CACHE-TROU-ACACIA', 'cache-trou-acacia-20', 'Cache-Trou Acacia 20 mm', 22, 280.00, 240.00, 'Bouchon en bois massif pour cacher les trous de vis et chevilles. Finition naturelle.', '{\"Diamïtre\": \"20 mm\", \"Bois\": \"Acacia massif\", \"Finition\": \"Brut\", \"Boïte\": \"100 piïces\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(144, NULL, 'VERROUS-S??CURIT??', 'verrou-securite-brass', 'Verrou de Sïcuritï Laiton', 22, 1650.00, 1480.00, 'Verrou de bonne qualitï pour armoires et portes sensibles. Fermeture ï clï 3 positions.', '{\"Matiïre\": \"Laiton\", \"Clïs\": \"Sïcurisïe\", \"Positions\": \"3\", \"Installation\": \"Externe\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(145, NULL, 'SAPIN-RABOT-27', 'sapin-rabot-27x70', 'Sapin Rabotï 27 x 70 mm', 23, 2800.00, 2500.00, 'Bois de sapin massif rabote pour menuiserie, cadres et structures lïgïres. Sïchï et rabotï.', '{\"Section\": \"27 x 70 mm\", \"Longueur\": \"Au mïtre\", \"Essence\": \"Sapin du Nord\", \"Humiditï\": \"Rïgulïe\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(146, NULL, 'CHENE-MASSIF-35', 'chene-massif-35x150', 'Chïne Massif 35 x 150 mm', 23, 8500.00, 7800.00, 'Chïne blanc massif de belle qualitï pour mobilier noble et agencements haut de gamme.', '{\"Section\": \"35 x 150 mm\", \"Essence\": \"Chïne blanc\", \"Sïchage\": \"Naturel\", \"Grade\": \"Sïlectionnï\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(147, NULL, 'MERISIER-LAMES', 'merisier-lames-parquet', 'Lames Merisier Parquet', 23, 6200.00, 5700.00, 'Lames de merisier pour sols, revïtement ou agencement. Aspect chaud et naturel.', '{\"ïpaisseur\": \"18 mm\", \"Largeur\": \"90-140 mm\", \"Essence\": \"Merisier\", \"Finition\": \"Brut poncï\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(148, NULL, 'TECK-EXOTIQUE-40', 'teck-exotique-40x80', 'Teck Exotique 40 x 80 mm', 23, 15500.00, 14200.00, 'Bois teck premium pour applications haut de gamme. Extrïmement durable et imputrescible.', '{\"Section\": \"40 x 80 mm\", \"Essence\": \"Teck Birmanie\", \"Durabilitï\": \"Classe 1\", \"Traitement\": \"Naturel\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(149, NULL, 'EPICEA-RABOTE-20', 'epicea-rabote-20x40', 'ïpicïa Rabotï 20 x 40 mm', 23, 1500.00, 1350.00, 'ïpicïa blanc rabotï pour petits travaux de menuiserie, cadres et assemblage gïnïral.', '{\"Section\": \"20 x 40 mm\", \"Essence\": \"ïpicïa blanc\", \"Longueur\": \"Au mïtre\", \"Humiditï\": \"Rïgulïe\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(150, NULL, 'VERNIS-POLYURETH', 'vernis-polyur??thane-brillant', 'Vernis Polyurïthane Brillant 1L', 24, 3800.00, 3400.00, 'Vernis haute rïsistance pour bois intïrieur et extïrieur. Finition brillante et durable.', '{\"Volume\": \"1 litre\", \"Brillance\": \"Brillant\", \"Temps sïchage\": \"6 heures\", \"Rendement\": \"8-10 mï/L\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(151, NULL, 'LASURE-BOIS-INCOLORE', 'lasure-bois-incolore', 'Lasure Bois Incolore 2.5L', 24, 4500.00, 4100.00, 'Lasure incolore pour protection bois brut extïrieur. Laisse voir le grain naturel.', '{\"Volume\": \"2.5 litres\", \"Coloration\": \"Incolore\", \"Temps sïchage\": \"4 heures\", \"Durabilitï\": \"5-7 ans\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(152, NULL, 'PEINTURE-EPOXY', 'peinture-epoxy-gris-acier', 'Peinture ïpoxy Gris Acier 1L', 24, 2600.00, 2350.00, 'Peinture ïpoxy haute performance pour mobilier et surface intense. Finition lisse mat.', '{\"Volume\": \"1 litre\", \"Couleur\": \"Gris acier\", \"Brillance\": \"Mat\", \"Rïsistance\": \"Extrïme\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(153, NULL, 'CIRE-BOIS-NATURELLE', 'cire-bois-naturelle-500', 'Cire Bois Naturelle 500 ml', 24, 1900.00, 1650.00, 'Cire naturelle ï base d\'huiles essentielles pour entretien bois. Effet satinï protecteur.', '{\"Volume\": \"500 ml\", \"Base\": \"Naturelle 100%\", \"Aspect\": \"Satinï\", \"Odeur\": \"Naturelle\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30'),
+(154, NULL, 'DECAPANT-CHIMIQUE', 'decapant-chimique-pro-1l', 'Dïcapant Chimique Pro 1L', 24, 3200.00, 2900.00, 'Dïcapant puissant pour enlever peinture et vernis ancien. ïcologique et efficace.', '{\"Volume\": \"1 litre\", \"Type\": \"Chimique non-toxique\", \"Temps action\": \"30 minutes\", \"Rendement\": \"1-2 mï\"}', NULL, '[]', 1, '2025-12-12 23:56:13', '2025-12-13 16:16:30');
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `chambres`
+-- Table structure for table `chambres`
 --
 
 CREATE TABLE `chambres` (
@@ -344,7 +414,7 @@ CREATE TABLE `chambres` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `chambres`
+-- Dumping data for table `chambres`
 --
 
 INSERT INTO `chambres` (`id`, `code`, `description`, `tarif_nuite`, `actif`) VALUES
@@ -354,7 +424,7 @@ INSERT INTO `chambres` (`id`, `code`, `description`, `tarif_nuite`, `actif`) VAL
 -- --------------------------------------------------------
 
 --
--- Structure de la table `clients`
+-- Table structure for table `clients`
 --
 
 CREATE TABLE `clients` (
@@ -370,7 +440,7 @@ CREATE TABLE `clients` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `clients`
+-- Dumping data for table `clients`
 --
 
 INSERT INTO `clients` (`id`, `nom`, `type_client_id`, `telephone`, `email`, `adresse`, `source`, `statut`, `date_creation`) VALUES
@@ -379,12 +449,42 @@ INSERT INTO `clients` (`id`, `nom`, `type_client_id`, `telephone`, `email`, `adr
 (3, 'Client Digital Test', 3, '+237650000003', 'client.digital@test.local', 'Yaound??', 'Facebook', 'CLIENT', '2025-11-18 11:00:22'),
 (4, 'Client H??tel Test', 4, '+237650000004', 'client.hotel@test.local', 'Douala', 'R??servation directe', 'HOTE', '2025-11-18 11:00:22'),
 (5, 'Apprenant Formation', 5, '+237650000005', 'apprenant@test.local', 'Bafoussam', 'WhatsApp', 'APPRENANT', '2025-11-18 11:00:22'),
-(6, 'romy', 5, '695657613', 'cm@kennemulti-services.com', NULL, 'facebook', 'PROSPECT', '2025-11-20 09:02:31');
+(6, 'romy', 5, '695657613', 'cm@kennemulti-services.com', NULL, 'facebook', 'PROSPECT', '2025-11-20 09:02:31'),
+(67, 'Ouattara Marie', 1, '0478965788', 'ouattara.marie@email.ci', 'Abidjan, Cocody', 'Terrain', 'CLIENT', '2025-12-13 17:33:50'),
+(68, 'Coulibaly Kouadio', 2, '0390572888', 'coulibaly.kouadio@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(69, 'Yao Fatou', 2, '0496564644', 'yao.fatou@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(70, 'Koné Marie', 3, '0440047667', 'koné.marie@email.ci', 'Abidjan, Cocody', 'Showroom', 'PROSPECT', '2025-12-13 17:33:50'),
+(71, 'Traoré Aya', 1, '0140238155', 'traoré.aya@email.ci', 'Abidjan, Cocody', 'Showroom', 'PROSPECT', '2025-12-13 17:33:50'),
+(72, 'Yao Kouadio', 4, '0776354415', 'yao.kouadio@email.ci', 'Abidjan, Cocody', 'Showroom', 'PROSPECT', '2025-12-13 17:33:50'),
+(73, 'Touré Fatou', 2, '0372709450', 'touré.fatou@email.ci', 'Abidjan, Cocody', 'Showroom', 'PROSPECT', '2025-12-13 17:33:50'),
+(74, 'Coulibaly Aminata', 4, '0320933123', 'coulibaly.aminata@email.ci', 'Abidjan, Cocody', 'Showroom', 'PROSPECT', '2025-12-13 17:33:50'),
+(75, 'Koné Mamadou', 2, '0739719179', 'koné.mamadou@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(76, 'Kouassi Ibrahim', 1, '0371713936', 'kouassi.ibrahim@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(77, 'Yao Aminata', 4, '0165653443', 'yao.aminata@email.ci', 'Abidjan, Cocody', 'Showroom', 'PROSPECT', '2025-12-13 17:33:50'),
+(78, 'Ouattara Aya', 4, '0125766755', 'ouattara.aya@email.ci', 'Abidjan, Cocody', 'Terrain', 'CLIENT', '2025-12-13 17:33:50'),
+(79, 'Coulibaly Ibrahim', 4, '0347030143', 'coulibaly.ibrahim@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(80, 'Coulibaly Mamadou', 3, '0118500425', 'coulibaly.mamadou@email.ci', 'Abidjan, Cocody', 'Terrain', 'CLIENT', '2025-12-13 17:33:50'),
+(81, 'Ouattara Fatou', 4, '0218253827', 'ouattara.fatou@email.ci', 'Abidjan, Cocody', 'Terrain', 'PROSPECT', '2025-12-13 17:33:50'),
+(82, 'Kouassi Fatou', 4, '0780869280', 'kouassi.fatou@email.ci', 'Abidjan, Cocody', 'Terrain', 'CLIENT', '2025-12-13 17:33:50'),
+(83, 'Bamba Mamadou', 2, '0289505099', 'bamba.mamadou@email.ci', 'Abidjan, Cocody', 'Terrain', 'CLIENT', '2025-12-13 17:33:50'),
+(84, 'Kouassi Marie', 3, '0346644905', 'kouassi.marie@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(85, 'Traoré Ibrahim', 1, '0716360698', 'traoré.ibrahim@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(86, 'Bamba Aya', 1, '0268163113', 'bamba.aya@email.ci', 'Abidjan, Cocody', 'Terrain', 'CLIENT', '2025-12-13 17:33:50'),
+(87, 'Kouassi Aya', 1, '0232287535', 'kouassi.aya@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(88, 'Coulibaly Fatou', 2, '0547773861', 'coulibaly.fatou@email.ci', 'Abidjan, Cocody', 'Terrain', 'PROSPECT', '2025-12-13 17:33:50'),
+(89, 'Ouattara Aya', 3, '0231718090', 'ouattara.aya@email.ci', 'Abidjan, Cocody', 'Showroom', 'PROSPECT', '2025-12-13 17:33:50'),
+(90, 'Ouattara Kouadio', 1, '0625182667', 'ouattara.kouadio@email.ci', 'Abidjan, Cocody', 'Terrain', 'CLIENT', '2025-12-13 17:33:50'),
+(91, 'Ouattara Aya', 2, '0676393379', 'ouattara.aya@email.ci', 'Abidjan, Cocody', 'Terrain', 'PROSPECT', '2025-12-13 17:33:50'),
+(92, 'Yao Mamadou', 1, '0676798295', 'yao.mamadou@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(93, 'Touré Aya', 4, '0693878644', 'touré.aya@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(94, 'Touré Kouadio', 4, '0515213148', 'touré.kouadio@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(95, 'Kouassi Aya', 4, '0625430495', 'kouassi.aya@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50'),
+(96, 'Touré Kouadio', 3, '0368743996', 'touré.kouadio@email.ci', 'Abidjan, Cocody', 'Showroom', 'CLIENT', '2025-12-13 17:33:50');
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `compta_comptes`
+-- Table structure for table `compta_comptes`
 --
 
 CREATE TABLE `compta_comptes` (
@@ -403,7 +503,7 @@ CREATE TABLE `compta_comptes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `compta_comptes`
+-- Dumping data for table `compta_comptes`
 --
 
 INSERT INTO `compta_comptes` (`id`, `numero_compte`, `libelle`, `classe`, `est_analytique`, `compte_parent_id`, `type_compte`, `nature`, `est_actif`, `observations`, `created_at`, `updated_at`) VALUES
@@ -520,7 +620,7 @@ INSERT INTO `compta_comptes` (`id`, `numero_compte`, `libelle`, `classe`, `est_a
 -- --------------------------------------------------------
 
 --
--- Structure de la table `compta_ecritures`
+-- Table structure for table `compta_ecritures`
 --
 
 CREATE TABLE `compta_ecritures` (
@@ -539,7 +639,7 @@ CREATE TABLE `compta_ecritures` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `compta_ecritures`
+-- Dumping data for table `compta_ecritures`
 --
 
 INSERT INTO `compta_ecritures` (`id`, `piece_id`, `compte_id`, `libelle_ecriture`, `debit`, `credit`, `tiers_client_id`, `tiers_fournisseur_id`, `centre_analytique_id`, `ordre_ligne`, `observations`, `created_at`) VALUES
@@ -599,7 +699,7 @@ INSERT INTO `compta_ecritures` (`id`, `piece_id`, `compte_id`, `libelle_ecriture
 -- --------------------------------------------------------
 
 --
--- Structure de la table `compta_exercices`
+-- Table structure for table `compta_exercices`
 --
 
 CREATE TABLE `compta_exercices` (
@@ -614,7 +714,7 @@ CREATE TABLE `compta_exercices` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `compta_exercices`
+-- Dumping data for table `compta_exercices`
 --
 
 INSERT INTO `compta_exercices` (`id`, `annee`, `date_ouverture`, `date_cloture`, `est_clos`, `observations`, `created_at`, `updated_at`) VALUES
@@ -624,7 +724,7 @@ INSERT INTO `compta_exercices` (`id`, `annee`, `date_ouverture`, `date_cloture`,
 -- --------------------------------------------------------
 
 --
--- Structure de la table `compta_journaux`
+-- Table structure for table `compta_journaux`
 --
 
 CREATE TABLE `compta_journaux` (
@@ -639,7 +739,7 @@ CREATE TABLE `compta_journaux` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `compta_journaux`
+-- Dumping data for table `compta_journaux`
 --
 
 INSERT INTO `compta_journaux` (`id`, `code`, `libelle`, `type`, `compte_contre_partie`, `observations`, `created_at`, `updated_at`) VALUES
@@ -652,7 +752,7 @@ INSERT INTO `compta_journaux` (`id`, `code`, `libelle`, `type`, `compte_contre_p
 -- --------------------------------------------------------
 
 --
--- Structure de la table `compta_mapping_operations`
+-- Table structure for table `compta_mapping_operations`
 --
 
 CREATE TABLE `compta_mapping_operations` (
@@ -669,7 +769,7 @@ CREATE TABLE `compta_mapping_operations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `compta_mapping_operations`
+-- Dumping data for table `compta_mapping_operations`
 --
 
 INSERT INTO `compta_mapping_operations` (`id`, `source_type`, `code_operation`, `journal_id`, `compte_debit_id`, `compte_credit_id`, `description`, `actif`, `created_at`, `updated_at`) VALUES
@@ -679,7 +779,7 @@ INSERT INTO `compta_mapping_operations` (`id`, `source_type`, `code_operation`, 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `compta_operations_trace`
+-- Table structure for table `compta_operations_trace`
 --
 
 CREATE TABLE `compta_operations_trace` (
@@ -694,7 +794,7 @@ CREATE TABLE `compta_operations_trace` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `compta_operations_trace`
+-- Dumping data for table `compta_operations_trace`
 --
 
 INSERT INTO `compta_operations_trace` (`id`, `source_type`, `source_id`, `piece_id`, `status`, `messages`, `executed_at`, `created_at`) VALUES
@@ -713,7 +813,7 @@ INSERT INTO `compta_operations_trace` (`id`, `source_type`, `source_id`, `piece_
 -- --------------------------------------------------------
 
 --
--- Structure de la table `compta_pieces`
+-- Table structure for table `compta_pieces`
 --
 
 CREATE TABLE `compta_pieces` (
@@ -733,7 +833,7 @@ CREATE TABLE `compta_pieces` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `compta_pieces`
+-- Dumping data for table `compta_pieces`
 --
 
 INSERT INTO `compta_pieces` (`id`, `exercice_id`, `journal_id`, `numero_piece`, `date_piece`, `reference_type`, `reference_id`, `tiers_client_id`, `tiers_fournisseur_id`, `observations`, `est_validee`, `created_at`, `updated_at`) VALUES
@@ -767,7 +867,7 @@ INSERT INTO `compta_pieces` (`id`, `exercice_id`, `journal_id`, `numero_piece`, 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `connexions_utilisateur`
+-- Table structure for table `connexions_utilisateur`
 --
 
 CREATE TABLE `connexions_utilisateur` (
@@ -780,7 +880,7 @@ CREATE TABLE `connexions_utilisateur` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `connexions_utilisateur`
+-- Dumping data for table `connexions_utilisateur`
 --
 
 INSERT INTO `connexions_utilisateur` (`id`, `utilisateur_id`, `date_connexion`, `adresse_ip`, `user_agent`, `succes`) VALUES
@@ -827,7 +927,7 @@ INSERT INTO `connexions_utilisateur` (`id`, `utilisateur_id`, `date_connexion`, 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `conversions_pipeline`
+-- Table structure for table `conversions_pipeline`
 --
 
 CREATE TABLE `conversions_pipeline` (
@@ -844,7 +944,7 @@ CREATE TABLE `conversions_pipeline` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `devis`
+-- Table structure for table `devis`
 --
 
 CREATE TABLE `devis` (
@@ -865,20 +965,40 @@ CREATE TABLE `devis` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `devis`
+-- Dumping data for table `devis`
 --
 
 INSERT INTO `devis` (`id`, `numero`, `date_devis`, `client_id`, `canal_vente_id`, `statut`, `est_converti`, `date_relance`, `utilisateur_id`, `montant_total_ht`, `montant_total_ttc`, `remise_global`, `conditions`, `commentaires`) VALUES
-(1, 'DV-20251118-135909', '2025-11-18', 5, 3, 'ACCEPTE', 1, NULL, 1, 50000.00, 50000.00, 0.00, NULL, NULL),
-(2, 'DV-20251120-105327', '2025-11-20', 2, 3, 'ACCEPTE', 1, NULL, 1, 38000.00, 38000.00, 0.00, NULL, NULL),
-(3, 'DV-20251120-120352', '2025-11-20', 5, 3, 'ACCEPTE', 1, '2025-11-24', 1, 75995.00, 75995.00, 0.00, NULL, NULL),
-(4, 'DV-20251120-122248', '2025-11-20', 2, 3, 'ACCEPTE', 1, NULL, 1, 38000.00, 38000.00, 0.00, NULL, NULL),
-(5, 'DV-20251121-112258', '2025-11-21', 6, 1, 'ACCEPTE', 1, '2025-11-27', 1, 1290000.00, 1290000.00, 0.00, NULL, NULL);
+(51, 'DEV-20251027-001', '2025-10-27', 93, 1, 'EN_ATTENTE', 0, NULL, 1, 303300.00, 303300.00, 0.00, NULL, NULL),
+(52, 'DEV-20251104-002', '2025-11-04', 94, 1, 'ACCEPTE', 0, NULL, 1, 3043100.00, 3043100.00, 0.00, NULL, NULL),
+(53, 'DEV-20251112-003', '2025-11-12', 70, 1, 'EN_ATTENTE', 0, NULL, 1, 760800.00, 760800.00, 0.00, NULL, NULL),
+(54, 'DEV-20251021-004', '2025-10-21', 93, 1, 'ACCEPTE', 0, NULL, 1, 5276600.00, 5276600.00, 0.00, NULL, NULL),
+(55, 'DEV-20251116-005', '2025-11-16', 72, 1, 'ACCEPTE', 0, NULL, 1, 766500.00, 766500.00, 0.00, NULL, NULL),
+(56, 'DEV-20251129-006', '2025-11-29', 86, 1, 'ACCEPTE', 0, NULL, 1, 1447000.00, 1447000.00, 0.00, NULL, NULL),
+(57, 'DEV-20251121-007', '2025-11-21', 91, 1, 'EN_ATTENTE', 0, NULL, 1, 40000.00, 40000.00, 0.00, NULL, NULL),
+(58, 'DEV-20251118-008', '2025-11-18', 89, 1, 'ACCEPTE', 0, NULL, 1, 2945000.00, 2945000.00, 0.00, NULL, NULL),
+(59, 'DEV-20251116-009', '2025-11-16', 71, 1, 'ACCEPTE', 0, NULL, 1, 8130000.00, 8130000.00, 0.00, NULL, NULL),
+(60, 'DEV-20251109-010', '2025-11-09', 85, 1, 'EN_ATTENTE', 0, NULL, 1, 3699100.00, 3699100.00, 0.00, NULL, NULL),
+(61, 'DEV-20251121-011', '2025-11-21', 81, 1, 'EN_ATTENTE', 0, NULL, 1, 14400.00, 14400.00, 0.00, NULL, NULL),
+(62, 'DEV-20251109-012', '2025-11-09', 71, 1, 'ACCEPTE', 0, NULL, 1, 3065800.00, 3065800.00, 0.00, NULL, NULL),
+(63, 'DEV-20251202-013', '2025-12-02', 84, 1, 'EN_ATTENTE', 0, NULL, 1, 1725800.00, 1725800.00, 0.00, NULL, NULL),
+(64, 'DEV-20251123-014', '2025-11-23', 89, 1, 'ACCEPTE', 0, NULL, 1, 2159000.00, 2159000.00, 0.00, NULL, NULL),
+(65, 'DEV-20251115-015', '2025-11-15', 96, 1, 'ACCEPTE', 0, NULL, 1, 102950.00, 102950.00, 0.00, NULL, NULL),
+(66, 'DEV-20251115-016', '2025-11-15', 88, 1, 'EN_ATTENTE', 0, NULL, 1, 674500.00, 674500.00, 0.00, NULL, NULL),
+(67, 'DEV-20251114-017', '2025-11-14', 95, 1, 'ACCEPTE', 0, NULL, 1, 512500.00, 512500.00, 0.00, NULL, NULL),
+(68, 'DEV-20251029-018', '2025-10-29', 76, 1, 'EN_ATTENTE', 0, NULL, 1, 4307000.00, 4307000.00, 0.00, NULL, NULL),
+(69, 'DEV-20251104-019', '2025-11-04', 91, 1, 'ACCEPTE', 0, NULL, 1, 1151500.00, 1151500.00, 0.00, NULL, NULL),
+(70, 'DEV-20251020-020', '2025-10-20', 95, 1, 'ACCEPTE', 0, NULL, 1, 5891900.00, 5891900.00, 0.00, NULL, NULL),
+(71, 'DEV-20251203-021', '2025-12-03', 81, 1, 'ACCEPTE', 0, NULL, 1, 51800.00, 51800.00, 0.00, NULL, NULL),
+(72, 'DEV-20251101-022', '2025-11-01', 70, 1, 'EN_ATTENTE', 0, NULL, 1, 3912000.00, 3912000.00, 0.00, NULL, NULL),
+(73, 'DEV-20251014-023', '2025-10-14', 82, 1, 'ACCEPTE', 0, NULL, 1, 1147000.00, 1147000.00, 0.00, NULL, NULL),
+(74, 'DEV-20251207-024', '2025-12-07', 67, 1, 'ACCEPTE', 0, NULL, 1, 2744000.00, 2744000.00, 0.00, NULL, NULL),
+(75, 'DEV-20251123-025', '2025-11-23', 78, 1, 'ACCEPTE', 0, NULL, 1, 2095000.00, 2095000.00, 0.00, NULL, NULL);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `devis_lignes`
+-- Table structure for table `devis_lignes`
 --
 
 CREATE TABLE `devis_lignes` (
@@ -892,22 +1012,101 @@ CREATE TABLE `devis_lignes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `devis_lignes`
+-- Dumping data for table `devis_lignes`
 --
 
 INSERT INTO `devis_lignes` (`id`, `devis_id`, `produit_id`, `quantite`, `prix_unitaire`, `remise`, `montant_ligne_ht`) VALUES
-(3, 1, 3, 2, 25000.00, 0.00, 50000.00),
-(6, 2, 4, 1, 38000.00, 0.00, 38000.00),
-(9, 3, 4, 1, 38000.00, 5.00, 37995.00),
-(10, 3, 4, 1, 38000.00, 0.00, 38000.00),
-(12, 4, 4, 1, 38000.00, 0.00, 38000.00),
-(15, 5, 1, 4, 180000.00, 0.00, 720000.00),
-(16, 5, 4, 15, 38000.00, 0.00, 570000.00);
+(165, 51, 66, 9, 4200.00, 0.00, 37800.00),
+(166, 51, 59, 9, 29500.00, 0.00, 265500.00),
+(167, 52, 59, 3, 29500.00, 0.00, 88500.00),
+(168, 52, 62, 13, 185000.00, 0.00, 2405000.00),
+(169, 52, 60, 8, 13200.00, 0.00, 105600.00),
+(170, 52, 71, 9, 8500.00, 0.00, 76500.00),
+(171, 52, 61, 15, 24500.00, 0.00, 367500.00),
+(172, 53, 65, 8, 950.00, 0.00, 7600.00),
+(173, 53, 68, 4, 185000.00, 0.00, 740000.00),
+(174, 53, 67, 11, 1200.00, 0.00, 13200.00),
+(175, 54, 69, 4, 95000.00, 0.00, 380000.00),
+(176, 54, 64, 11, 425000.00, 0.00, 4675000.00),
+(177, 54, 60, 13, 13200.00, 0.00, 171600.00),
+(178, 54, 72, 4, 12500.00, 0.00, 50000.00),
+(179, 55, 59, 13, 29500.00, 0.00, 383500.00),
+(180, 55, 67, 7, 1200.00, 0.00, 8400.00),
+(181, 55, 60, 3, 13200.00, 0.00, 39600.00),
+(182, 55, 72, 12, 12500.00, 0.00, 150000.00),
+(183, 55, 62, 1, 185000.00, 0.00, 185000.00),
+(184, 56, 59, 13, 29500.00, 0.00, 383500.00),
+(185, 56, 71, 12, 8500.00, 0.00, 102000.00),
+(186, 56, 72, 13, 12500.00, 0.00, 162500.00),
+(187, 56, 59, 2, 29500.00, 0.00, 59000.00),
+(188, 56, 62, 4, 185000.00, 0.00, 740000.00),
+(189, 57, 67, 15, 1200.00, 0.00, 18000.00),
+(190, 57, 70, 11, 2000.00, 0.00, 22000.00),
+(191, 58, 68, 9, 185000.00, 0.00, 1665000.00),
+(192, 58, 63, 4, 320000.00, 0.00, 1280000.00),
+(193, 59, 68, 4, 185000.00, 0.00, 740000.00),
+(194, 59, 69, 14, 95000.00, 0.00, 1330000.00),
+(195, 59, 64, 4, 425000.00, 0.00, 1700000.00),
+(196, 59, 63, 3, 320000.00, 0.00, 960000.00),
+(197, 59, 64, 8, 425000.00, 0.00, 3400000.00),
+(198, 60, 60, 8, 13200.00, 0.00, 105600.00),
+(199, 60, 61, 3, 24500.00, 0.00, 73500.00),
+(200, 60, 63, 11, 320000.00, 0.00, 3520000.00),
+(201, 61, 70, 3, 2000.00, 0.00, 6000.00),
+(202, 61, 66, 2, 4200.00, 0.00, 8400.00),
+(203, 62, 62, 12, 185000.00, 0.00, 2220000.00),
+(204, 62, 59, 3, 29500.00, 0.00, 88500.00),
+(205, 62, 65, 4, 950.00, 0.00, 3800.00),
+(206, 62, 59, 13, 29500.00, 0.00, 383500.00),
+(207, 62, 62, 2, 185000.00, 0.00, 370000.00),
+(208, 63, 66, 9, 4200.00, 0.00, 37800.00),
+(209, 63, 64, 3, 425000.00, 0.00, 1275000.00),
+(210, 63, 59, 14, 29500.00, 0.00, 413000.00),
+(211, 64, 64, 4, 425000.00, 0.00, 1700000.00),
+(212, 64, 71, 4, 8500.00, 0.00, 34000.00),
+(213, 64, 64, 1, 425000.00, 0.00, 425000.00),
+(214, 65, 71, 8, 8500.00, 0.00, 68000.00),
+(215, 65, 65, 1, 950.00, 0.00, 950.00),
+(216, 65, 70, 14, 2000.00, 0.00, 28000.00),
+(217, 65, 67, 5, 1200.00, 0.00, 6000.00),
+(218, 66, 70, 8, 2000.00, 0.00, 16000.00),
+(219, 66, 59, 3, 29500.00, 0.00, 88500.00),
+(220, 66, 69, 6, 95000.00, 0.00, 570000.00),
+(221, 67, 61, 11, 24500.00, 0.00, 269500.00),
+(222, 67, 69, 1, 95000.00, 0.00, 95000.00),
+(223, 67, 71, 3, 8500.00, 0.00, 25500.00),
+(224, 67, 61, 5, 24500.00, 0.00, 122500.00),
+(225, 68, 59, 6, 29500.00, 0.00, 177000.00),
+(226, 68, 62, 8, 185000.00, 0.00, 1480000.00),
+(227, 68, 61, 10, 24500.00, 0.00, 245000.00),
+(228, 68, 68, 13, 185000.00, 0.00, 2405000.00),
+(229, 69, 72, 12, 12500.00, 0.00, 150000.00),
+(230, 69, 68, 5, 185000.00, 0.00, 925000.00),
+(231, 69, 71, 9, 8500.00, 0.00, 76500.00),
+(232, 70, 71, 15, 8500.00, 0.00, 127500.00),
+(233, 70, 67, 12, 1200.00, 0.00, 14400.00),
+(234, 70, 64, 6, 425000.00, 0.00, 2550000.00),
+(235, 70, 63, 10, 320000.00, 0.00, 3200000.00),
+(236, 71, 66, 9, 4200.00, 0.00, 37800.00),
+(237, 71, 70, 7, 2000.00, 0.00, 14000.00),
+(238, 72, 70, 11, 2000.00, 0.00, 22000.00),
+(239, 72, 63, 8, 320000.00, 0.00, 2560000.00),
+(240, 72, 69, 14, 95000.00, 0.00, 1330000.00),
+(241, 73, 69, 11, 95000.00, 0.00, 1045000.00),
+(242, 73, 71, 12, 8500.00, 0.00, 102000.00),
+(243, 74, 72, 6, 12500.00, 0.00, 75000.00),
+(244, 74, 59, 14, 29500.00, 0.00, 413000.00),
+(245, 74, 68, 12, 185000.00, 0.00, 2220000.00),
+(246, 74, 70, 14, 2000.00, 0.00, 28000.00),
+(247, 74, 70, 4, 2000.00, 0.00, 8000.00),
+(248, 75, 64, 1, 425000.00, 0.00, 425000.00),
+(249, 75, 61, 10, 24500.00, 0.00, 245000.00),
+(250, 75, 69, 15, 95000.00, 0.00, 1425000.00);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `familles_produits`
+-- Table structure for table `familles_produits`
 --
 
 CREATE TABLE `familles_produits` (
@@ -916,19 +1115,28 @@ CREATE TABLE `familles_produits` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `familles_produits`
+-- Dumping data for table `familles_produits`
 --
 
 INSERT INTO `familles_produits` (`id`, `nom`) VALUES
 (1, 'Meubles & am??nagements int??rieurs'),
 (2, 'Accessoires & quincaillerie de menuiserie'),
 (3, 'Machines & ??quipements de menuiserie'),
-(4, 'Panneaux & mat??riaux d??????agencement');
+(4, 'Panneaux & mat??riaux d??????agencement'),
+(65, 'Electricite'),
+(66, 'Plomberie'),
+(67, 'Peinture'),
+(68, 'Quincaillerie'),
+(69, 'Construction'),
+(70, 'Panneaux Bois'),
+(71, 'Machines Menuiserie'),
+(72, 'Electromenager'),
+(73, 'Accessoires');
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `formations`
+-- Table structure for table `formations`
 --
 
 CREATE TABLE `formations` (
@@ -939,7 +1147,7 @@ CREATE TABLE `formations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `formations`
+-- Dumping data for table `formations`
 --
 
 INSERT INTO `formations` (`id`, `nom`, `description`, `tarif_total`) VALUES
@@ -949,7 +1157,7 @@ INSERT INTO `formations` (`id`, `nom`, `description`, `tarif_total`) VALUES
 -- --------------------------------------------------------
 
 --
--- Structure de la table `fournisseurs`
+-- Table structure for table `fournisseurs`
 --
 
 CREATE TABLE `fournisseurs` (
@@ -962,7 +1170,7 @@ CREATE TABLE `fournisseurs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `fournisseurs`
+-- Dumping data for table `fournisseurs`
 --
 
 INSERT INTO `fournisseurs` (`id`, `nom`, `contact`, `telephone`, `email`, `adresse`) VALUES
@@ -972,7 +1180,7 @@ INSERT INTO `fournisseurs` (`id`, `nom`, `contact`, `telephone`, `email`, `adres
 -- --------------------------------------------------------
 
 --
--- Structure de la table `inscriptions_formation`
+-- Table structure for table `inscriptions_formation`
 --
 
 CREATE TABLE `inscriptions_formation` (
@@ -986,18 +1194,75 @@ CREATE TABLE `inscriptions_formation` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `inscriptions_formation`
+-- Dumping data for table `inscriptions_formation`
 --
 
 INSERT INTO `inscriptions_formation` (`id`, `date_inscription`, `apprenant_nom`, `client_id`, `formation_id`, `montant_paye`, `solde_du`) VALUES
 (1, '2025-11-19', 'Martial', NULL, 2, 50000.00, 130000.00),
 (2, '2025-11-19', 'Tendop', 3, 2, 150000.00, 30000.00),
-(3, '2025-11-20', 'Nkolo', NULL, 1, 80000.00, 70000.00);
+(3, '2025-11-20', 'Nkolo', NULL, 1, 80000.00, 70000.00),
+(4, '2025-12-01', 'Yao Kouadio', 72, 2, 132720.00, 0.00),
+(5, '2025-10-15', 'Coulibaly Kouadio', 68, 1, 106409.00, 23793.00),
+(6, '2025-10-14', 'Traoré Aya', 71, 1, 94989.00, 32320.00),
+(7, '2025-10-24', 'Touré Aya', 93, 2, 162388.00, 0.00),
+(8, '2025-10-24', 'Coulibaly Aminata', 74, 2, 156104.00, 24804.00),
+(9, '2025-10-31', 'Ouattara Aya', 78, 1, 99184.00, 24711.00),
+(10, '2025-11-17', 'Coulibaly Aminata', 74, 1, 107932.00, 0.00),
+(11, '2025-11-05', 'Yao Aminata', 77, 1, 40173.00, 107653.00),
+(12, '2025-11-01', 'Kouassi Ibrahim', 76, 2, 49095.00, 81406.00),
+(13, '2025-10-21', 'Ouattara Aya', 91, 2, 110909.00, 0.00);
+
+--
+-- Triggers `inscriptions_formation`
+--
+DELIMITER $$
+CREATE TRIGGER `after_inscription_formation_insert` AFTER INSERT ON `inscriptions_formation` FOR EACH ROW BEGIN
+            IF NEW.montant_paye > 0 THEN
+                INSERT INTO caisse_journal 
+                (date_ecriture, montant, sens, source_type, source_id, utilisateur_id, commentaire)
+                VALUES (
+                    NEW.date_inscription,
+                    NEW.montant_paye,
+                    'ENTREE',
+                    'inscription_formation',
+                    NEW.id,
+                    1,
+                    CONCAT('Inscription formation #', NEW.id)
+                );
+            END IF;
+        END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `after_inscription_formation_update` AFTER UPDATE ON `inscriptions_formation` FOR EACH ROW BEGIN
+            IF NEW.montant_paye != OLD.montant_paye THEN
+                -- Annuler l'ancienne écriture
+                DELETE FROM caisse_journal 
+                WHERE source_type = 'inscription_formation' AND source_id = NEW.id;
+                
+                -- Créer nouvelle écriture si montant > 0
+                IF NEW.montant_paye > 0 THEN
+                    INSERT INTO caisse_journal 
+                    (date_ecriture, montant, sens, source_type, source_id, utilisateur_id, commentaire)
+                    VALUES (
+                        NEW.date_inscription,
+                        NEW.montant_paye,
+                        'ENTREE',
+                        'inscription_formation',
+                        NEW.id,
+                        1,
+                        CONCAT('Inscription formation #', NEW.id)
+                    );
+                END IF;
+            END IF;
+        END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `journal_caisse`
+-- Table structure for table `journal_caisse`
 --
 
 CREATE TABLE `journal_caisse` (
@@ -1021,7 +1286,7 @@ CREATE TABLE `journal_caisse` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `journal_caisse`
+-- Dumping data for table `journal_caisse`
 --
 
 INSERT INTO `journal_caisse` (`id`, `date_operation`, `numero_piece`, `nature_operation`, `client_id`, `fournisseur_id`, `sens`, `montant`, `mode_paiement_id`, `vente_id`, `reservation_id`, `inscription_formation_id`, `responsable_encaissement_id`, `observations`, `est_annule`, `date_annulation`, `annule_par_id`) VALUES
@@ -1031,12 +1296,13 @@ INSERT INTO `journal_caisse` (`id`, `date_operation`, `numero_piece`, `nature_op
 (4, '2025-11-20', '5', 'r??glement fournissuer', NULL, NULL, 'RECETTE', 10000.00, 4, NULL, NULL, NULL, 1, NULL, 0, NULL, NULL),
 (5, '2025-11-20', '', 'sorepco', NULL, NULL, 'RECETTE', 100000.00, 4, NULL, NULL, NULL, 1, 'recouvrement', 1, '2025-11-20 18:53:38', 1),
 (6, '2025-11-20', '', 'versement mupeci', NULL, NULL, 'RECETTE', 1000000.00, 4, NULL, NULL, NULL, 1, 'recouvrement', 0, NULL, NULL),
-(7, '2025-11-21', '', 'recouvrement sorepco', NULL, NULL, 'RECETTE', 150000.00, 4, NULL, NULL, NULL, 1, NULL, 0, NULL, NULL);
+(7, '2025-11-21', '', 'recouvrement sorepco', NULL, NULL, 'RECETTE', 150000.00, 4, NULL, NULL, NULL, 1, NULL, 0, NULL, NULL),
+(8, '2025-12-13', 'a14', '', NULL, NULL, 'DEPENSE', 5000.00, 1, NULL, NULL, NULL, 1, NULL, 1, '2025-12-13 17:35:32', 1);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `kpis_quotidiens`
+-- Table structure for table `kpis_quotidiens`
 --
 
 CREATE TABLE `kpis_quotidiens` (
@@ -1054,7 +1320,7 @@ CREATE TABLE `kpis_quotidiens` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `leads_digital`
+-- Table structure for table `leads_digital`
 --
 
 CREATE TABLE `leads_digital` (
@@ -1083,7 +1349,7 @@ CREATE TABLE `leads_digital` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `modes_paiement`
+-- Table structure for table `modes_paiement`
 --
 
 CREATE TABLE `modes_paiement` (
@@ -1093,7 +1359,7 @@ CREATE TABLE `modes_paiement` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `modes_paiement`
+-- Dumping data for table `modes_paiement`
 --
 
 INSERT INTO `modes_paiement` (`id`, `code`, `libelle`) VALUES
@@ -1105,7 +1371,7 @@ INSERT INTO `modes_paiement` (`id`, `code`, `libelle`) VALUES
 -- --------------------------------------------------------
 
 --
--- Structure de la table `mouvements_stock_backup_20251209_161710`
+-- Table structure for table `mouvements_stock_backup_20251209_161710`
 --
 
 CREATE TABLE `mouvements_stock_backup_20251209_161710` (
@@ -1122,7 +1388,7 @@ CREATE TABLE `mouvements_stock_backup_20251209_161710` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `mouvements_stock_backup_20251209_161710`
+-- Dumping data for table `mouvements_stock_backup_20251209_161710`
 --
 
 INSERT INTO `mouvements_stock_backup_20251209_161710` (`id`, `date_mouvement`, `type_mouvement`, `produit_id`, `quantite`, `source_module`, `source_id`, `utilisateur_id`, `commentaire`, `date_creation`) VALUES
@@ -1134,7 +1400,7 @@ INSERT INTO `mouvements_stock_backup_20251209_161710` (`id`, `date_mouvement`, `
 -- --------------------------------------------------------
 
 --
--- Structure de la table `objectifs_commerciaux`
+-- Table structure for table `objectifs_commerciaux`
 --
 
 CREATE TABLE `objectifs_commerciaux` (
@@ -1153,7 +1419,7 @@ CREATE TABLE `objectifs_commerciaux` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `ordres_preparation`
+-- Table structure for table `ordres_preparation`
 --
 
 CREATE TABLE `ordres_preparation` (
@@ -1176,18 +1442,10 @@ CREATE TABLE `ordres_preparation` (
   `date_creation` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Ordres de pr??paration (liaison marketing-magasin)';
 
---
--- Déchargement des données de la table `ordres_preparation`
---
-
-INSERT INTO `ordres_preparation` (`id`, `numero_ordre`, `date_ordre`, `vente_id`, `devis_id`, `client_id`, `type_commande`, `commercial_responsable_id`, `statut`, `date_preparation_demandee`, `priorite`, `observations`, `signature_resp_marketing`, `date_signature_marketing`, `magasinier_id`, `date_preparation_effectuee`, `date_creation`) VALUES
-(4, 'OP-20251211-0001', '2025-12-11', 18, NULL, 6, 'VENTE_SHOWROOM', 1, 'EN_ATTENTE', '2025-12-13', 'NORMALE', '', 0, NULL, NULL, NULL, '2025-12-11 13:08:40'),
-(5, 'OP-20251212-0001', '2025-12-12', 13, NULL, 2, 'VENTE_SHOWROOM', 1, 'EN_ATTENTE', '2025-12-13', 'NORMALE', '', 0, NULL, NULL, NULL, '2025-12-12 15:06:08');
-
 -- --------------------------------------------------------
 
 --
--- Structure de la table `ordres_preparation_lignes`
+-- Table structure for table `ordres_preparation_lignes`
 --
 
 CREATE TABLE `ordres_preparation_lignes` (
@@ -1202,7 +1460,7 @@ CREATE TABLE `ordres_preparation_lignes` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `parametres_securite`
+-- Table structure for table `parametres_securite`
 --
 
 CREATE TABLE `parametres_securite` (
@@ -1216,7 +1474,7 @@ CREATE TABLE `parametres_securite` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Configuration de s??curit?? globale';
 
 --
--- Déchargement des données de la table `parametres_securite`
+-- Dumping data for table `parametres_securite`
 --
 
 INSERT INTO `parametres_securite` (`id`, `cle`, `valeur`, `type`, `description`, `modifie_par`, `date_modification`) VALUES
@@ -1241,7 +1499,7 @@ INSERT INTO `parametres_securite` (`id`, `cle`, `valeur`, `type`, `description`,
 -- --------------------------------------------------------
 
 --
--- Structure de la table `permissions`
+-- Table structure for table `permissions`
 --
 
 CREATE TABLE `permissions` (
@@ -1251,7 +1509,7 @@ CREATE TABLE `permissions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `permissions`
+-- Dumping data for table `permissions`
 --
 
 INSERT INTO `permissions` (`id`, `code`, `description`) VALUES
@@ -1282,7 +1540,7 @@ INSERT INTO `permissions` (`id`, `code`, `description`) VALUES
 -- --------------------------------------------------------
 
 --
--- Structure de la table `produits`
+-- Table structure for table `produits`
 --
 
 CREATE TABLE `produits` (
@@ -1306,22 +1564,45 @@ CREATE TABLE `produits` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `produits`
+-- Dumping data for table `produits`
 --
 
 INSERT INTO `produits` (`id`, `code_produit`, `famille_id`, `sous_categorie_id`, `designation`, `caracteristiques`, `description`, `fournisseur_id`, `localisation`, `prix_achat`, `prix_vente`, `stock_actuel`, `seuil_alerte`, `image_path`, `actif`, `date_creation`, `date_modification`) VALUES
 (1, 'MEU-CH-001', 1, 1, 'Lit 2 places avec chevets', 'Dimensions 160x200', 'Lit moderne pour chambre parentale', 1, 'Showroom Douala', 120000.00, 180000.00, 21, 2, '/assets/img/produits/MEU-CH-001.png', 1, '2025-11-18 11:00:22', '2025-12-02 15:58:23'),
 (2, 'MEU-SAL-001', 1, 2, 'Salon 5 places', 'Structure bois, mousse haute densit??', 'Salon complet 3+1+1', 1, 'Showroom Douala', 200000.00, 280000.00, 27, 1, NULL, 1, '2025-11-18 11:00:22', NULL),
-(3, 'ACC-VIS-001', 2, 3, 'Lot de visserie menuiserie', 'Assortiment vis bois', 'Accessoires pour montage de meubles', 2, 'Magasin PK12', 15000.00, 25000.00, 68, 10, NULL, 1, '2025-11-18 11:00:22', NULL),
-(4, 'PAN-MEL-001', 4, 5, 'Panneau m??lamin?? blanc 18mm', '2,75m x 1,83m', 'Panneau pour agencement int??rieur', 2, 'Magasin PK12', 25000.00, 38000.00, 12, 5, NULL, 1, '2025-11-18 11:00:22', NULL),
-(15, 'PAN-FOR-001', 2, 3, 'Panneau formica blanc 18mm', NULL, NULL, 2, 'Magasin PK12', 500.00, 2000.00, 10, 2, '/assets/img/produits/PAN-FOR-001.png', 1, '2025-12-06 12:32:22', NULL),
-(16, 'PAN-MDF', 4, 5, 'Panneau MDFblanc 18mm', NULL, NULL, 2, 'Magasin PK12', 10000.00, 500000.00, 24, 2, '/kms_app/assets/img/produits/PAN-MDF.jpg', 1, '2025-12-10 11:45:00', NULL),
-(17, 'TEST-PRD-001', 1, NULL, 'Produit test automatis????', NULL, NULL, NULL, NULL, 0.00, 1500.00, 3, 0, NULL, 0, '2025-12-10 13:09:46', NULL);
+(17, 'TEST-PRD-001', 1, NULL, 'Produit test automatis????', NULL, NULL, NULL, NULL, 0.00, 1500.00, 3, 0, NULL, 0, '2025-12-10 13:09:46', NULL),
+(18, 'CBL-001', 65, NULL, 'Cable electrique 2.5mm2', NULL, NULL, NULL, NULL, 25000.00, 45000.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(19, 'DISJ-001', 65, NULL, 'Disjoncteur 16A', NULL, NULL, NULL, NULL, 5000.00, 8500.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(20, 'PRISE-001', 65, NULL, 'Prise double', NULL, NULL, NULL, NULL, 1500.00, 2500.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(21, 'TUY-001', 66, NULL, 'Tube PVC 110mm', NULL, NULL, NULL, NULL, 7000.00, 12000.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(22, 'ROB-001', 66, NULL, 'Robinet chrome', NULL, NULL, NULL, NULL, 9000.00, 15000.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(23, 'WC-001', 66, NULL, 'WC complet', NULL, NULL, NULL, NULL, 50000.00, 85000.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(24, 'PEIN-001', 67, NULL, 'Peinture int 25L', NULL, NULL, NULL, NULL, 20000.00, 35000.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(25, 'PEIN-002', 67, NULL, 'Peinture ext 25L', NULL, NULL, NULL, NULL, 25000.00, 42000.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(26, 'MART-001', 68, NULL, 'Marteau 500g', NULL, NULL, NULL, NULL, 3500.00, 6500.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(27, 'SCIE-001', 68, NULL, 'Scie metaux', NULL, NULL, NULL, NULL, 5000.00, 8500.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(28, 'CIM-001', 69, NULL, 'Ciment 50kg', NULL, NULL, NULL, NULL, 3200.00, 5500.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(29, 'BRIQUE-001', 69, NULL, 'Brique creuse', NULL, NULL, NULL, NULL, 150.00, 250.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(30, 'CARR-001', 69, NULL, 'Carreau 40x40', NULL, NULL, NULL, NULL, 5000.00, 8500.00, 0, 10, NULL, 1, '2025-12-13 16:21:47', NULL),
+(59, 'PAN-CTBX18', 70, NULL, 'Panneau CTBX 18mm 1220x2440', NULL, NULL, NULL, NULL, 22000.00, 29500.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(60, 'PAN-MDF16', 70, NULL, 'Panneau MDF 16mm 1220x2440', NULL, NULL, NULL, NULL, 9500.00, 13200.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(61, 'PAN-MULTI21', 70, NULL, 'Multiplex 21mm 1220x2440', NULL, NULL, NULL, NULL, 18000.00, 24500.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(62, 'MAC-SCIE210', 71, NULL, 'Scie a ruban 210W professionnelle', NULL, NULL, NULL, NULL, 145000.00, 185000.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(63, 'MAC-RABOTEUSE', 71, NULL, 'Raboteuse 305mm', NULL, NULL, NULL, NULL, 260000.00, 320000.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(64, 'MAC-TOUPIE', 71, NULL, 'Toupie 2200W', NULL, NULL, NULL, NULL, 350000.00, 425000.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(65, 'QUI-CHARN90', 68, NULL, 'Charniere inox 90deg (paire)', NULL, NULL, NULL, NULL, 600.00, 950.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(66, 'QUI-GLISS50', 68, NULL, 'Glissiere telescopique 500mm', NULL, NULL, NULL, NULL, 3000.00, 4200.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(67, 'QUI-POIGN160', 68, NULL, 'Poignee aluminium 160mm', NULL, NULL, NULL, NULL, 750.00, 1200.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(68, 'ELM-FOUR', 72, NULL, 'Four encastrable inox 60cm', NULL, NULL, NULL, NULL, 145000.00, 185000.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(69, 'ELM-PLAQUE', 72, NULL, 'Plaque vitroceramique 4 feux', NULL, NULL, NULL, NULL, 72000.00, 95000.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(70, 'ACC-VIS430', 73, NULL, 'Vis noire 4x30mm (boite 100)', NULL, NULL, NULL, NULL, 1200.00, 2000.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(71, 'ACC-COLLE', 73, NULL, 'Colle bois pro 750ml', NULL, NULL, NULL, NULL, 5500.00, 8500.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL),
+(72, 'ACC-VERNIS', 73, NULL, 'Vernis brillant 1L', NULL, NULL, NULL, NULL, 8000.00, 12500.00, 0, 10, NULL, 1, '2025-12-13 17:33:50', NULL);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `promotions`
+-- Table structure for table `promotions`
 --
 
 CREATE TABLE `promotions` (
@@ -1338,7 +1619,7 @@ CREATE TABLE `promotions` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `promotion_produit`
+-- Table structure for table `promotion_produit`
 --
 
 CREATE TABLE `promotion_produit` (
@@ -1349,7 +1630,7 @@ CREATE TABLE `promotion_produit` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `prospections_terrain`
+-- Table structure for table `prospections_terrain`
 --
 
 CREATE TABLE `prospections_terrain` (
@@ -1370,7 +1651,7 @@ CREATE TABLE `prospections_terrain` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `prospections_terrain`
+-- Dumping data for table `prospections_terrain`
 --
 
 INSERT INTO `prospections_terrain` (`id`, `date_prospection`, `heure_prospection`, `prospect_nom`, `secteur`, `latitude`, `longitude`, `adresse_gps`, `besoin_identifie`, `action_menee`, `resultat`, `prochaine_etape`, `client_id`, `commercial_id`) VALUES
@@ -1381,7 +1662,7 @@ INSERT INTO `prospections_terrain` (`id`, `date_prospection`, `heure_prospection
 -- --------------------------------------------------------
 
 --
--- Structure de la table `prospects_formation`
+-- Table structure for table `prospects_formation`
 --
 
 CREATE TABLE `prospects_formation` (
@@ -1396,7 +1677,7 @@ CREATE TABLE `prospects_formation` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `prospects_formation`
+-- Dumping data for table `prospects_formation`
 --
 
 INSERT INTO `prospects_formation` (`id`, `date_prospect`, `nom_prospect`, `contact`, `source`, `statut_actuel`, `client_id`, `utilisateur_id`) VALUES
@@ -1405,7 +1686,7 @@ INSERT INTO `prospects_formation` (`id`, `date_prospect`, `nom_prospect`, `conta
 -- --------------------------------------------------------
 
 --
--- Structure de la table `relances_devis`
+-- Table structure for table `relances_devis`
 --
 
 CREATE TABLE `relances_devis` (
@@ -1423,7 +1704,7 @@ CREATE TABLE `relances_devis` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `rendezvous_terrain`
+-- Table structure for table `rendezvous_terrain`
 --
 
 CREATE TABLE `rendezvous_terrain` (
@@ -1441,7 +1722,7 @@ CREATE TABLE `rendezvous_terrain` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `reservations_hotel`
+-- Table structure for table `reservations_hotel`
 --
 
 CREATE TABLE `reservations_hotel` (
@@ -1459,17 +1740,73 @@ CREATE TABLE `reservations_hotel` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `reservations_hotel`
+-- Dumping data for table `reservations_hotel`
 --
 
 INSERT INTO `reservations_hotel` (`id`, `date_reservation`, `client_id`, `chambre_id`, `date_debut`, `date_fin`, `nb_nuits`, `montant_total`, `statut`, `mode_paiement_id`, `concierge_id`) VALUES
 (1, '2025-11-18', 5, 2, '2025-11-18', '2025-11-18', 1, 35000.00, 'EN_COURS', 4, 1),
-(2, '2025-11-18', 4, 2, '2025-11-18', '2025-11-20', 2, 70000.00, 'EN_COURS', NULL, 1);
+(2, '2025-11-18', 4, 2, '2025-11-18', '2025-11-20', 2, 70000.00, 'EN_COURS', NULL, 1),
+(3, '2025-12-13', 23, 1, '2025-12-13', '2025-12-13', 1, 20000.00, 'EN_COURS', 1, 1),
+(20, '2025-11-16', 76, 2, '2025-11-21', '2025-11-24', 3, 60351.00, '', NULL, 1),
+(21, '2025-11-21', 95, 1, '2025-11-26', '2025-11-30', 4, 161240.00, '', NULL, 1),
+(22, '2025-10-17', 85, 2, '2025-10-22', '2025-10-23', 1, 20910.00, '', NULL, 1),
+(23, '2025-11-28', 67, 1, '2025-12-03', '2025-12-05', 2, 89710.00, '', NULL, 1),
+(24, '2025-10-21', 88, 2, '2025-10-26', '2025-10-28', 2, 59508.00, '', NULL, 1),
+(25, '2025-10-31', 88, 1, '2025-11-05', '2025-11-07', 2, 50382.00, '', NULL, 1),
+(26, '2025-11-24', 74, 1, '2025-11-29', '2025-12-02', 3, 102837.00, '', NULL, 1),
+(27, '2025-10-25', 82, 1, '2025-10-30', '2025-11-04', 5, 204625.00, '', NULL, 1);
+
+--
+-- Triggers `reservations_hotel`
+--
+DELIMITER $$
+CREATE TRIGGER `after_reservation_hotel_insert` AFTER INSERT ON `reservations_hotel` FOR EACH ROW BEGIN
+            IF NEW.montant_total > 0 THEN
+                INSERT INTO caisse_journal 
+                (date_ecriture, montant, sens, source_type, source_id, utilisateur_id, commentaire)
+                VALUES (
+                    NEW.date_reservation,
+                    NEW.montant_total,
+                    'ENTREE',
+                    'reservation_hotel',
+                    NEW.id,
+                    COALESCE(NEW.concierge_id, 1),
+                    CONCAT('Réservation hôtel #', NEW.id)
+                );
+            END IF;
+        END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `after_reservation_hotel_update` AFTER UPDATE ON `reservations_hotel` FOR EACH ROW BEGIN
+            IF NEW.montant_total != OLD.montant_total THEN
+                -- Annuler l'ancienne écriture
+                DELETE FROM caisse_journal 
+                WHERE source_type = 'reservation_hotel' AND source_id = NEW.id;
+                
+                -- Créer nouvelle écriture si montant > 0
+                IF NEW.montant_total > 0 THEN
+                    INSERT INTO caisse_journal 
+                    (date_ecriture, montant, sens, source_type, source_id, utilisateur_id, commentaire)
+                    VALUES (
+                        NEW.date_reservation,
+                        NEW.montant_total,
+                        'ENTREE',
+                        'reservation_hotel',
+                        NEW.id,
+                        COALESCE(NEW.concierge_id, 1),
+                        CONCAT('Réservation hôtel #', NEW.id)
+                    );
+                END IF;
+            END IF;
+        END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `retours_litiges`
+-- Table structure for table `retours_litiges`
 --
 
 CREATE TABLE `retours_litiges` (
@@ -1491,7 +1828,7 @@ CREATE TABLE `retours_litiges` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `roles`
+-- Table structure for table `roles`
 --
 
 CREATE TABLE `roles` (
@@ -1502,7 +1839,7 @@ CREATE TABLE `roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `roles`
+-- Dumping data for table `roles`
 --
 
 INSERT INTO `roles` (`id`, `code`, `nom`, `description`) VALUES
@@ -1516,7 +1853,7 @@ INSERT INTO `roles` (`id`, `code`, `nom`, `description`) VALUES
 -- --------------------------------------------------------
 
 --
--- Structure de la table `role_permission`
+-- Table structure for table `role_permission`
 --
 
 CREATE TABLE `role_permission` (
@@ -1525,7 +1862,7 @@ CREATE TABLE `role_permission` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `role_permission`
+-- Dumping data for table `role_permission`
 --
 
 INSERT INTO `role_permission` (`role_id`, `permission_id`) VALUES
@@ -1590,7 +1927,7 @@ INSERT INTO `role_permission` (`role_id`, `permission_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Structure de la table `ruptures_signalees`
+-- Table structure for table `ruptures_signalees`
 --
 
 CREATE TABLE `ruptures_signalees` (
@@ -1611,7 +1948,7 @@ CREATE TABLE `ruptures_signalees` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `ruptures_stock`
+-- Table structure for table `ruptures_stock`
 --
 
 CREATE TABLE `ruptures_stock` (
@@ -1628,7 +1965,7 @@ CREATE TABLE `ruptures_stock` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `satisfaction_clients`
+-- Table structure for table `satisfaction_clients`
 --
 
 CREATE TABLE `satisfaction_clients` (
@@ -1643,7 +1980,7 @@ CREATE TABLE `satisfaction_clients` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `satisfaction_clients`
+-- Dumping data for table `satisfaction_clients`
 --
 
 INSERT INTO `satisfaction_clients` (`id`, `date_satisfaction`, `client_id`, `nom_client`, `service_utilise`, `note`, `commentaire`, `utilisateur_id`) VALUES
@@ -1653,7 +1990,7 @@ INSERT INTO `satisfaction_clients` (`id`, `date_satisfaction`, `client_id`, `nom
 -- --------------------------------------------------------
 
 --
--- Structure de la table `sessions_actives`
+-- Table structure for table `sessions_actives`
 --
 
 CREATE TABLE `sessions_actives` (
@@ -1671,17 +2008,18 @@ CREATE TABLE `sessions_actives` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Sessions actives avec tracking d??taill??';
 
 --
--- Déchargement des données de la table `sessions_actives`
+-- Dumping data for table `sessions_actives`
 --
 
 INSERT INTO `sessions_actives` (`id`, `utilisateur_id`, `ip_address`, `user_agent`, `device_fingerprint`, `pays`, `ville`, `date_creation`, `date_derniere_activite`, `date_expiration`, `actif`) VALUES
+('4i7r6spbtrkholn08ncn2bnu96', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, NULL, NULL, '2025-12-13 15:24:50', '2025-12-13 15:24:50', '2025-12-13 17:24:50', 1),
 ('nr7ld1kfh8rh8i9hr40f2db8te', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0', NULL, NULL, NULL, '2025-12-13 13:03:12', '2025-12-13 13:03:12', '2025-12-13 15:03:12', 1),
 ('u78v44an2rnvh1vjml3r74u03m', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, NULL, NULL, '2025-12-13 13:26:22', '2025-12-13 13:26:22', '2025-12-13 15:26:22', 1);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `sms_2fa_codes`
+-- Table structure for table `sms_2fa_codes`
 --
 
 CREATE TABLE `sms_2fa_codes` (
@@ -1698,7 +2036,7 @@ CREATE TABLE `sms_2fa_codes` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `sms_tracking`
+-- Table structure for table `sms_tracking`
 --
 
 CREATE TABLE `sms_tracking` (
@@ -1713,7 +2051,7 @@ CREATE TABLE `sms_tracking` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `sous_categories_produits`
+-- Table structure for table `sous_categories_produits`
 --
 
 CREATE TABLE `sous_categories_produits` (
@@ -1723,7 +2061,7 @@ CREATE TABLE `sous_categories_produits` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `sous_categories_produits`
+-- Dumping data for table `sous_categories_produits`
 --
 
 INSERT INTO `sous_categories_produits` (`id`, `famille_id`, `nom`) VALUES
@@ -1736,7 +2074,7 @@ INSERT INTO `sous_categories_produits` (`id`, `famille_id`, `nom`) VALUES
 -- --------------------------------------------------------
 
 --
--- Structure de la table `stocks_mouvements`
+-- Table structure for table `stocks_mouvements`
 --
 
 CREATE TABLE `stocks_mouvements` (
@@ -1752,39 +2090,81 @@ CREATE TABLE `stocks_mouvements` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `stocks_mouvements`
+-- Dumping data for table `stocks_mouvements`
 --
 
 INSERT INTO `stocks_mouvements` (`id`, `produit_id`, `date_mouvement`, `type_mouvement`, `quantite`, `source_type`, `source_id`, `commentaire`, `utilisateur_id`) VALUES
-(1, 1, '2025-11-18 11:00:22', 'ENTREE', 5, 'INVENTAIRE', NULL, 'Stock initial lit 2 places', 1),
-(2, 2, '2025-11-18 11:00:22', 'ENTREE', 3, 'INVENTAIRE', NULL, 'Stock initial salon', 1),
-(3, 3, '2025-11-18 11:00:22', 'ENTREE', 50, 'INVENTAIRE', NULL, 'Stock initial visserie', 1),
-(4, 4, '2025-11-18 11:00:22', 'ENTREE', 30, 'INVENTAIRE', NULL, 'Stock initial panneaux', 1),
-(5, 4, '2025-11-18 12:36:29', 'SORTIE', 2, 'VENTE', 2, 'Sortie via BL BL-20251118-123629', 1),
-(6, 2, '2025-11-18 12:37:39', 'SORTIE', 1, 'VENTE', 1, 'Sortie via BL BL-20251118-123739', 1),
-(7, 3, '2025-11-18 14:00:08', 'SORTIE', 2, 'VENTE', 3, 'Sortie via BL BL-20251118-140008', 1),
-(8, 3, '2025-11-18 15:18:54', 'SORTIE', 2, 'VENTE', 4, 'Sortie via BL BL-20251118-151854', 1),
-(9, 4, '2025-11-20 12:23:39', 'SORTIE', 1, 'VENTE', 16, 'Sortie via BL BL-20251120-122339', 1),
-(10, 1, '2025-11-21 11:23:46', 'SORTIE', 4, 'VENTE', 17, 'Sortie via BL BL-20251121-112346', 1),
-(11, 4, '2025-11-21 11:23:46', 'SORTIE', 15, 'VENTE', 17, 'Sortie via BL BL-20251121-112346', 1),
-(12, 1, '2025-12-06 12:30:51', 'ENTREE', 2, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(13, 1, '2025-12-06 12:31:08', 'SORTIE', 2, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(14, 15, '2025-12-06 12:32:22', 'ENTREE', 10, 'INVENTAIRE', NULL, 'Stock initial ?? la cr??ation du produit', 1),
-(15, 1, '2025-11-21 12:50:59', 'ENTREE', 22, 'ACHAT', 55222, NULL, 1),
-(17, 2, '2025-11-26 17:05:44', 'ENTREE', 25, 'ACHAT', 2, 'Entr??e suite ?? l???achat AC-20251126-170544', 1),
-(18, 3, '2025-12-02 15:40:14', 'ENTREE', 25, 'ACHAT', 3, 'Entr??e suite ?? l???achat AC-20251202-154014', 1),
-(19, 1, '2025-12-10 11:43:34', 'SORTIE', 1, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(20, 1, '2025-12-10 11:43:43', 'SORTIE', 1, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(21, 16, '2025-12-10 11:45:00', 'ENTREE', 25, 'INVENTAIRE', NULL, 'Stock initial ?? la cr??ation du produit', 1),
-(22, 16, '2025-12-10 11:45:31', 'SORTIE', 1, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(27, 17, '2025-12-10 13:09:46', 'ENTREE', 5, 'INVENTAIRE', NULL, 'Stock initial ?? la cr??ation du produit', 1),
-(28, 17, '2025-12-10 13:09:46', 'SORTIE', 2, 'AJUSTEMENT', NULL, 'Ajustement manuel depuis fiche produit', 1),
-(29, 3, '2025-11-26 00:00:00', 'SORTIE', 3, 'VENTE', 20, 'Sortie suite ?? la vente V-20251126-170324', 1);
+(168, 59, '2025-12-13 17:33:50', '', 50, NULL, NULL, 'Stock initial', 1),
+(169, 60, '2025-12-13 17:33:50', '', 80, NULL, NULL, 'Stock initial', 1),
+(170, 61, '2025-12-13 17:33:50', '', 40, NULL, NULL, 'Stock initial', 1),
+(171, 62, '2025-12-13 17:33:50', '', 5, NULL, NULL, 'Stock initial', 1),
+(172, 63, '2025-12-13 17:33:50', '', 3, NULL, NULL, 'Stock initial', 1),
+(173, 64, '2025-12-13 17:33:50', '', 2, NULL, NULL, 'Stock initial', 1),
+(174, 65, '2025-12-13 17:33:50', '', 200, NULL, NULL, 'Stock initial', 1),
+(175, 66, '2025-12-13 17:33:50', '', 100, NULL, NULL, 'Stock initial', 1),
+(176, 67, '2025-12-13 17:33:50', '', 150, NULL, NULL, 'Stock initial', 1),
+(177, 68, '2025-12-13 17:33:50', '', 8, NULL, NULL, 'Stock initial', 1),
+(178, 69, '2025-12-13 17:33:50', '', 10, NULL, NULL, 'Stock initial', 1),
+(179, 70, '2025-12-13 17:33:50', '', 300, NULL, NULL, 'Stock initial', 1),
+(180, 71, '2025-12-13 17:33:50', '', 80, NULL, NULL, 'Stock initial', 1),
+(181, 72, '2025-12-13 17:33:50', '', 60, NULL, NULL, 'Stock initial', 1),
+(182, 69, '2025-12-13 17:33:50', '', -4, 'bon_livraison', 45, 'Livraison BL-20251025-001', 1),
+(183, 64, '2025-12-13 17:33:50', '', -11, 'bon_livraison', 45, 'Livraison BL-20251025-001', 1),
+(184, 60, '2025-12-13 17:33:50', '', -13, 'bon_livraison', 45, 'Livraison BL-20251025-001', 1),
+(185, 72, '2025-12-13 17:33:50', '', -4, 'bon_livraison', 45, 'Livraison BL-20251025-001', 1),
+(186, 62, '2025-12-13 17:33:50', '', -12, 'bon_livraison', 46, 'Livraison BL-20251113-002', 1),
+(187, 59, '2025-12-13 17:33:50', '', -3, 'bon_livraison', 46, 'Livraison BL-20251113-002', 1),
+(188, 65, '2025-12-13 17:33:50', '', -4, 'bon_livraison', 46, 'Livraison BL-20251113-002', 1),
+(189, 59, '2025-12-13 17:33:50', '', -13, 'bon_livraison', 46, 'Livraison BL-20251113-002', 1),
+(190, 62, '2025-12-13 17:33:50', '', -2, 'bon_livraison', 46, 'Livraison BL-20251113-002', 1),
+(191, 61, '2025-12-13 17:33:50', '', -11, 'bon_livraison', 47, 'Livraison BL-20251122-003', 1),
+(192, 69, '2025-12-13 17:33:50', '', -1, 'bon_livraison', 47, 'Livraison BL-20251122-003', 1),
+(193, 71, '2025-12-13 17:33:50', '', -3, 'bon_livraison', 47, 'Livraison BL-20251122-003', 1),
+(194, 61, '2025-12-13 17:33:50', '', -5, 'bon_livraison', 47, 'Livraison BL-20251122-003', 1),
+(195, 72, '2025-12-13 17:33:50', '', -12, 'bon_livraison', 48, 'Livraison BL-20251111-004', 1),
+(196, 68, '2025-12-13 17:33:50', '', -5, 'bon_livraison', 48, 'Livraison BL-20251111-004', 1),
+(197, 71, '2025-12-13 17:33:50', '', -9, 'bon_livraison', 48, 'Livraison BL-20251111-004', 1),
+(198, 69, '2025-12-13 17:33:50', '', -11, 'bon_livraison', 49, 'Livraison BL-20251017-005', 1),
+(199, 71, '2025-12-13 17:33:50', '', -12, 'bon_livraison', 49, 'Livraison BL-20251017-005', 1),
+(200, 72, '2025-12-13 17:33:50', '', -6, 'bon_livraison', 50, 'Livraison BL-20251215-006', 1),
+(201, 59, '2025-12-13 17:33:50', '', -14, 'bon_livraison', 50, 'Livraison BL-20251215-006', 1),
+(202, 68, '2025-12-13 17:33:50', '', -12, 'bon_livraison', 50, 'Livraison BL-20251215-006', 1),
+(203, 70, '2025-12-13 17:33:50', '', -14, 'bon_livraison', 50, 'Livraison BL-20251215-006', 1),
+(204, 70, '2025-12-13 17:33:50', '', -4, 'bon_livraison', 50, 'Livraison BL-20251215-006', 1),
+(205, 64, '2025-12-13 17:33:50', '', -1, 'bon_livraison', 51, 'Livraison BL-20251130-007', 1),
+(206, 61, '2025-12-13 17:33:50', '', -10, 'bon_livraison', 51, 'Livraison BL-20251130-007', 1),
+(207, 69, '2025-12-13 17:33:50', '', -15, 'bon_livraison', 51, 'Livraison BL-20251130-007', 1),
+(208, 70, '2025-12-13 17:33:50', '', -9, 'bon_livraison', 52, 'Livraison BL-20251212-008', 1),
+(209, 71, '2025-12-13 17:33:50', '', -8, 'bon_livraison', 52, 'Livraison BL-20251212-008', 1),
+(210, 67, '2025-12-13 17:33:50', '', -7, 'bon_livraison', 52, 'Livraison BL-20251212-008', 1),
+(211, 59, '2025-12-13 17:33:50', '', -2, 'bon_livraison', 53, 'Livraison BL-20251030-009', 1),
+(212, 72, '2025-12-13 17:33:50', '', -7, 'bon_livraison', 54, 'Livraison BL-20251202-010', 1),
+(213, 70, '2025-12-13 17:33:50', '', -2, 'bon_livraison', 54, 'Livraison BL-20251202-010', 1),
+(214, 64, '2025-12-13 17:33:50', '', -10, 'bon_livraison', 55, 'Livraison BL-20251016-011', 1),
+(215, 67, '2025-12-13 17:33:50', '', -3, 'bon_livraison', 55, 'Livraison BL-20251016-011', 1),
+(216, 67, '2025-12-13 17:33:50', '', -8, 'bon_livraison', 55, 'Livraison BL-20251016-011', 1),
+(217, 60, '2025-12-13 17:33:50', '', -7, 'bon_livraison', 55, 'Livraison BL-20251016-011', 1),
+(218, 69, '2025-12-13 17:33:50', '', -10, 'bon_livraison', 56, 'Livraison BL-20251212-012', 1),
+(219, 63, '2025-12-13 17:33:50', '', -4, 'bon_livraison', 57, 'Livraison BL-20251210-013', 1),
+(220, 64, '2025-12-13 17:33:50', '', -9, 'bon_livraison', 58, 'Livraison BL-20251115-014', 1),
+(221, 65, '2025-12-13 17:33:50', '', -10, 'bon_livraison', 58, 'Livraison BL-20251115-014', 1),
+(222, 72, '2025-12-13 17:33:50', '', -5, 'bon_livraison', 58, 'Livraison BL-20251115-014', 1),
+(223, 68, '2025-12-13 17:33:50', '', -3, 'bon_livraison', 58, 'Livraison BL-20251115-014', 1),
+(224, 68, '2025-12-13 17:33:50', '', -7, 'bon_livraison', 59, 'Livraison BL-20251215-015', 1),
+(225, 71, '2025-12-13 17:33:50', '', -9, 'bon_livraison', 59, 'Livraison BL-20251215-015', 1),
+(226, 70, '2025-12-13 17:33:50', '', -1, 'bon_livraison', 59, 'Livraison BL-20251215-015', 1),
+(227, 63, '2025-12-13 17:33:50', '', -9, 'bon_livraison', 59, 'Livraison BL-20251215-015', 1),
+(228, 70, '2025-12-13 17:33:50', '', -5, 'bon_livraison', 60, 'Livraison BL-20251209-016', 1),
+(229, 69, '2025-12-13 17:33:50', '', -9, 'bon_livraison', 60, 'Livraison BL-20251209-016', 1),
+(230, 61, '2025-12-13 17:33:50', '', -5, 'bon_livraison', 60, 'Livraison BL-20251209-016', 1),
+(231, 64, '2025-12-13 17:33:50', '', -3, 'bon_livraison', 61, 'Livraison BL-20251108-017', 1),
+(232, 61, '2025-12-13 17:33:50', '', -4, 'bon_livraison', 61, 'Livraison BL-20251108-017', 1),
+(233, 65, '2025-12-13 17:33:50', '', -7, 'bon_livraison', 61, 'Livraison BL-20251108-017', 1);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `tentatives_connexion`
+-- Table structure for table `tentatives_connexion`
 --
 
 CREATE TABLE `tentatives_connexion` (
@@ -1802,18 +2182,19 @@ CREATE TABLE `tentatives_connexion` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Historique d??taill?? des tentatives de connexion';
 
 --
--- Déchargement des données de la table `tentatives_connexion`
+-- Dumping data for table `tentatives_connexion`
 --
 
 INSERT INTO `tentatives_connexion` (`id`, `login_attempt`, `utilisateur_id`, `ip_address`, `user_agent`, `methode_2fa`, `succes`, `raison_echec`, `pays`, `ville`, `date_tentative`) VALUES
 (1, 'admin', 1, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0', NULL, 0, 'Mot de passe incorrect', NULL, NULL, '2025-12-13 13:03:02'),
 (2, 'admin', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', NULL, 0, 'Mot de passe incorrect', NULL, NULL, '2025-12-13 13:18:28'),
-(3, 'admin', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'EMAIL', 1, NULL, NULL, NULL, '2025-12-13 13:26:22');
+(3, 'admin', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'EMAIL', 1, NULL, NULL, NULL, '2025-12-13 13:26:22'),
+(4, 'admin', 1, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'EMAIL', 1, NULL, NULL, NULL, '2025-12-13 15:24:50');
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `types_client`
+-- Table structure for table `types_client`
 --
 
 CREATE TABLE `types_client` (
@@ -1823,7 +2204,7 @@ CREATE TABLE `types_client` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `types_client`
+-- Dumping data for table `types_client`
 --
 
 INSERT INTO `types_client` (`id`, `code`, `libelle`) VALUES
@@ -1836,7 +2217,7 @@ INSERT INTO `types_client` (`id`, `code`, `libelle`) VALUES
 -- --------------------------------------------------------
 
 --
--- Structure de la table `upsell_hotel`
+-- Table structure for table `upsell_hotel`
 --
 
 CREATE TABLE `upsell_hotel` (
@@ -1849,7 +2230,7 @@ CREATE TABLE `upsell_hotel` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `utilisateurs`
+-- Table structure for table `utilisateurs`
 --
 
 CREATE TABLE `utilisateurs` (
@@ -1872,11 +2253,11 @@ CREATE TABLE `utilisateurs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `utilisateurs`
+-- Dumping data for table `utilisateurs`
 --
 
 INSERT INTO `utilisateurs` (`id`, `login`, `mot_de_passe_hash`, `nom_complet`, `email`, `telephone`, `actif`, `date_creation`, `date_derniere_connexion`, `date_changement_mdp`, `mdp_expire`, `force_changement_mdp`, `compte_verrouille`, `raison_verrouillage`, `date_verrouillage`, `sessions_simultanees_actuelles`) VALUES
-(1, 'admin', '$2b$10$j6YYUX.QLOxOoBn9eB4rJu8/ye4/NOEXPvRjcYhUY4mBiaZZFUrTi', 'Administrateur KMS', 'admin@kms.local', NULL, 1, '2025-11-18 10:59:28', '2025-12-13 13:26:22', NULL, 0, 0, 0, NULL, NULL, 0),
+(1, 'admin', '$2b$10$j6YYUX.QLOxOoBn9eB4rJu8/ye4/NOEXPvRjcYhUY4mBiaZZFUrTi', 'Administrateur KMS', 'admin@kms.local', NULL, 1, '2025-11-18 10:59:28', '2025-12-13 15:24:50', NULL, 0, 0, 0, NULL, NULL, 0),
 (2, 'admin2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Administrateur Syst??me', 'admin2@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
 (3, 'showroom1', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Marie Kouadio', 'marie.kouadio@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
 (4, 'showroom2', '$2y$10$G6sGiMHX75v9PYTAqIZCPObMQV.3InGlXpNGyrKWKK/gM8iln0Tfu', 'Yao Kouassi', 'yao.kouassi@kms.local', NULL, 1, '2025-12-11 11:56:20', NULL, NULL, 0, 0, 0, NULL, NULL, 0),
@@ -1894,7 +2275,7 @@ INSERT INTO `utilisateurs` (`id`, `login`, `mot_de_passe_hash`, `nom_complet`, `
 -- --------------------------------------------------------
 
 --
--- Structure de la table `utilisateurs_2fa`
+-- Table structure for table `utilisateurs_2fa`
 --
 
 CREATE TABLE `utilisateurs_2fa` (
@@ -1913,7 +2294,7 @@ CREATE TABLE `utilisateurs_2fa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Configuration 2FA par utilisateur';
 
 --
--- Déchargement des données de la table `utilisateurs_2fa`
+-- Dumping data for table `utilisateurs_2fa`
 --
 
 INSERT INTO `utilisateurs_2fa` (`id`, `utilisateur_id`, `secret`, `actif`, `date_activation`, `date_desactivation`, `methode`, `telephone_backup`, `email_backup`, `date_creation`, `methode_2fa`, `telephone`) VALUES
@@ -1922,7 +2303,7 @@ INSERT INTO `utilisateurs_2fa` (`id`, `utilisateur_id`, `secret`, `actif`, `date
 -- --------------------------------------------------------
 
 --
--- Structure de la table `utilisateurs_2fa_recovery`
+-- Table structure for table `utilisateurs_2fa_recovery`
 --
 
 CREATE TABLE `utilisateurs_2fa_recovery` (
@@ -1937,7 +2318,7 @@ CREATE TABLE `utilisateurs_2fa_recovery` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `utilisateur_role`
+-- Table structure for table `utilisateur_role`
 --
 
 CREATE TABLE `utilisateur_role` (
@@ -1946,7 +2327,7 @@ CREATE TABLE `utilisateur_role` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `utilisateur_role`
+-- Dumping data for table `utilisateur_role`
 --
 
 INSERT INTO `utilisateur_role` (`utilisateur_id`, `role_id`) VALUES
@@ -1969,7 +2350,7 @@ INSERT INTO `utilisateur_role` (`utilisateur_id`, `role_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Structure de la table `ventes`
+-- Table structure for table `ventes`
 --
 
 CREATE TABLE `ventes` (
@@ -1979,7 +2360,7 @@ CREATE TABLE `ventes` (
   `client_id` int(10) UNSIGNED NOT NULL,
   `canal_vente_id` int(10) UNSIGNED NOT NULL,
   `devis_id` int(10) UNSIGNED DEFAULT NULL,
-  `statut` enum('EN_ATTENTE_LIVRAISON','LIVREE','ANNULEE','PARTIELLEMENT_LIVREE') NOT NULL DEFAULT 'EN_ATTENTE_LIVRAISON',
+  `statut` enum('DEVIS','DEVIS_ACCEPTE','EN_ATTENTE_LIVRAISON','EN_PREPARATION','PRET_LIVRAISON','PARTIELLEMENT_LIVREE','LIVREE','FACTUREE','PAYEE','ANNULEE') NOT NULL DEFAULT 'EN_ATTENTE_LIVRAISON',
   `montant_total_ht` decimal(15,2) NOT NULL DEFAULT 0.00,
   `montant_total_ttc` decimal(15,2) NOT NULL DEFAULT 0.00,
   `utilisateur_id` int(10) UNSIGNED NOT NULL,
@@ -1987,36 +2368,46 @@ CREATE TABLE `ventes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `ventes`
+-- Dumping data for table `ventes`
 --
 
 INSERT INTO `ventes` (`id`, `numero`, `date_vente`, `client_id`, `canal_vente_id`, `devis_id`, `statut`, `montant_total_ht`, `montant_total_ttc`, `utilisateur_id`, `commentaires`) VALUES
-(1, 'V-20251118-114131', '2025-11-18', 3, 3, NULL, 'LIVREE', 200000.00, 238500.00, 1, NULL),
-(2, 'V-20251118-122137', '2025-11-18', 2, 2, NULL, 'LIVREE', 1499994.00, 1788742.85, 1, NULL),
-(3, 'V-20251118-135949', '2025-11-18', 5, 3, 1, 'LIVREE', 50000.00, 50000.00, 1, 'Vente issue du devis DV-20251118-135909'),
-(4, 'V-20251118-151825', '2025-11-18', 5, 3, 1, 'LIVREE', 50000.00, 50000.00, 1, 'Vente issue du devis DV-20251118-135909'),
-(5, 'V-20251118-155819', '2025-11-18', 5, 3, NULL, 'EN_ATTENTE_LIVRAISON', 50000.00, 59625.00, 1, NULL),
-(6, 'V-20251120-105356', '2025-11-20', 2, 3, 2, 'EN_ATTENTE_LIVRAISON', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-105327'),
-(7, 'V-20251120-112512', '2025-11-20', 2, 3, 2, 'EN_ATTENTE_LIVRAISON', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-105327'),
-(8, 'V-20251120-112647', '2025-11-20', 2, 3, 2, 'EN_ATTENTE_LIVRAISON', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-105327'),
-(9, 'V-20251120-112839', '2025-11-20', 2, 3, 2, 'EN_ATTENTE_LIVRAISON', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-105327'),
-(10, 'V-20251120-112933', '2025-11-20', 2, 3, 2, 'EN_ATTENTE_LIVRAISON', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-105327'),
-(11, 'V-20251120-112955', '2025-11-20', 2, 3, 2, 'EN_ATTENTE_LIVRAISON', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-105327'),
-(12, 'V-20251120-113037', '2025-11-20', 2, 3, 2, 'EN_ATTENTE_LIVRAISON', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-105327'),
-(13, 'V-20251120-114844', '2025-11-20', 2, 3, 2, 'EN_ATTENTE_LIVRAISON', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-105327'),
-(14, 'V-20251120-115447', '2025-11-20', 2, 3, 2, 'EN_ATTENTE_LIVRAISON', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-105327'),
-(15, 'V-20251120-120452', '2025-11-20', 5, 3, 3, 'EN_ATTENTE_LIVRAISON', 75995.00, 75995.00, 1, 'Vente issue du devis DV-20251120-120352'),
-(16, 'V-20251120-122303', '2025-11-20', 2, 3, 4, 'LIVREE', 38000.00, 38000.00, 1, 'Vente issue du devis DV-20251120-122248'),
-(17, 'V-20251121-112325', '2025-11-21', 6, 1, 5, 'LIVREE', 1315000.00, 1568137.50, 1, 'Vente issue du devis DV-20251121-112258'),
-(18, 'V-20251126-154658', '2025-11-26', 6, 1, NULL, 'EN_ATTENTE_LIVRAISON', 180000.00, 214650.00, 1, NULL),
-(19, 'V-20251126-154749', '2025-11-26', 6, 1, NULL, 'LIVREE', 360000.00, 429300.00, 1, NULL),
-(20, 'V-20251126-170324', '2025-11-26', 2, 4, NULL, 'LIVREE', 75000.00, 89437.50, 1, NULL),
-(21, 'V-20251212-151125', '2025-12-12', 4, 1, NULL, 'EN_ATTENTE_LIVRAISON', 840000.00, 1001700.00, 1, NULL);
+(57, 'VTE-20251109-001', '2025-11-09', 94, 1, 52, 'EN_ATTENTE_LIVRAISON', 3043100.00, 3043100.00, 1, NULL),
+(58, 'VTE-20251023-002', '2025-10-23', 93, 1, 54, 'LIVREE', 5276600.00, 5276600.00, 1, NULL),
+(59, 'VTE-20251117-003', '2025-11-17', 72, 1, 55, 'EN_ATTENTE_LIVRAISON', 766500.00, 766500.00, 1, NULL),
+(60, 'VTE-20251202-004', '2025-12-02', 86, 1, 56, 'EN_ATTENTE_LIVRAISON', 1447000.00, 1447000.00, 1, NULL),
+(61, 'VTE-20251125-005', '2025-11-25', 89, 1, 58, 'EN_ATTENTE_LIVRAISON', 2945000.00, 2945000.00, 1, NULL),
+(62, 'VTE-20251123-006', '2025-11-23', 71, 1, 59, 'EN_ATTENTE_LIVRAISON', 8130000.00, 8130000.00, 1, NULL),
+(63, 'VTE-20251111-007', '2025-11-11', 71, 1, 62, 'LIVREE', 3065800.00, 3065800.00, 1, NULL),
+(64, 'VTE-20251130-008', '2025-11-30', 89, 1, 64, 'EN_ATTENTE_LIVRAISON', 2159000.00, 2159000.00, 1, NULL),
+(65, 'VTE-20251121-009', '2025-11-21', 96, 1, 65, 'EN_ATTENTE_LIVRAISON', 102950.00, 102950.00, 1, NULL),
+(66, 'VTE-20251117-010', '2025-11-17', 95, 1, 67, 'LIVREE', 512500.00, 512500.00, 1, NULL),
+(67, 'VTE-20251109-011', '2025-11-09', 91, 1, 69, 'LIVREE', 1151500.00, 1151500.00, 1, NULL),
+(68, 'VTE-20251027-012', '2025-10-27', 95, 1, 70, 'EN_ATTENTE_LIVRAISON', 5891900.00, 5891900.00, 1, NULL),
+(69, 'VTE-20251204-013', '2025-12-04', 81, 1, 71, 'EN_ATTENTE_LIVRAISON', 51800.00, 51800.00, 1, NULL),
+(70, 'VTE-20251015-014', '2025-10-15', 82, 1, 73, 'LIVREE', 1147000.00, 1147000.00, 1, NULL),
+(71, 'VTE-20251214-015', '2025-12-14', 67, 1, 74, 'LIVREE', 2744000.00, 2744000.00, 1, NULL),
+(72, 'VTE-20251127-016', '2025-11-27', 78, 1, 75, 'LIVREE', 2095000.00, 2095000.00, 1, NULL),
+(73, 'VTE-20251211-017', '2025-12-11', 94, 1, NULL, 'LIVREE', 94400.00, 94400.00, 1, NULL),
+(74, 'VTE-20251021-018', '2025-10-21', 87, 1, NULL, 'EN_ATTENTE_LIVRAISON', 5730000.00, 5730000.00, 1, NULL),
+(75, 'VTE-20251027-019', '2025-10-27', 83, 1, NULL, 'LIVREE', 59000.00, 59000.00, 1, NULL),
+(76, 'VTE-20251129-020', '2025-11-29', 93, 1, NULL, 'LIVREE', 91500.00, 91500.00, 1, NULL),
+(77, 'VTE-20251212-021', '2025-12-12', 79, 1, NULL, 'EN_ATTENTE_LIVRAISON', 2387850.00, 2387850.00, 1, NULL),
+(78, 'VTE-20251015-022', '2025-10-15', 68, 1, NULL, 'EN_ATTENTE_LIVRAISON', 43400.00, 43400.00, 1, NULL),
+(79, 'VTE-20251015-023', '2025-10-15', 92, 1, NULL, 'LIVREE', 4355600.00, 4355600.00, 1, NULL),
+(80, 'VTE-20251024-024', '2025-10-24', 75, 1, NULL, 'EN_ATTENTE_LIVRAISON', 61000.00, 61000.00, 1, NULL),
+(81, 'VTE-20251208-025', '2025-12-08', 94, 1, NULL, 'LIVREE', 950000.00, 950000.00, 1, NULL),
+(82, 'VTE-20251208-026', '2025-12-08', 67, 1, NULL, 'LIVREE', 1280000.00, 1280000.00, 1, NULL),
+(83, 'VTE-20251113-027', '2025-11-13', 86, 1, NULL, 'LIVREE', 4452000.00, 4452000.00, 1, NULL),
+(84, 'VTE-20251213-028', '2025-12-13', 69, 1, NULL, 'LIVREE', 4253500.00, 4253500.00, 1, NULL),
+(85, 'VTE-20251120-029', '2025-11-20', 74, 1, NULL, 'EN_ATTENTE_LIVRAISON', 77300.00, 77300.00, 1, NULL),
+(86, 'VTE-20251205-030', '2025-12-05', 77, 1, NULL, 'LIVREE', 987500.00, 987500.00, 1, NULL),
+(87, 'VTE-20251107-031', '2025-11-07', 83, 1, NULL, 'LIVREE', 1379650.00, 1379650.00, 1, NULL);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `ventes_lignes`
+-- Table structure for table `ventes_lignes`
 --
 
 CREATE TABLE `ventes_lignes` (
@@ -2030,39 +2421,114 @@ CREATE TABLE `ventes_lignes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Déchargement des données de la table `ventes_lignes`
+-- Dumping data for table `ventes_lignes`
 --
 
 INSERT INTO `ventes_lignes` (`id`, `vente_id`, `produit_id`, `quantite`, `prix_unitaire`, `remise`, `montant_ligne_ht`) VALUES
-(2, 1, 2, 1, 200000.00, 0.00, 200000.00),
-(4, 2, 4, 2, 750000.00, 6.00, 1499994.00),
-(5, 3, 3, 2, 25000.00, 0.00, 50000.00),
-(6, 4, 3, 2, 25000.00, 0.00, 50000.00),
-(7, 5, 3, 2, 25000.00, 0.00, 50000.00),
-(8, 6, 4, 1, 38000.00, 0.00, 38000.00),
-(9, 7, 4, 1, 38000.00, 0.00, 38000.00),
-(10, 8, 4, 1, 38000.00, 0.00, 38000.00),
-(11, 9, 4, 1, 38000.00, 0.00, 38000.00),
-(12, 10, 4, 1, 38000.00, 0.00, 38000.00),
-(13, 11, 4, 1, 38000.00, 0.00, 38000.00),
-(14, 12, 4, 1, 38000.00, 0.00, 38000.00),
-(15, 13, 4, 1, 38000.00, 0.00, 38000.00),
-(16, 14, 4, 1, 38000.00, 0.00, 38000.00),
-(17, 15, 4, 1, 38000.00, 5.00, 37995.00),
-(18, 15, 4, 1, 38000.00, 0.00, 38000.00),
-(19, 16, 4, 1, 38000.00, 0.00, 38000.00),
-(25, 17, 1, 4, 180000.00, 0.00, 720000.00),
-(26, 17, 4, 15, 38000.00, 0.00, 570000.00),
-(27, 17, 3, 5, 5000.00, 0.00, 25000.00),
-(28, 18, 1, 1, 180000.00, 0.00, 180000.00),
-(31, 19, 1, 2, 180000.00, 0.00, 360000.00),
-(34, 20, 3, 3, 25000.00, 0.00, 75000.00),
-(35, 21, 2, 3, 280000.00, 0.00, 840000.00);
+(169, 57, 59, 3, 29500.00, 0.00, 88500.00),
+(170, 57, 62, 13, 185000.00, 0.00, 2405000.00),
+(171, 57, 60, 8, 13200.00, 0.00, 105600.00),
+(172, 57, 71, 9, 8500.00, 0.00, 76500.00),
+(173, 57, 61, 15, 24500.00, 0.00, 367500.00),
+(174, 58, 69, 4, 95000.00, 0.00, 380000.00),
+(175, 58, 64, 11, 425000.00, 0.00, 4675000.00),
+(176, 58, 60, 13, 13200.00, 0.00, 171600.00),
+(177, 58, 72, 4, 12500.00, 0.00, 50000.00),
+(178, 59, 59, 13, 29500.00, 0.00, 383500.00),
+(179, 59, 67, 7, 1200.00, 0.00, 8400.00),
+(180, 59, 60, 3, 13200.00, 0.00, 39600.00),
+(181, 59, 72, 12, 12500.00, 0.00, 150000.00),
+(182, 59, 62, 1, 185000.00, 0.00, 185000.00),
+(183, 60, 59, 13, 29500.00, 0.00, 383500.00),
+(184, 60, 71, 12, 8500.00, 0.00, 102000.00),
+(185, 60, 72, 13, 12500.00, 0.00, 162500.00),
+(186, 60, 59, 2, 29500.00, 0.00, 59000.00),
+(187, 60, 62, 4, 185000.00, 0.00, 740000.00),
+(188, 61, 68, 9, 185000.00, 0.00, 1665000.00),
+(189, 61, 63, 4, 320000.00, 0.00, 1280000.00),
+(190, 62, 68, 4, 185000.00, 0.00, 740000.00),
+(191, 62, 69, 14, 95000.00, 0.00, 1330000.00),
+(192, 62, 64, 4, 425000.00, 0.00, 1700000.00),
+(193, 62, 63, 3, 320000.00, 0.00, 960000.00),
+(194, 62, 64, 8, 425000.00, 0.00, 3400000.00),
+(195, 63, 62, 12, 185000.00, 0.00, 2220000.00),
+(196, 63, 59, 3, 29500.00, 0.00, 88500.00),
+(197, 63, 65, 4, 950.00, 0.00, 3800.00),
+(198, 63, 59, 13, 29500.00, 0.00, 383500.00),
+(199, 63, 62, 2, 185000.00, 0.00, 370000.00),
+(200, 64, 64, 4, 425000.00, 0.00, 1700000.00),
+(201, 64, 71, 4, 8500.00, 0.00, 34000.00),
+(202, 64, 64, 1, 425000.00, 0.00, 425000.00),
+(203, 65, 71, 8, 8500.00, 0.00, 68000.00),
+(204, 65, 65, 1, 950.00, 0.00, 950.00),
+(205, 65, 70, 14, 2000.00, 0.00, 28000.00),
+(206, 65, 67, 5, 1200.00, 0.00, 6000.00),
+(207, 66, 61, 11, 24500.00, 0.00, 269500.00),
+(208, 66, 69, 1, 95000.00, 0.00, 95000.00),
+(209, 66, 71, 3, 8500.00, 0.00, 25500.00),
+(210, 66, 61, 5, 24500.00, 0.00, 122500.00),
+(211, 67, 72, 12, 12500.00, 0.00, 150000.00),
+(212, 67, 68, 5, 185000.00, 0.00, 925000.00),
+(213, 67, 71, 9, 8500.00, 0.00, 76500.00),
+(214, 68, 71, 15, 8500.00, 0.00, 127500.00),
+(215, 68, 67, 12, 1200.00, 0.00, 14400.00),
+(216, 68, 64, 6, 425000.00, 0.00, 2550000.00),
+(217, 68, 63, 10, 320000.00, 0.00, 3200000.00),
+(218, 69, 66, 9, 4200.00, 0.00, 37800.00),
+(219, 69, 70, 7, 2000.00, 0.00, 14000.00),
+(220, 70, 69, 11, 95000.00, 0.00, 1045000.00),
+(221, 70, 71, 12, 8500.00, 0.00, 102000.00),
+(222, 71, 72, 6, 12500.00, 0.00, 75000.00),
+(223, 71, 59, 14, 29500.00, 0.00, 413000.00),
+(224, 71, 68, 12, 185000.00, 0.00, 2220000.00),
+(225, 71, 70, 14, 2000.00, 0.00, 28000.00),
+(226, 71, 70, 4, 2000.00, 0.00, 8000.00),
+(227, 72, 64, 1, 425000.00, 0.00, 425000.00),
+(228, 72, 61, 10, 24500.00, 0.00, 245000.00),
+(229, 72, 69, 15, 95000.00, 0.00, 1425000.00),
+(230, 73, 70, 9, 2000.00, 0.00, 18000.00),
+(231, 73, 71, 8, 8500.00, 0.00, 68000.00),
+(232, 73, 67, 7, 1200.00, 0.00, 8400.00),
+(233, 74, 62, 8, 185000.00, 0.00, 1480000.00),
+(234, 74, 64, 10, 425000.00, 0.00, 4250000.00),
+(235, 75, 59, 2, 29500.00, 0.00, 59000.00),
+(236, 76, 72, 7, 12500.00, 0.00, 87500.00),
+(237, 76, 70, 2, 2000.00, 0.00, 4000.00),
+(238, 77, 64, 3, 425000.00, 0.00, 1275000.00),
+(239, 77, 65, 3, 950.00, 0.00, 2850.00),
+(240, 77, 68, 6, 185000.00, 0.00, 1110000.00),
+(241, 78, 71, 2, 8500.00, 0.00, 17000.00),
+(242, 78, 60, 2, 13200.00, 0.00, 26400.00),
+(243, 79, 64, 10, 425000.00, 0.00, 4250000.00),
+(244, 79, 67, 3, 1200.00, 0.00, 3600.00),
+(245, 79, 67, 8, 1200.00, 0.00, 9600.00),
+(246, 79, 60, 7, 13200.00, 0.00, 92400.00),
+(247, 80, 66, 8, 4200.00, 0.00, 33600.00),
+(248, 80, 72, 2, 12500.00, 0.00, 25000.00),
+(249, 80, 67, 2, 1200.00, 0.00, 2400.00),
+(250, 81, 69, 10, 95000.00, 0.00, 950000.00),
+(251, 82, 63, 4, 320000.00, 0.00, 1280000.00),
+(252, 83, 64, 9, 425000.00, 0.00, 3825000.00),
+(253, 83, 65, 10, 950.00, 0.00, 9500.00),
+(254, 83, 72, 5, 12500.00, 0.00, 62500.00),
+(255, 83, 68, 3, 185000.00, 0.00, 555000.00),
+(256, 84, 68, 7, 185000.00, 0.00, 1295000.00),
+(257, 84, 71, 9, 8500.00, 0.00, 76500.00),
+(258, 84, 70, 1, 2000.00, 0.00, 2000.00),
+(259, 84, 63, 9, 320000.00, 0.00, 2880000.00),
+(260, 85, 60, 4, 13200.00, 0.00, 52800.00),
+(261, 85, 61, 1, 24500.00, 0.00, 24500.00),
+(262, 86, 70, 5, 2000.00, 0.00, 10000.00),
+(263, 86, 69, 9, 95000.00, 0.00, 855000.00),
+(264, 86, 61, 5, 24500.00, 0.00, 122500.00),
+(265, 87, 64, 3, 425000.00, 0.00, 1275000.00),
+(266, 87, 61, 4, 24500.00, 0.00, 98000.00),
+(267, 87, 65, 7, 950.00, 0.00, 6650.00);
 
 -- --------------------------------------------------------
 
 --
--- Structure de la table `visiteurs_hotel`
+-- Table structure for table `visiteurs_hotel`
 --
 
 CREATE TABLE `visiteurs_hotel` (
@@ -2080,7 +2546,7 @@ CREATE TABLE `visiteurs_hotel` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `visiteurs_showroom`
+-- Table structure for table `visiteurs_showroom`
 --
 
 CREATE TABLE `visiteurs_showroom` (
@@ -2097,8 +2563,8 @@ CREATE TABLE `visiteurs_showroom` (
 -- --------------------------------------------------------
 
 --
--- Doublure de structure pour la vue `v_pipeline_commercial`
--- (Voir ci-dessous la vue réelle)
+-- Stand-in structure for view `v_pipeline_commercial`
+-- (See below for the actual view)
 --
 CREATE TABLE `v_pipeline_commercial` (
 `canal` varchar(8)
@@ -2113,15 +2579,15 @@ CREATE TABLE `v_pipeline_commercial` (
 -- --------------------------------------------------------
 
 --
--- Doublure de structure pour la vue `v_ventes_livraison_encaissement`
--- (Voir ci-dessous la vue réelle)
+-- Stand-in structure for view `v_ventes_livraison_encaissement`
+-- (See below for the actual view)
 --
 CREATE TABLE `v_ventes_livraison_encaissement` (
 `id` int(10) unsigned
 ,`numero` varchar(50)
 ,`date_vente` date
 ,`montant_total_ttc` decimal(15,2)
-,`statut_vente` enum('EN_ATTENTE_LIVRAISON','LIVREE','ANNULEE','PARTIELLEMENT_LIVREE')
+,`statut_vente` enum('DEVIS','DEVIS_ACCEPTE','EN_ATTENTE_LIVRAISON','EN_PREPARATION','PRET_LIVRAISON','PARTIELLEMENT_LIVREE','LIVREE','FACTUREE','PAYEE','ANNULEE')
 ,`statut_livraison` varchar(9)
 ,`montant_encaisse` decimal(37,2)
 ,`solde_du` decimal(38,2)
@@ -2130,7 +2596,7 @@ CREATE TABLE `v_ventes_livraison_encaissement` (
 -- --------------------------------------------------------
 
 --
--- Structure de la vue `v_pipeline_commercial`
+-- Structure for view `v_pipeline_commercial`
 --
 DROP TABLE IF EXISTS `v_pipeline_commercial`;
 
@@ -2139,25 +2605,25 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 -- --------------------------------------------------------
 
 --
--- Structure de la vue `v_ventes_livraison_encaissement`
+-- Structure for view `v_ventes_livraison_encaissement`
 --
 DROP TABLE IF EXISTS `v_ventes_livraison_encaissement`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_ventes_livraison_encaissement`  AS SELECT `v`.`id` AS `id`, `v`.`numero` AS `numero`, `v`.`date_vente` AS `date_vente`, `v`.`montant_total_ttc` AS `montant_total_ttc`, `v`.`statut` AS `statut_vente`, CASE WHEN exists(select 1 from `bons_livraison` `bl` where `bl`.`vente_id` = `v`.`id` AND `bl`.`signe_client` = 1 limit 1) THEN 'LIVRE' ELSE 'NON_LIVRE' END AS `statut_livraison`, coalesce((select sum(`jc`.`montant`) from `journal_caisse` `jc` where `jc`.`vente_id` = `v`.`id`),0) AS `montant_encaisse`, `v`.`montant_total_ttc`- coalesce((select sum(`jc`.`montant`) from `journal_caisse` `jc` where `jc`.`vente_id` = `v`.`id`),0) AS `solde_du` FROM `ventes` AS `v` ;
 
 --
--- Index pour les tables déchargées
+-- Indexes for dumped tables
 --
 
 --
--- Index pour la table `achats`
+-- Indexes for table `achats`
 --
 ALTER TABLE `achats`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_achats_utilisateur` (`utilisateur_id`);
 
 --
--- Index pour la table `achats_lignes`
+-- Indexes for table `achats_lignes`
 --
 ALTER TABLE `achats_lignes`
   ADD PRIMARY KEY (`id`),
@@ -2165,7 +2631,7 @@ ALTER TABLE `achats_lignes`
   ADD KEY `fk_achats_lignes_produit` (`produit_id`);
 
 --
--- Index pour la table `audit_log`
+-- Indexes for table `audit_log`
 --
 ALTER TABLE `audit_log`
   ADD PRIMARY KEY (`id`),
@@ -2177,7 +2643,7 @@ ALTER TABLE `audit_log`
   ADD KEY `idx_audit_entite` (`entite_type`,`entite_id`);
 
 --
--- Index pour la table `blocages_ip`
+-- Indexes for table `blocages_ip`
 --
 ALTER TABLE `blocages_ip`
   ADD PRIMARY KEY (`id`),
@@ -2186,7 +2652,7 @@ ALTER TABLE `blocages_ip`
   ADD KEY `idx_blocage_expiration` (`date_expiration`);
 
 --
--- Index pour la table `bons_livraison`
+-- Indexes for table `bons_livraison`
 --
 ALTER TABLE `bons_livraison`
   ADD PRIMARY KEY (`id`),
@@ -2194,10 +2660,13 @@ ALTER TABLE `bons_livraison`
   ADD KEY `fk_bl_vente` (`vente_id`),
   ADD KEY `fk_bl_client` (`client_id`),
   ADD KEY `fk_bl_magasinier` (`magasinier_id`),
-  ADD KEY `idx_bl_date` (`date_bl`);
+  ADD KEY `idx_bl_date` (`date_bl`),
+  ADD KEY `idx_livreur` (`livreur_id`),
+  ADD KEY `idx_statut` (`statut`),
+  ADD KEY `idx_ordre_preparation` (`ordre_preparation_id`);
 
 --
--- Index pour la table `bons_livraison_lignes`
+-- Indexes for table `bons_livraison_lignes`
 --
 ALTER TABLE `bons_livraison_lignes`
   ADD PRIMARY KEY (`id`),
@@ -2205,27 +2674,27 @@ ALTER TABLE `bons_livraison_lignes`
   ADD KEY `fk_bl_lignes_produit` (`produit_id`);
 
 --
--- Index pour la table `caisse_journal`
+-- Indexes for table `caisse_journal`
 --
 ALTER TABLE `caisse_journal`
   ADD PRIMARY KEY (`id`);
 
 --
--- Index pour la table `canaux_vente`
+-- Indexes for table `canaux_vente`
 --
 ALTER TABLE `canaux_vente`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `code` (`code`);
 
 --
--- Index pour la table `catalogue_categories`
+-- Indexes for table `catalogue_categories`
 --
 ALTER TABLE `catalogue_categories`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `slug` (`slug`);
 
 --
--- Index pour la table `catalogue_produits`
+-- Indexes for table `catalogue_produits`
 --
 ALTER TABLE `catalogue_produits`
   ADD PRIMARY KEY (`id`),
@@ -2234,14 +2703,14 @@ ALTER TABLE `catalogue_produits`
   ADD KEY `fk_catalogue_categorie` (`categorie_id`);
 
 --
--- Index pour la table `chambres`
+-- Indexes for table `chambres`
 --
 ALTER TABLE `chambres`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `code` (`code`);
 
 --
--- Index pour la table `clients`
+-- Indexes for table `clients`
 --
 ALTER TABLE `clients`
   ADD PRIMARY KEY (`id`),
@@ -2249,7 +2718,7 @@ ALTER TABLE `clients`
   ADD KEY `idx_clients_nom` (`nom`);
 
 --
--- Index pour la table `compta_comptes`
+-- Indexes for table `compta_comptes`
 --
 ALTER TABLE `compta_comptes`
   ADD PRIMARY KEY (`id`),
@@ -2260,7 +2729,7 @@ ALTER TABLE `compta_comptes`
   ADD KEY `idx_nature` (`nature`);
 
 --
--- Index pour la table `compta_ecritures`
+-- Indexes for table `compta_ecritures`
 --
 ALTER TABLE `compta_ecritures`
   ADD PRIMARY KEY (`id`),
@@ -2271,14 +2740,14 @@ ALTER TABLE `compta_ecritures`
   ADD KEY `idx_debit_credit` (`debit`,`credit`);
 
 --
--- Index pour la table `compta_exercices`
+-- Indexes for table `compta_exercices`
 --
 ALTER TABLE `compta_exercices`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `annee` (`annee`);
 
 --
--- Index pour la table `compta_journaux`
+-- Indexes for table `compta_journaux`
 --
 ALTER TABLE `compta_journaux`
   ADD PRIMARY KEY (`id`),
@@ -2286,7 +2755,7 @@ ALTER TABLE `compta_journaux`
   ADD KEY `compte_contre_partie` (`compte_contre_partie`);
 
 --
--- Index pour la table `compta_mapping_operations`
+-- Indexes for table `compta_mapping_operations`
 --
 ALTER TABLE `compta_mapping_operations`
   ADD PRIMARY KEY (`id`),
@@ -2297,7 +2766,7 @@ ALTER TABLE `compta_mapping_operations`
   ADD KEY `idx_source` (`source_type`,`code_operation`);
 
 --
--- Index pour la table `compta_operations_trace`
+-- Indexes for table `compta_operations_trace`
 --
 ALTER TABLE `compta_operations_trace`
   ADD PRIMARY KEY (`id`),
@@ -2306,7 +2775,7 @@ ALTER TABLE `compta_operations_trace`
   ADD KEY `idx_status` (`status`);
 
 --
--- Index pour la table `compta_pieces`
+-- Indexes for table `compta_pieces`
 --
 ALTER TABLE `compta_pieces`
   ADD PRIMARY KEY (`id`),
@@ -2318,7 +2787,7 @@ ALTER TABLE `compta_pieces`
   ADD KEY `idx_ref` (`reference_type`,`reference_id`);
 
 --
--- Index pour la table `connexions_utilisateur`
+-- Indexes for table `connexions_utilisateur`
 --
 ALTER TABLE `connexions_utilisateur`
   ADD PRIMARY KEY (`id`),
@@ -2326,7 +2795,7 @@ ALTER TABLE `connexions_utilisateur`
   ADD KEY `idx_connexions_utilisateur_date` (`date_connexion`);
 
 --
--- Index pour la table `conversions_pipeline`
+-- Indexes for table `conversions_pipeline`
 --
 ALTER TABLE `conversions_pipeline`
   ADD PRIMARY KEY (`id`),
@@ -2338,7 +2807,7 @@ ALTER TABLE `conversions_pipeline`
   ADD KEY `fk_conversions_vente` (`vente_id`);
 
 --
--- Index pour la table `devis`
+-- Indexes for table `devis`
 --
 ALTER TABLE `devis`
   ADD PRIMARY KEY (`id`),
@@ -2350,7 +2819,7 @@ ALTER TABLE `devis`
   ADD KEY `idx_devis_statut` (`statut`);
 
 --
--- Index pour la table `devis_lignes`
+-- Indexes for table `devis_lignes`
 --
 ALTER TABLE `devis_lignes`
   ADD PRIMARY KEY (`id`),
@@ -2358,25 +2827,25 @@ ALTER TABLE `devis_lignes`
   ADD KEY `fk_devis_lignes_produit` (`produit_id`);
 
 --
--- Index pour la table `familles_produits`
+-- Indexes for table `familles_produits`
 --
 ALTER TABLE `familles_produits`
   ADD PRIMARY KEY (`id`);
 
 --
--- Index pour la table `formations`
+-- Indexes for table `formations`
 --
 ALTER TABLE `formations`
   ADD PRIMARY KEY (`id`);
 
 --
--- Index pour la table `fournisseurs`
+-- Indexes for table `fournisseurs`
 --
 ALTER TABLE `fournisseurs`
   ADD PRIMARY KEY (`id`);
 
 --
--- Index pour la table `inscriptions_formation`
+-- Indexes for table `inscriptions_formation`
 --
 ALTER TABLE `inscriptions_formation`
   ADD PRIMARY KEY (`id`),
@@ -2385,7 +2854,7 @@ ALTER TABLE `inscriptions_formation`
   ADD KEY `idx_inscription_date` (`date_inscription`);
 
 --
--- Index pour la table `journal_caisse`
+-- Indexes for table `journal_caisse`
 --
 ALTER TABLE `journal_caisse`
   ADD PRIMARY KEY (`id`),
@@ -2398,7 +2867,7 @@ ALTER TABLE `journal_caisse`
   ADD KEY `fk_journal_caisse_annule_par` (`annule_par_id`);
 
 --
--- Index pour la table `kpis_quotidiens`
+-- Indexes for table `kpis_quotidiens`
 --
 ALTER TABLE `kpis_quotidiens`
   ADD PRIMARY KEY (`id`),
@@ -2406,7 +2875,7 @@ ALTER TABLE `kpis_quotidiens`
   ADD KEY `idx_kpis_date` (`date`);
 
 --
--- Index pour la table `leads_digital`
+-- Indexes for table `leads_digital`
 --
 ALTER TABLE `leads_digital`
   ADD PRIMARY KEY (`id`),
@@ -2418,14 +2887,14 @@ ALTER TABLE `leads_digital`
   ADD KEY `fk_leads_utilisateur` (`utilisateur_responsable_id`);
 
 --
--- Index pour la table `modes_paiement`
+-- Indexes for table `modes_paiement`
 --
 ALTER TABLE `modes_paiement`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `code` (`code`);
 
 --
--- Index pour la table `mouvements_stock_backup_20251209_161710`
+-- Indexes for table `mouvements_stock_backup_20251209_161710`
 --
 ALTER TABLE `mouvements_stock_backup_20251209_161710`
   ADD PRIMARY KEY (`id`),
@@ -2433,7 +2902,7 @@ ALTER TABLE `mouvements_stock_backup_20251209_161710`
   ADD KEY `idx_mouvements_stock_utilisateur` (`utilisateur_id`);
 
 --
--- Index pour la table `objectifs_commerciaux`
+-- Indexes for table `objectifs_commerciaux`
 --
 ALTER TABLE `objectifs_commerciaux`
   ADD PRIMARY KEY (`id`),
@@ -2441,7 +2910,7 @@ ALTER TABLE `objectifs_commerciaux`
   ADD KEY `idx_objectifs_periode` (`annee`,`mois`);
 
 --
--- Index pour la table `ordres_preparation`
+-- Indexes for table `ordres_preparation`
 --
 ALTER TABLE `ordres_preparation`
   ADD PRIMARY KEY (`id`),
@@ -2455,7 +2924,7 @@ ALTER TABLE `ordres_preparation`
   ADD KEY `fk_ordres_magasinier` (`magasinier_id`);
 
 --
--- Index pour la table `ordres_preparation_lignes`
+-- Indexes for table `ordres_preparation_lignes`
 --
 ALTER TABLE `ordres_preparation_lignes`
   ADD PRIMARY KEY (`id`),
@@ -2463,7 +2932,7 @@ ALTER TABLE `ordres_preparation_lignes`
   ADD KEY `fk_ordres_lignes_produit` (`produit_id`);
 
 --
--- Index pour la table `parametres_securite`
+-- Indexes for table `parametres_securite`
 --
 ALTER TABLE `parametres_securite`
   ADD PRIMARY KEY (`id`),
@@ -2471,14 +2940,14 @@ ALTER TABLE `parametres_securite`
   ADD KEY `modifie_par` (`modifie_par`);
 
 --
--- Index pour la table `permissions`
+-- Indexes for table `permissions`
 --
 ALTER TABLE `permissions`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `code` (`code`);
 
 --
--- Index pour la table `produits`
+-- Indexes for table `produits`
 --
 ALTER TABLE `produits`
   ADD PRIMARY KEY (`id`),
@@ -2490,20 +2959,20 @@ ALTER TABLE `produits`
   ADD KEY `idx_produits_code` (`code_produit`);
 
 --
--- Index pour la table `promotions`
+-- Indexes for table `promotions`
 --
 ALTER TABLE `promotions`
   ADD PRIMARY KEY (`id`);
 
 --
--- Index pour la table `promotion_produit`
+-- Indexes for table `promotion_produit`
 --
 ALTER TABLE `promotion_produit`
   ADD PRIMARY KEY (`promotion_id`,`produit_id`),
   ADD KEY `fk_promo_produit_produit` (`produit_id`);
 
 --
--- Index pour la table `prospections_terrain`
+-- Indexes for table `prospections_terrain`
 --
 ALTER TABLE `prospections_terrain`
   ADD PRIMARY KEY (`id`),
@@ -2512,7 +2981,7 @@ ALTER TABLE `prospections_terrain`
   ADD KEY `idx_prospections_date` (`date_prospection`);
 
 --
--- Index pour la table `prospects_formation`
+-- Indexes for table `prospects_formation`
 --
 ALTER TABLE `prospects_formation`
   ADD PRIMARY KEY (`id`),
@@ -2521,7 +2990,7 @@ ALTER TABLE `prospects_formation`
   ADD KEY `idx_prospect_formation_date` (`date_prospect`);
 
 --
--- Index pour la table `relances_devis`
+-- Indexes for table `relances_devis`
 --
 ALTER TABLE `relances_devis`
   ADD PRIMARY KEY (`id`),
@@ -2530,7 +2999,7 @@ ALTER TABLE `relances_devis`
   ADD KEY `fk_relances_utilisateur` (`utilisateur_id`);
 
 --
--- Index pour la table `rendezvous_terrain`
+-- Indexes for table `rendezvous_terrain`
 --
 ALTER TABLE `rendezvous_terrain`
   ADD PRIMARY KEY (`id`),
@@ -2539,7 +3008,7 @@ ALTER TABLE `rendezvous_terrain`
   ADD KEY `idx_rdv_date` (`date_rdv`);
 
 --
--- Index pour la table `reservations_hotel`
+-- Indexes for table `reservations_hotel`
 --
 ALTER TABLE `reservations_hotel`
   ADD PRIMARY KEY (`id`),
@@ -2550,7 +3019,7 @@ ALTER TABLE `reservations_hotel`
   ADD KEY `idx_reservation_dates` (`date_debut`,`date_fin`);
 
 --
--- Index pour la table `retours_litiges`
+-- Indexes for table `retours_litiges`
 --
 ALTER TABLE `retours_litiges`
   ADD PRIMARY KEY (`id`),
@@ -2560,21 +3029,21 @@ ALTER TABLE `retours_litiges`
   ADD KEY `fk_litiges_responsable` (`responsable_suivi_id`);
 
 --
--- Index pour la table `roles`
+-- Indexes for table `roles`
 --
 ALTER TABLE `roles`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `code` (`code`);
 
 --
--- Index pour la table `role_permission`
+-- Indexes for table `role_permission`
 --
 ALTER TABLE `role_permission`
   ADD PRIMARY KEY (`role_id`,`permission_id`),
   ADD KEY `fk_role_permission_permission` (`permission_id`);
 
 --
--- Index pour la table `ruptures_signalees`
+-- Indexes for table `ruptures_signalees`
 --
 ALTER TABLE `ruptures_signalees`
   ADD PRIMARY KEY (`id`),
@@ -2584,7 +3053,7 @@ ALTER TABLE `ruptures_signalees`
   ADD KEY `fk_ruptures_sig_magasinier` (`magasinier_id`);
 
 --
--- Index pour la table `ruptures_stock`
+-- Indexes for table `ruptures_stock`
 --
 ALTER TABLE `ruptures_stock`
   ADD PRIMARY KEY (`id`),
@@ -2593,7 +3062,7 @@ ALTER TABLE `ruptures_stock`
   ADD KEY `idx_ruptures_date` (`date_rapport`);
 
 --
--- Index pour la table `satisfaction_clients`
+-- Indexes for table `satisfaction_clients`
 --
 ALTER TABLE `satisfaction_clients`
   ADD PRIMARY KEY (`id`),
@@ -2602,7 +3071,7 @@ ALTER TABLE `satisfaction_clients`
   ADD KEY `idx_satisfaction_date` (`date_satisfaction`);
 
 --
--- Index pour la table `sessions_actives`
+-- Indexes for table `sessions_actives`
 --
 ALTER TABLE `sessions_actives`
   ADD PRIMARY KEY (`id`),
@@ -2611,7 +3080,7 @@ ALTER TABLE `sessions_actives`
   ADD KEY `idx_session_actif` (`actif`);
 
 --
--- Index pour la table `sms_2fa_codes`
+-- Indexes for table `sms_2fa_codes`
 --
 ALTER TABLE `sms_2fa_codes`
   ADD PRIMARY KEY (`id`),
@@ -2620,7 +3089,7 @@ ALTER TABLE `sms_2fa_codes`
   ADD KEY `idx_utilise` (`utilise`);
 
 --
--- Index pour la table `sms_tracking`
+-- Indexes for table `sms_tracking`
 --
 ALTER TABLE `sms_tracking`
   ADD PRIMARY KEY (`id`),
@@ -2629,14 +3098,14 @@ ALTER TABLE `sms_tracking`
   ADD KEY `idx_date` (`envoye_a`);
 
 --
--- Index pour la table `sous_categories_produits`
+-- Indexes for table `sous_categories_produits`
 --
 ALTER TABLE `sous_categories_produits`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_sous_categories_famille` (`famille_id`);
 
 --
--- Index pour la table `stocks_mouvements`
+-- Indexes for table `stocks_mouvements`
 --
 ALTER TABLE `stocks_mouvements`
   ADD PRIMARY KEY (`id`),
@@ -2645,7 +3114,7 @@ ALTER TABLE `stocks_mouvements`
   ADD KEY `idx_mouvements_date` (`date_mouvement`);
 
 --
--- Index pour la table `tentatives_connexion`
+-- Indexes for table `tentatives_connexion`
 --
 ALTER TABLE `tentatives_connexion`
   ADD PRIMARY KEY (`id`),
@@ -2655,21 +3124,21 @@ ALTER TABLE `tentatives_connexion`
   ADD KEY `idx_tentative_user` (`utilisateur_id`);
 
 --
--- Index pour la table `types_client`
+-- Indexes for table `types_client`
 --
 ALTER TABLE `types_client`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `code` (`code`);
 
 --
--- Index pour la table `upsell_hotel`
+-- Indexes for table `upsell_hotel`
 --
 ALTER TABLE `upsell_hotel`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_upsell_reservation` (`reservation_id`);
 
 --
--- Index pour la table `utilisateurs`
+-- Indexes for table `utilisateurs`
 --
 ALTER TABLE `utilisateurs`
   ADD PRIMARY KEY (`id`),
@@ -2678,7 +3147,7 @@ ALTER TABLE `utilisateurs`
   ADD KEY `idx_mdp_expire` (`mdp_expire`);
 
 --
--- Index pour la table `utilisateurs_2fa`
+-- Indexes for table `utilisateurs_2fa`
 --
 ALTER TABLE `utilisateurs_2fa`
   ADD PRIMARY KEY (`id`),
@@ -2687,7 +3156,7 @@ ALTER TABLE `utilisateurs_2fa`
   ADD KEY `idx_methode` (`methode_2fa`);
 
 --
--- Index pour la table `utilisateurs_2fa_recovery`
+-- Indexes for table `utilisateurs_2fa_recovery`
 --
 ALTER TABLE `utilisateurs_2fa_recovery`
   ADD PRIMARY KEY (`id`),
@@ -2695,14 +3164,14 @@ ALTER TABLE `utilisateurs_2fa_recovery`
   ADD KEY `idx_recovery_utilise` (`utilise`);
 
 --
--- Index pour la table `utilisateur_role`
+-- Indexes for table `utilisateur_role`
 --
 ALTER TABLE `utilisateur_role`
   ADD PRIMARY KEY (`utilisateur_id`,`role_id`),
   ADD KEY `fk_utilisateur_role_role` (`role_id`);
 
 --
--- Index pour la table `ventes`
+-- Indexes for table `ventes`
 --
 ALTER TABLE `ventes`
   ADD PRIMARY KEY (`id`),
@@ -2715,7 +3184,7 @@ ALTER TABLE `ventes`
   ADD KEY `idx_ventes_statut` (`statut`);
 
 --
--- Index pour la table `ventes_lignes`
+-- Indexes for table `ventes_lignes`
 --
 ALTER TABLE `ventes_lignes`
   ADD PRIMARY KEY (`id`),
@@ -2723,7 +3192,7 @@ ALTER TABLE `ventes_lignes`
   ADD KEY `fk_ventes_lignes_produit` (`produit_id`);
 
 --
--- Index pour la table `visiteurs_hotel`
+-- Indexes for table `visiteurs_hotel`
 --
 ALTER TABLE `visiteurs_hotel`
   ADD PRIMARY KEY (`id`),
@@ -2731,7 +3200,7 @@ ALTER TABLE `visiteurs_hotel`
   ADD KEY `idx_visiteurs_hotel_date` (`date_visite`);
 
 --
--- Index pour la table `visiteurs_showroom`
+-- Indexes for table `visiteurs_showroom`
 --
 ALTER TABLE `visiteurs_showroom`
   ADD PRIMARY KEY (`id`),
@@ -2740,412 +3209,412 @@ ALTER TABLE `visiteurs_showroom`
   ADD KEY `idx_visiteurs_date` (`date_visite`);
 
 --
--- AUTO_INCREMENT pour les tables déchargées
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT pour la table `achats`
+-- AUTO_INCREMENT for table `achats`
 --
 ALTER TABLE `achats`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `achats_lignes`
+-- AUTO_INCREMENT for table `achats_lignes`
 --
 ALTER TABLE `achats_lignes`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `audit_log`
+-- AUTO_INCREMENT for table `audit_log`
 --
 ALTER TABLE `audit_log`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `blocages_ip`
+-- AUTO_INCREMENT for table `blocages_ip`
 --
 ALTER TABLE `blocages_ip`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `bons_livraison`
+-- AUTO_INCREMENT for table `bons_livraison`
 --
 ALTER TABLE `bons_livraison`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
 
 --
--- AUTO_INCREMENT pour la table `bons_livraison_lignes`
+-- AUTO_INCREMENT for table `bons_livraison_lignes`
 --
 ALTER TABLE `bons_livraison_lignes`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=192;
 
 --
--- AUTO_INCREMENT pour la table `caisse_journal`
+-- AUTO_INCREMENT for table `caisse_journal`
 --
 ALTER TABLE `caisse_journal`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
 
 --
--- AUTO_INCREMENT pour la table `canaux_vente`
+-- AUTO_INCREMENT for table `canaux_vente`
 --
 ALTER TABLE `canaux_vente`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT pour la table `catalogue_categories`
+-- AUTO_INCREMENT for table `catalogue_categories`
 --
 ALTER TABLE `catalogue_categories`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
--- AUTO_INCREMENT pour la table `catalogue_produits`
+-- AUTO_INCREMENT for table `catalogue_produits`
 --
 ALTER TABLE `catalogue_produits`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=155;
 
 --
--- AUTO_INCREMENT pour la table `chambres`
+-- AUTO_INCREMENT for table `chambres`
 --
 ALTER TABLE `chambres`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT pour la table `clients`
+-- AUTO_INCREMENT for table `clients`
 --
 ALTER TABLE `clients`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=97;
 
 --
--- AUTO_INCREMENT pour la table `compta_comptes`
+-- AUTO_INCREMENT for table `compta_comptes`
 --
 ALTER TABLE `compta_comptes`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=112;
 
 --
--- AUTO_INCREMENT pour la table `compta_ecritures`
+-- AUTO_INCREMENT for table `compta_ecritures`
 --
 ALTER TABLE `compta_ecritures`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
 
 --
--- AUTO_INCREMENT pour la table `compta_exercices`
+-- AUTO_INCREMENT for table `compta_exercices`
 --
 ALTER TABLE `compta_exercices`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT pour la table `compta_journaux`
+-- AUTO_INCREMENT for table `compta_journaux`
 --
 ALTER TABLE `compta_journaux`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT pour la table `compta_mapping_operations`
+-- AUTO_INCREMENT for table `compta_mapping_operations`
 --
 ALTER TABLE `compta_mapping_operations`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT pour la table `compta_operations_trace`
+-- AUTO_INCREMENT for table `compta_operations_trace`
 --
 ALTER TABLE `compta_operations_trace`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
--- AUTO_INCREMENT pour la table `compta_pieces`
+-- AUTO_INCREMENT for table `compta_pieces`
 --
 ALTER TABLE `compta_pieces`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
--- AUTO_INCREMENT pour la table `connexions_utilisateur`
+-- AUTO_INCREMENT for table `connexions_utilisateur`
 --
 ALTER TABLE `connexions_utilisateur`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
--- AUTO_INCREMENT pour la table `conversions_pipeline`
+-- AUTO_INCREMENT for table `conversions_pipeline`
 --
 ALTER TABLE `conversions_pipeline`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `devis`
+-- AUTO_INCREMENT for table `devis`
 --
 ALTER TABLE `devis`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=76;
 
 --
--- AUTO_INCREMENT pour la table `devis_lignes`
+-- AUTO_INCREMENT for table `devis_lignes`
 --
 ALTER TABLE `devis_lignes`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=251;
 
 --
--- AUTO_INCREMENT pour la table `familles_produits`
+-- AUTO_INCREMENT for table `familles_produits`
 --
 ALTER TABLE `familles_produits`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=74;
 
 --
--- AUTO_INCREMENT pour la table `formations`
+-- AUTO_INCREMENT for table `formations`
 --
 ALTER TABLE `formations`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT pour la table `fournisseurs`
+-- AUTO_INCREMENT for table `fournisseurs`
 --
 ALTER TABLE `fournisseurs`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
 
 --
--- AUTO_INCREMENT pour la table `inscriptions_formation`
+-- AUTO_INCREMENT for table `inscriptions_formation`
 --
 ALTER TABLE `inscriptions_formation`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
--- AUTO_INCREMENT pour la table `journal_caisse`
+-- AUTO_INCREMENT for table `journal_caisse`
 --
 ALTER TABLE `journal_caisse`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
--- AUTO_INCREMENT pour la table `kpis_quotidiens`
+-- AUTO_INCREMENT for table `kpis_quotidiens`
 --
 ALTER TABLE `kpis_quotidiens`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `leads_digital`
+-- AUTO_INCREMENT for table `leads_digital`
 --
 ALTER TABLE `leads_digital`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT pour la table `modes_paiement`
+-- AUTO_INCREMENT for table `modes_paiement`
 --
 ALTER TABLE `modes_paiement`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT pour la table `mouvements_stock_backup_20251209_161710`
+-- AUTO_INCREMENT for table `mouvements_stock_backup_20251209_161710`
 --
 ALTER TABLE `mouvements_stock_backup_20251209_161710`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT pour la table `objectifs_commerciaux`
+-- AUTO_INCREMENT for table `objectifs_commerciaux`
 --
 ALTER TABLE `objectifs_commerciaux`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `ordres_preparation`
+-- AUTO_INCREMENT for table `ordres_preparation`
 --
 ALTER TABLE `ordres_preparation`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `ordres_preparation_lignes`
+-- AUTO_INCREMENT for table `ordres_preparation_lignes`
 --
 ALTER TABLE `ordres_preparation_lignes`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `parametres_securite`
+-- AUTO_INCREMENT for table `parametres_securite`
 --
 ALTER TABLE `parametres_securite`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
--- AUTO_INCREMENT pour la table `permissions`
+-- AUTO_INCREMENT for table `permissions`
 --
 ALTER TABLE `permissions`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
--- AUTO_INCREMENT pour la table `produits`
+-- AUTO_INCREMENT for table `produits`
 --
 ALTER TABLE `produits`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 
 --
--- AUTO_INCREMENT pour la table `promotions`
+-- AUTO_INCREMENT for table `promotions`
 --
 ALTER TABLE `promotions`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `prospections_terrain`
+-- AUTO_INCREMENT for table `prospections_terrain`
 --
 ALTER TABLE `prospections_terrain`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT pour la table `prospects_formation`
+-- AUTO_INCREMENT for table `prospects_formation`
 --
 ALTER TABLE `prospects_formation`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT pour la table `relances_devis`
+-- AUTO_INCREMENT for table `relances_devis`
 --
 ALTER TABLE `relances_devis`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `rendezvous_terrain`
+-- AUTO_INCREMENT for table `rendezvous_terrain`
 --
 ALTER TABLE `rendezvous_terrain`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `reservations_hotel`
+-- AUTO_INCREMENT for table `reservations_hotel`
 --
 ALTER TABLE `reservations_hotel`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
--- AUTO_INCREMENT pour la table `retours_litiges`
+-- AUTO_INCREMENT for table `retours_litiges`
 --
 ALTER TABLE `retours_litiges`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `roles`
+-- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- AUTO_INCREMENT pour la table `ruptures_signalees`
+-- AUTO_INCREMENT for table `ruptures_signalees`
 --
 ALTER TABLE `ruptures_signalees`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `ruptures_stock`
+-- AUTO_INCREMENT for table `ruptures_stock`
 --
 ALTER TABLE `ruptures_stock`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `satisfaction_clients`
+-- AUTO_INCREMENT for table `satisfaction_clients`
 --
 ALTER TABLE `satisfaction_clients`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT pour la table `sms_2fa_codes`
+-- AUTO_INCREMENT for table `sms_2fa_codes`
 --
 ALTER TABLE `sms_2fa_codes`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT pour la table `sms_tracking`
+-- AUTO_INCREMENT for table `sms_tracking`
 --
 ALTER TABLE `sms_tracking`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `sous_categories_produits`
+-- AUTO_INCREMENT for table `sous_categories_produits`
 --
 ALTER TABLE `sous_categories_produits`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT pour la table `stocks_mouvements`
+-- AUTO_INCREMENT for table `stocks_mouvements`
 --
 ALTER TABLE `stocks_mouvements`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=234;
 
 --
--- AUTO_INCREMENT pour la table `tentatives_connexion`
+-- AUTO_INCREMENT for table `tentatives_connexion`
 --
 ALTER TABLE `tentatives_connexion`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT pour la table `types_client`
+-- AUTO_INCREMENT for table `types_client`
 --
 ALTER TABLE `types_client`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
--- AUTO_INCREMENT pour la table `upsell_hotel`
+-- AUTO_INCREMENT for table `upsell_hotel`
 --
 ALTER TABLE `upsell_hotel`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `utilisateurs`
+-- AUTO_INCREMENT for table `utilisateurs`
 --
 ALTER TABLE `utilisateurs`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
--- AUTO_INCREMENT pour la table `utilisateurs_2fa`
+-- AUTO_INCREMENT for table `utilisateurs_2fa`
 --
 ALTER TABLE `utilisateurs_2fa`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT pour la table `utilisateurs_2fa_recovery`
+-- AUTO_INCREMENT for table `utilisateurs_2fa_recovery`
 --
 ALTER TABLE `utilisateurs_2fa_recovery`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `ventes`
+-- AUTO_INCREMENT for table `ventes`
 --
 ALTER TABLE `ventes`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=88;
 
 --
--- AUTO_INCREMENT pour la table `ventes_lignes`
+-- AUTO_INCREMENT for table `ventes_lignes`
 --
 ALTER TABLE `ventes_lignes`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=268;
 
 --
--- AUTO_INCREMENT pour la table `visiteurs_hotel`
+-- AUTO_INCREMENT for table `visiteurs_hotel`
 --
 ALTER TABLE `visiteurs_hotel`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `visiteurs_showroom`
+-- AUTO_INCREMENT for table `visiteurs_showroom`
 --
 ALTER TABLE `visiteurs_showroom`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
--- Contraintes pour les tables déchargées
+-- Constraints for dumped tables
 --
 
 --
--- Contraintes pour la table `achats`
+-- Constraints for table `achats`
 --
 ALTER TABLE `achats`
   ADD CONSTRAINT `fk_achats_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `achats_lignes`
+-- Constraints for table `achats_lignes`
 --
 ALTER TABLE `achats_lignes`
   ADD CONSTRAINT `fk_achats_lignes_achat` FOREIGN KEY (`achat_id`) REFERENCES `achats` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_achats_lignes_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `audit_log`
+-- Constraints for table `audit_log`
 --
 ALTER TABLE `audit_log`
   ADD CONSTRAINT `audit_log_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE SET NULL;
 
 --
--- Contraintes pour la table `bons_livraison`
+-- Constraints for table `bons_livraison`
 --
 ALTER TABLE `bons_livraison`
   ADD CONSTRAINT `fk_bl_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,
@@ -3153,32 +3622,32 @@ ALTER TABLE `bons_livraison`
   ADD CONSTRAINT `fk_bl_vente` FOREIGN KEY (`vente_id`) REFERENCES `ventes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `bons_livraison_lignes`
+-- Constraints for table `bons_livraison_lignes`
 --
 ALTER TABLE `bons_livraison_lignes`
   ADD CONSTRAINT `fk_bl_lignes_bl` FOREIGN KEY (`bon_livraison_id`) REFERENCES `bons_livraison` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_bl_lignes_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `catalogue_produits`
+-- Constraints for table `catalogue_produits`
 --
 ALTER TABLE `catalogue_produits`
   ADD CONSTRAINT `fk_catalogue_categorie` FOREIGN KEY (`categorie_id`) REFERENCES `catalogue_categories` (`id`);
 
 --
--- Contraintes pour la table `clients`
+-- Constraints for table `clients`
 --
 ALTER TABLE `clients`
   ADD CONSTRAINT `fk_clients_type` FOREIGN KEY (`type_client_id`) REFERENCES `types_client` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `compta_comptes`
+-- Constraints for table `compta_comptes`
 --
 ALTER TABLE `compta_comptes`
   ADD CONSTRAINT `compta_comptes_ibfk_1` FOREIGN KEY (`compte_parent_id`) REFERENCES `compta_comptes` (`id`);
 
 --
--- Contraintes pour la table `compta_ecritures`
+-- Constraints for table `compta_ecritures`
 --
 ALTER TABLE `compta_ecritures`
   ADD CONSTRAINT `compta_ecritures_ibfk_1` FOREIGN KEY (`piece_id`) REFERENCES `compta_pieces` (`id`) ON DELETE CASCADE,
@@ -3187,13 +3656,13 @@ ALTER TABLE `compta_ecritures`
   ADD CONSTRAINT `compta_ecritures_ibfk_4` FOREIGN KEY (`tiers_fournisseur_id`) REFERENCES `fournisseurs` (`id`);
 
 --
--- Contraintes pour la table `compta_journaux`
+-- Constraints for table `compta_journaux`
 --
 ALTER TABLE `compta_journaux`
   ADD CONSTRAINT `compta_journaux_ibfk_1` FOREIGN KEY (`compte_contre_partie`) REFERENCES `compta_comptes` (`id`);
 
 --
--- Contraintes pour la table `compta_mapping_operations`
+-- Constraints for table `compta_mapping_operations`
 --
 ALTER TABLE `compta_mapping_operations`
   ADD CONSTRAINT `compta_mapping_operations_ibfk_1` FOREIGN KEY (`journal_id`) REFERENCES `compta_journaux` (`id`),
@@ -3201,13 +3670,13 @@ ALTER TABLE `compta_mapping_operations`
   ADD CONSTRAINT `compta_mapping_operations_ibfk_3` FOREIGN KEY (`compte_credit_id`) REFERENCES `compta_comptes` (`id`);
 
 --
--- Contraintes pour la table `compta_operations_trace`
+-- Constraints for table `compta_operations_trace`
 --
 ALTER TABLE `compta_operations_trace`
   ADD CONSTRAINT `compta_operations_trace_ibfk_1` FOREIGN KEY (`piece_id`) REFERENCES `compta_pieces` (`id`);
 
 --
--- Contraintes pour la table `compta_pieces`
+-- Constraints for table `compta_pieces`
 --
 ALTER TABLE `compta_pieces`
   ADD CONSTRAINT `compta_pieces_ibfk_1` FOREIGN KEY (`exercice_id`) REFERENCES `compta_exercices` (`id`),
@@ -3216,13 +3685,13 @@ ALTER TABLE `compta_pieces`
   ADD CONSTRAINT `compta_pieces_ibfk_4` FOREIGN KEY (`tiers_fournisseur_id`) REFERENCES `fournisseurs` (`id`);
 
 --
--- Contraintes pour la table `connexions_utilisateur`
+-- Constraints for table `connexions_utilisateur`
 --
 ALTER TABLE `connexions_utilisateur`
   ADD CONSTRAINT `fk_connexions_utilisateur_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `conversions_pipeline`
+-- Constraints for table `conversions_pipeline`
 --
 ALTER TABLE `conversions_pipeline`
   ADD CONSTRAINT `fk_conversions_canal` FOREIGN KEY (`canal_vente_id`) REFERENCES `canaux_vente` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -3231,7 +3700,7 @@ ALTER TABLE `conversions_pipeline`
   ADD CONSTRAINT `fk_conversions_vente` FOREIGN KEY (`vente_id`) REFERENCES `ventes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `devis`
+-- Constraints for table `devis`
 --
 ALTER TABLE `devis`
   ADD CONSTRAINT `fk_devis_canal` FOREIGN KEY (`canal_vente_id`) REFERENCES `canaux_vente` (`id`) ON UPDATE CASCADE,
@@ -3239,21 +3708,21 @@ ALTER TABLE `devis`
   ADD CONSTRAINT `fk_devis_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `devis_lignes`
+-- Constraints for table `devis_lignes`
 --
 ALTER TABLE `devis_lignes`
   ADD CONSTRAINT `fk_devis_lignes_devis` FOREIGN KEY (`devis_id`) REFERENCES `devis` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_devis_lignes_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `inscriptions_formation`
+-- Constraints for table `inscriptions_formation`
 --
 ALTER TABLE `inscriptions_formation`
   ADD CONSTRAINT `fk_inscription_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_inscription_formation` FOREIGN KEY (`formation_id`) REFERENCES `formations` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `journal_caisse`
+-- Constraints for table `journal_caisse`
 --
 ALTER TABLE `journal_caisse`
   ADD CONSTRAINT `fk_caisse_inscription` FOREIGN KEY (`inscription_formation_id`) REFERENCES `inscriptions_formation` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
@@ -3264,21 +3733,21 @@ ALTER TABLE `journal_caisse`
   ADD CONSTRAINT `fk_journal_caisse_annule_par` FOREIGN KEY (`annule_par_id`) REFERENCES `utilisateurs` (`id`) ON DELETE SET NULL;
 
 --
--- Contraintes pour la table `leads_digital`
+-- Constraints for table `leads_digital`
 --
 ALTER TABLE `leads_digital`
   ADD CONSTRAINT `fk_leads_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_leads_utilisateur` FOREIGN KEY (`utilisateur_responsable_id`) REFERENCES `utilisateurs` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `mouvements_stock_backup_20251209_161710`
+-- Constraints for table `mouvements_stock_backup_20251209_161710`
 --
 ALTER TABLE `mouvements_stock_backup_20251209_161710`
   ADD CONSTRAINT `fk_mouvements_stock_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_mouvements_stock_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `ordres_preparation`
+-- Constraints for table `ordres_preparation`
 --
 ALTER TABLE `ordres_preparation`
   ADD CONSTRAINT `fk_ordres_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
@@ -3288,20 +3757,20 @@ ALTER TABLE `ordres_preparation`
   ADD CONSTRAINT `fk_ordres_vente` FOREIGN KEY (`vente_id`) REFERENCES `ventes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `ordres_preparation_lignes`
+-- Constraints for table `ordres_preparation_lignes`
 --
 ALTER TABLE `ordres_preparation_lignes`
   ADD CONSTRAINT `fk_ordres_lignes_ordre` FOREIGN KEY (`ordre_preparation_id`) REFERENCES `ordres_preparation` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_ordres_lignes_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `parametres_securite`
+-- Constraints for table `parametres_securite`
 --
 ALTER TABLE `parametres_securite`
   ADD CONSTRAINT `parametres_securite_ibfk_1` FOREIGN KEY (`modifie_par`) REFERENCES `utilisateurs` (`id`) ON DELETE SET NULL;
 
 --
--- Contraintes pour la table `produits`
+-- Constraints for table `produits`
 --
 ALTER TABLE `produits`
   ADD CONSTRAINT `fk_produits_famille` FOREIGN KEY (`famille_id`) REFERENCES `familles_produits` (`id`) ON UPDATE CASCADE,
@@ -3309,42 +3778,42 @@ ALTER TABLE `produits`
   ADD CONSTRAINT `fk_produits_sous_categorie` FOREIGN KEY (`sous_categorie_id`) REFERENCES `sous_categories_produits` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `promotion_produit`
+-- Constraints for table `promotion_produit`
 --
 ALTER TABLE `promotion_produit`
   ADD CONSTRAINT `fk_promo_produit_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_promo_produit_promo` FOREIGN KEY (`promotion_id`) REFERENCES `promotions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `prospections_terrain`
+-- Constraints for table `prospections_terrain`
 --
 ALTER TABLE `prospections_terrain`
   ADD CONSTRAINT `fk_prospections_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_prospections_commercial` FOREIGN KEY (`commercial_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `prospects_formation`
+-- Constraints for table `prospects_formation`
 --
 ALTER TABLE `prospects_formation`
   ADD CONSTRAINT `fk_prospect_formation_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_prospect_formation_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `relances_devis`
+-- Constraints for table `relances_devis`
 --
 ALTER TABLE `relances_devis`
   ADD CONSTRAINT `fk_relances_devis` FOREIGN KEY (`devis_id`) REFERENCES `devis` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_relances_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `rendezvous_terrain`
+-- Constraints for table `rendezvous_terrain`
 --
 ALTER TABLE `rendezvous_terrain`
   ADD CONSTRAINT `fk_rdv_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_rdv_commercial` FOREIGN KEY (`commercial_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `reservations_hotel`
+-- Constraints for table `reservations_hotel`
 --
 ALTER TABLE `reservations_hotel`
   ADD CONSTRAINT `fk_reservation_chambre` FOREIGN KEY (`chambre_id`) REFERENCES `chambres` (`id`) ON UPDATE CASCADE,
@@ -3353,7 +3822,7 @@ ALTER TABLE `reservations_hotel`
   ADD CONSTRAINT `fk_reservation_mode_paiement` FOREIGN KEY (`mode_paiement_id`) REFERENCES `modes_paiement` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `retours_litiges`
+-- Constraints for table `retours_litiges`
 --
 ALTER TABLE `retours_litiges`
   ADD CONSTRAINT `fk_litiges_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON UPDATE CASCADE,
@@ -3362,85 +3831,85 @@ ALTER TABLE `retours_litiges`
   ADD CONSTRAINT `fk_litiges_vente` FOREIGN KEY (`vente_id`) REFERENCES `ventes` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `role_permission`
+-- Constraints for table `role_permission`
 --
 ALTER TABLE `role_permission`
   ADD CONSTRAINT `fk_role_permission_permission` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_role_permission_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `ruptures_signalees`
+-- Constraints for table `ruptures_signalees`
 --
 ALTER TABLE `ruptures_signalees`
   ADD CONSTRAINT `fk_ruptures_sig_magasinier` FOREIGN KEY (`magasinier_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_ruptures_sig_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `ruptures_stock`
+-- Constraints for table `ruptures_stock`
 --
 ALTER TABLE `ruptures_stock`
   ADD CONSTRAINT `fk_ruptures_magasinier` FOREIGN KEY (`magasinier_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_ruptures_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `satisfaction_clients`
+-- Constraints for table `satisfaction_clients`
 --
 ALTER TABLE `satisfaction_clients`
   ADD CONSTRAINT `fk_satisfaction_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_satisfaction_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `sessions_actives`
+-- Constraints for table `sessions_actives`
 --
 ALTER TABLE `sessions_actives`
   ADD CONSTRAINT `sessions_actives_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE;
 
 --
--- Contraintes pour la table `sous_categories_produits`
+-- Constraints for table `sous_categories_produits`
 --
 ALTER TABLE `sous_categories_produits`
   ADD CONSTRAINT `fk_sous_categories_famille` FOREIGN KEY (`famille_id`) REFERENCES `familles_produits` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `stocks_mouvements`
+-- Constraints for table `stocks_mouvements`
 --
 ALTER TABLE `stocks_mouvements`
   ADD CONSTRAINT `fk_mouvements_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_mouvements_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `tentatives_connexion`
+-- Constraints for table `tentatives_connexion`
 --
 ALTER TABLE `tentatives_connexion`
   ADD CONSTRAINT `tentatives_connexion_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE SET NULL;
 
 --
--- Contraintes pour la table `upsell_hotel`
+-- Constraints for table `upsell_hotel`
 --
 ALTER TABLE `upsell_hotel`
   ADD CONSTRAINT `fk_upsell_reservation` FOREIGN KEY (`reservation_id`) REFERENCES `reservations_hotel` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `utilisateurs_2fa`
+-- Constraints for table `utilisateurs_2fa`
 --
 ALTER TABLE `utilisateurs_2fa`
   ADD CONSTRAINT `utilisateurs_2fa_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE;
 
 --
--- Contraintes pour la table `utilisateurs_2fa_recovery`
+-- Constraints for table `utilisateurs_2fa_recovery`
 --
 ALTER TABLE `utilisateurs_2fa_recovery`
   ADD CONSTRAINT `utilisateurs_2fa_recovery_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE;
 
 --
--- Contraintes pour la table `utilisateur_role`
+-- Constraints for table `utilisateur_role`
 --
 ALTER TABLE `utilisateur_role`
   ADD CONSTRAINT `fk_utilisateur_role_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_utilisateur_role_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `ventes`
+-- Constraints for table `ventes`
 --
 ALTER TABLE `ventes`
   ADD CONSTRAINT `fk_ventes_canal` FOREIGN KEY (`canal_vente_id`) REFERENCES `canaux_vente` (`id`) ON UPDATE CASCADE,
@@ -3449,20 +3918,20 @@ ALTER TABLE `ventes`
   ADD CONSTRAINT `fk_ventes_utilisateur` FOREIGN KEY (`utilisateur_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `ventes_lignes`
+-- Constraints for table `ventes_lignes`
 --
 ALTER TABLE `ventes_lignes`
   ADD CONSTRAINT `fk_ventes_lignes_produit` FOREIGN KEY (`produit_id`) REFERENCES `produits` (`id`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_ventes_lignes_vente` FOREIGN KEY (`vente_id`) REFERENCES `ventes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `visiteurs_hotel`
+-- Constraints for table `visiteurs_hotel`
 --
 ALTER TABLE `visiteurs_hotel`
   ADD CONSTRAINT `fk_visiteurs_hotel_concierge` FOREIGN KEY (`concierge_id`) REFERENCES `utilisateurs` (`id`) ON UPDATE CASCADE;
 
 --
--- Contraintes pour la table `visiteurs_showroom`
+-- Constraints for table `visiteurs_showroom`
 --
 ALTER TABLE `visiteurs_showroom`
   ADD CONSTRAINT `fk_visiteurs_client` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
