@@ -69,7 +69,7 @@
                 <div class="d-flex gap-2 flex-wrap">
                     <?php foreach ($activeFilters as $label => $value): ?>
                         <span class="badge bg-info text-dark">
-                            <?= ucfirst(str_replace('_', ' ', $label)): ?>
+                            <?= ucfirst(str_replace('_', ' ', $label)) ?>:
                             <strong><?= htmlspecialchars(substr($value, 0, 20)) ?><?= strlen($value) > 20 ? '...' : '' ?></strong>
                         </span>
                     <?php endforeach; ?>

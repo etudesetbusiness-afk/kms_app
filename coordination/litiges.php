@@ -43,7 +43,7 @@ if ($dateFin !== '') {
 
 // Recherche texte
 if (!empty($search)) {
-    $where[] = "(c.nom LIKE :search OR p.designation LIKE :search OR v.numero LIKE :search OR rl.description LIKE :search)";
+    $where[] = "(c.nom LIKE :search OR p.designation LIKE :search OR v.numero LIKE :search OR rl.motif LIKE :search)";
     $params['search'] = '%' . $search . '%';
 }
 
