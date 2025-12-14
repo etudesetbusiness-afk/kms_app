@@ -1,12 +1,16 @@
 <?php
-// ventes/list.php - avec recherche texte, tri, et pagination
+// ventes/list.php - avec recherche texte, tri, pagination, et préférences utilisateur
 require_once __DIR__ . '/../security.php';
 require_once __DIR__ . '/../lib/filters_helpers.php';
 require_once __DIR__ . '/../lib/pagination.php';
+require_once __DIR__ . '/../lib/user_preferences.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
 
 global $pdo;
+
+$utilisateur = utilisateurConnecte();
+$user_id = $utilisateur['id'] ?? null;
 
 $today    = date('Y-m-d');
 $dateDeb  = $_GET['date_debut'] ?? null;
@@ -16,14 +20,22 @@ $clientId = isset($_GET['client_id']) ? (int)$_GET['client_id'] : 0;
 $canalId  = isset($_GET['canal_id']) ? (int)$_GET['canal_id'] : 0;
 $encaissement = $_GET['encaissement'] ?? '';
 $search   = trim($_GET['search'] ?? '');
-$sortBy   = $_GET['sort_by'] ?? 'date';  // date, client, montant
-$sortDir  = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+// Charger les préférences utilisateur et les appliquer
+if ($user_id) {
+    $prefs = updateUserPreferencesFromGet($user_id, 'ventes', $_GET, ['date', 'client', 'montant']);
+    $sortBy = $prefs['sort_by'];
+    $sortDir = $prefs['sort_dir'];
+    $per_page = $prefs['per_page'];
+} else {
+    $sortBy = $_GET['sort_by'] ?? 'date';
+    $sortDir = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+    $per_page = 25;
+}
 
 // Clients pour filtre
 $stmt = $pdo->query("SELECT id, nom FROM clients ORDER BY nom");
-$clients = $stmt->fetchAll();
-
-// Canaux de vente pour filtre
+$clients = $stmt->fetchAll();// Canaux de vente pour filtre
 $stmt = $pdo->query("SELECT id, code, libelle FROM canaux_vente ORDER BY code");
 $canaux = $stmt->fetchAll();
 
@@ -108,8 +120,8 @@ $stmtCount = $pdo->prepare($countSql);
 $stmtCount->execute($params);
 $totalCount = $stmtCount->fetch()['total'] ?? 0;
 
-// Pagination
-$pagination = getPaginationParams($_GET, $totalCount, 25);
+// Pagination (avec per_page des préférences)
+$pagination = getPaginationParams($_GET, $totalCount, $per_page ?? 25);
 $limitClause = getPaginationLimitClause($pagination['offset'], $pagination['per_page']);
 
 // Exécuter la requête avec LIMIT
