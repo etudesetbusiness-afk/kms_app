@@ -83,7 +83,7 @@ function renderPaginationControls($pagination, $get, $options = []) {
     // Sélecteur résultats par page
     $html .= '<div class="d-flex gap-2 align-items-center">';
     $html .= '<small class="text-muted">Par page:</small>';
-    $html .= '<select class="form-select form-select-sm" style="width: auto;" onchange="window.location.href=\'' . buildPaginationUrl($get, 1) . '&per_page=\' + this.value">';
+    $html .= '<select class="form-select form-select-sm" style="width: auto;" onchange="window.location.href=\'?' . buildPaginationUrl($get, 1) . '&per_page=\' + this.value">';
     foreach ([10, 25, 50, 100] as $pp) {
         $selected = $pp === $per_page ? 'selected' : '';
         $html .= "<option value=\"$pp\" $selected>$pp</option>";
