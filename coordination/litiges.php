@@ -1,6 +1,7 @@
 <?php
 // coordination/litiges.php - Gestion des retours et litiges clients
 require_once __DIR__ . '/../security.php';
+require_once __DIR__ . '/../lib/filters_helpers.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
 
@@ -13,6 +14,9 @@ $statut = $_GET['statut'] ?? '';
 $type = $_GET['type'] ?? '';
 $dateDebut = $_GET['date_debut'] ?? '';
 $dateFin = $_GET['date_fin'] ?? '';
+$search = trim($_GET['search'] ?? '');
+$sortBy = $_GET['sort_by'] ?? 'date';
+$sortDir = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
 
 $where = [];
 $params = [];
@@ -37,7 +41,23 @@ if ($dateFin !== '') {
     $params['date_fin'] = $dateFin;
 }
 
+// Recherche texte
+if (!empty($search)) {
+    $where[] = "(c.nom LIKE :search OR p.designation LIKE :search OR v.numero LIKE :search OR rl.description LIKE :search)";
+    $params['search'] = '%' . $search . '%';
+}
+
 $whereSql = count($where) > 0 ? 'WHERE ' . implode(' AND ', $where) : '';
+
+// Tri dynamique
+$orderSql = "ORDER BY CASE rl.statut_traitement WHEN 'EN_COURS' THEN 1 WHEN 'RESOLU' THEN 2 WHEN 'REMPLACEMENT_EFFECTUE' THEN 3 WHEN 'REMBOURSEMENT_EFFECTUE' THEN 4 WHEN 'ABANDONNE' THEN 5 END, rl.date_retour DESC";
+if ($sortBy === 'client') {
+    $orderSql = "ORDER BY c.nom $sortDir, rl.date_retour DESC";
+} elseif ($sortBy === 'montant') {
+    $orderSql = "ORDER BY rl.montant_rembourse $sortDir, rl.date_retour DESC";
+} else {
+    $orderSql = "ORDER BY rl.date_retour $sortDir, rl.id DESC";
+}
 
 $sql = "
     SELECT rl.*,
@@ -53,15 +73,7 @@ $sql = "
     LEFT JOIN produits p ON rl.produit_id = p.id
     LEFT JOIN utilisateurs u ON rl.responsable_suivi_id = u.id
     $whereSql
-    ORDER BY 
-        CASE rl.statut_traitement
-            WHEN 'EN_COURS' THEN 1
-            WHEN 'RESOLU' THEN 2
-            WHEN 'REMPLACEMENT_EFFECTUE' THEN 3
-            WHEN 'REMBOURSEMENT_EFFECTUE' THEN 4
-            WHEN 'ABANDONNE' THEN 5
-        END,
-        rl.date_retour DESC
+    $orderSql
 ";
 
 $stmt = $pdo->prepare($sql);
@@ -159,7 +171,18 @@ async function postForm(url, data) {
     <!-- Filtres -->
     <div class="card mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3">
+            <form method="get" class="row g-3" id="filter_form">
+                <!-- Recherche texte -->
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">
+                        <i class="bi bi-search"></i> Rechercher
+                    </label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Client, produit, vente, description..."
+                           value="<?= htmlspecialchars($search) ?>">
+                    <small class="text-muted d-block mt-1">Cherche dans: client, produit, vente, description</small>
+                </div>
+
                 <div class="col-md-3">
                     <label class="form-label small">Statut</label>
                     <select name="statut" class="form-select form-select-sm">
@@ -190,14 +213,40 @@ async function postForm(url, data) {
                     <label class="form-label small">Au</label>
                     <input type="date" name="date_fin" class="form-control form-control-sm" value="<?= htmlspecialchars($dateFin) ?>">
                 </div>
-                <div class="col-md-2 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-sm btn-primary w-100">
+                <div class="col-md-2 d-flex gap-2 align-items-end">
+                    <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
                         <i class="bi bi-search"></i> Filtrer
                     </button>
-                    <a href="<?= url_for('coordination/export_excel.php?date_debut=' . urlencode($dateDebut) . '&date_fin=' . urlencode($dateFin) . '&statut=' . urlencode($statut) . '&type=' . urlencode($type)) ?>" class="btn btn-sm btn-success">
+                    <a href="<?= url_for('coordination/litiges.php') ?>" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+                    <a href="<?= url_for('coordination/export_excel.php?date_debut=' . urlencode($dateDebut) . '&date_fin=' . urlencode($dateFin) . '&statut=' . urlencode($statut) . '&type=' . urlencode($type) . '&search=' . urlencode($search)) ?>" class="btn btn-sm btn-success">
                         <i class="bi bi-file-earmark-excel"></i>
                     </a>
                 </div>
+
+                <!-- Affichage des filtres actifs -->
+                <?php
+                $activeFilters = [];
+                if (!empty($search)) $activeFilters['Recherche'] = $search;
+                if ($dateDebut) $activeFilters['Du'] = $dateDebut;
+                if ($dateFin) $activeFilters['Au'] = $dateFin;
+                if ($statut) $activeFilters['Statut'] = $statut;
+                if ($type) $activeFilters['Type'] = $type;
+                ?>
+                <?php if (!empty($activeFilters)): ?>
+                    <div class="col-12 mt-2 pt-2 border-top">
+                        <small class="text-muted d-block mb-2">Filtres actifs:</small>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <?php foreach ($activeFilters as $label => $value): ?>
+                                <span class="badge bg-info text-dark">
+                                    <strong><?= htmlspecialchars($label) ?></strong>: 
+                                    <?= htmlspecialchars(substr($value, 0, 25)) ?><?= strlen($value) > 25 ? '...' : '' ?>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </form>
         </div>
     </div>
@@ -210,8 +259,24 @@ async function postForm(url, data) {
                     <thead class="table-light">
                         <tr>
                             <th>N° Litige</th>
-                            <th>Date</th>
-                            <th>Client</th>
+                            <th>
+                                <a href="?<?= http_build_query(array_merge($_GET, ['sort_by' => 'date', 'sort_dir' => $sortBy === 'date' && $sortDir === 'desc' ? 'asc' : 'desc'])) ?>" 
+                                   class="text-decoration-none text-dark">
+                                    Date 
+                                    <?php if ($sortBy === 'date'): ?>
+                                        <i class="bi <?= $sortDir === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up' ?>"></i>
+                                    <?php endif; ?>
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?<?= http_build_query(array_merge($_GET, ['sort_by' => 'client', 'sort_dir' => $sortBy === 'client' && $sortDir === 'desc' ? 'asc' : 'desc'])) ?>" 
+                                   class="text-decoration-none text-dark">
+                                    Client 
+                                    <?php if ($sortBy === 'client'): ?>
+                                        <i class="bi <?= $sortDir === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up' ?>"></i>
+                                    <?php endif; ?>
+                                </a>
+                            </th>
                             <th>Vente</th>
                             <th>Produit</th>
                             <th>Type problème</th>

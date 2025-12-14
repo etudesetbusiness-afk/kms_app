@@ -1,6 +1,7 @@
 <?php
-// livraisons/list.php
+// livraisons/list.php - avec recherche texte et tri
 require_once __DIR__ . '/../security.php';
+require_once __DIR__ . '/../lib/filters_helpers.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
 
@@ -10,6 +11,9 @@ $dateDeb  = $_GET['date_debut'] ?? '';
 $dateFin  = $_GET['date_fin'] ?? '';
 $clientId = isset($_GET['client_id']) ? (int)$_GET['client_id'] : 0;
 $signe    = $_GET['signe'] ?? ''; // '', '0', '1'
+$search   = trim($_GET['search'] ?? '');
+$sortBy   = $_GET['sort_by'] ?? 'date';  // date, client, numero
+$sortDir  = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
 
 // Clients
 $stmt = $pdo->query("SELECT id, nom FROM clients ORDER BY nom");
@@ -35,9 +39,25 @@ if ($signe !== '' && in_array($signe, ['0','1'], true)) {
     $params['signe'] = (int)$signe;
 }
 
+// Recherche texte
+if (!empty($search)) {
+    $where[] = "(b.numero LIKE :search OR c.nom LIKE :search OR v.numero LIKE :search)";
+    $params['search'] = '%' . $search . '%';
+}
+
 $whereSql = '';
 if (!empty($where)) {
     $whereSql = 'WHERE ' . implode(' AND ', $where);
+}
+
+// Tri dynamique
+$orderSql = 'ORDER BY b.date_bl DESC, b.id DESC';
+if ($sortBy === 'client') {
+    $orderSql = "ORDER BY c.nom $sortDir, b.date_bl DESC";
+} elseif ($sortBy === 'numero') {
+    $orderSql = "ORDER BY b.numero $sortDir, b.date_bl DESC";
+} else {
+    $orderSql = "ORDER BY b.date_bl $sortDir, b.id DESC";
 }
 
 $sql = "
@@ -49,7 +69,7 @@ $sql = "
     JOIN clients c ON c.id = b.client_id
     LEFT JOIN ventes v ON v.id = b.vente_id
     $whereSql
-    ORDER BY b.date_bl DESC, b.id DESC
+    $orderSql
 ";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -91,7 +111,18 @@ include __DIR__ . '/../partials/sidebar.php';
 
     <div class="card filter-card">
         <div class="card-body">
-            <form method="get" class="row g-3 align-items-end">
+            <form method="get" class="row g-3 align-items-end" id="filter_form">
+                <!-- Recherche texte -->
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">
+                        <i class="bi bi-search"></i> Rechercher
+                    </label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="N° BL, client, vente..."
+                           value="<?= htmlspecialchars($search) ?>">
+                    <small class="text-muted d-block mt-1">Cherche dans: N° BL, client, N° vente</small>
+                </div>
+
                 <div class="col-md-2">
                     <label class="form-label small">Date BL ≥</label>
                     <input type="date" name="date_debut" class="form-control"
@@ -129,10 +160,43 @@ include __DIR__ . '/../partials/sidebar.php';
                     <a href="<?= url_for('livraisons/list.php') ?>" class="btn btn-outline-secondary btn-filter">
                         <i class="bi bi-arrow-clockwise me-1"></i> Réinitialiser
                     </a>
-                    <a href="<?= url_for('livraisons/export_excel.php?date_debut=' . urlencode($dateDeb) . '&date_fin=' . urlencode($dateFin) . '&client_id=' . urlencode($clientId) . '&signe=' . urlencode($signe)) ?>" class="btn btn-success btn-filter">
+                    <a href="<?= url_for('livraisons/export_excel.php?date_debut=' . urlencode($dateDeb) . '&date_fin=' . urlencode($dateFin) . '&client_id=' . urlencode($clientId) . '&signe=' . urlencode($signe) . '&search=' . urlencode($search)) ?>" class="btn btn-success btn-filter">
                         <i class="bi bi-file-earmark-excel me-1"></i> Exporter
                     </a>
                 </div>
+
+                <!-- Affichage des filtres actifs -->
+                <?php
+                $activeFilters = [];
+                if (!empty($search)) $activeFilters['Recherche'] = $search;
+                if ($dateDeb) $activeFilters['Du'] = $dateDeb;
+                if ($dateFin) $activeFilters['Au'] = $dateFin;
+                if ($clientId > 0) {
+                    $clientName = 'Inconnu';
+                    foreach ($clients as $c) {
+                        if ($c['id'] == $clientId) {
+                            $clientName = $c['nom'];
+                            break;
+                        }
+                    }
+                    $activeFilters['Client'] = $clientName;
+                }
+                if ($signe === '1') $activeFilters['Signature'] = 'Signés';
+                elseif ($signe === '0') $activeFilters['Signature'] = 'Non signés';
+                ?>
+                <?php if (!empty($activeFilters)): ?>
+                    <div class="col-12 mt-2 pt-2 border-top">
+                        <small class="text-muted d-block mb-2">Filtres actifs:</small>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <?php foreach ($activeFilters as $label => $value): ?>
+                                <span class="badge bg-info text-dark">
+                                    <strong><?= htmlspecialchars($label) ?></strong>: 
+                                    <?= htmlspecialchars(substr($value, 0, 25)) ?><?= strlen($value) > 25 ? '...' : '' ?>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </form>
         </div>
     </div>
@@ -151,9 +215,25 @@ include __DIR__ . '/../partials/sidebar.php';
                         <thead class="table-light">
                         <tr>
                             <th>N° BL</th>
-                            <th>Date BL</th>
+                            <th>
+                                <a href="?<?= http_build_query(array_merge($_GET, ['sort_by' => 'date', 'sort_dir' => $sortBy === 'date' && $sortDir === 'desc' ? 'asc' : 'desc'])) ?>" 
+                                   class="text-decoration-none text-dark">
+                                    Date BL 
+                                    <?php if ($sortBy === 'date'): ?>
+                                        <i class="bi <?= $sortDir === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up' ?>"></i>
+                                    <?php endif; ?>
+                                </a>
+                            </th>
                             <th>Vente</th>
-                            <th>Client</th>
+                            <th>
+                                <a href="?<?= http_build_query(array_merge($_GET, ['sort_by' => 'client', 'sort_dir' => $sortBy === 'client' && $sortDir === 'desc' ? 'asc' : 'desc'])) ?>" 
+                                   class="text-decoration-none text-dark">
+                                    Client 
+                                    <?php if ($sortBy === 'client'): ?>
+                                        <i class="bi <?= $sortDir === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up' ?>"></i>
+                                    <?php endif; ?>
+                                </a>
+                            </th>
                             <th>Transport</th>
                             <th>Signé client</th>
                             <th class="text-end">Actions</th>

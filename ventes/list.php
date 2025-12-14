@@ -1,6 +1,7 @@
 <?php
-// ventes/list.php
+// ventes/list.php - avec recherche texte et tri
 require_once __DIR__ . '/../security.php';
+require_once __DIR__ . '/../lib/filters_helpers.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
 
@@ -13,6 +14,9 @@ $statut   = $_GET['statut'] ?? '';
 $clientId = isset($_GET['client_id']) ? (int)$_GET['client_id'] : 0;
 $canalId  = isset($_GET['canal_id']) ? (int)$_GET['canal_id'] : 0;
 $encaissement = $_GET['encaissement'] ?? '';
+$search   = trim($_GET['search'] ?? '');
+$sortBy   = $_GET['sort_by'] ?? 'date';  // date, client, montant
+$sortDir  = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
 
 // Clients pour filtre
 $stmt = $pdo->query("SELECT id, nom FROM clients ORDER BY nom");
@@ -51,9 +55,28 @@ if ($encaissement !== '' && in_array($encaissement, ['ATTENTE_PAIEMENT','PARTIEL
     $params[] = $encaissement;
 }
 
+// Recherche texte (cherche dans numero, client_nom, observations)
+if (!empty($search)) {
+    $where[] = "(v.numero LIKE ? OR c.nom LIKE ? OR v.observations LIKE ?)";
+    $searchTerm = '%' . $search . '%';
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+}
+
 $whereSql = '';
 if (!empty($where)) {
     $whereSql = 'WHERE ' . implode(' AND ', $where);
+}
+
+// Tri dynamique
+$orderSql = 'ORDER BY v.date_vente DESC, v.id DESC';
+if ($sortBy === 'client') {
+    $orderSql = "ORDER BY c.nom $sortDir, v.date_vente DESC";
+} elseif ($sortBy === 'montant') {
+    $orderSql = "ORDER BY v.montant_total_ttc $sortDir, v.date_vente DESC";
+} else {
+    $orderSql = "ORDER BY v.date_vente $sortDir, v.id DESC";
 }
 
 $sql = "
@@ -68,7 +91,7 @@ $sql = "
     JOIN canaux_vente cv ON cv.id = v.canal_vente_id
     JOIN utilisateurs u ON u.id = v.utilisateur_id
     $whereSql
-    ORDER BY v.date_vente DESC, v.id DESC
+    $orderSql
 ";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -115,7 +138,18 @@ include __DIR__ . '/../partials/sidebar.php';
     <!-- Filtres -->
     <div class="card filter-card">
         <div class="card-body">
-            <form class="row g-3 align-items-end" method="get">
+            <form class="row g-3 align-items-end" method="get" id="filter_form">
+                <!-- Recherche texte -->
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold">
+                        <i class="bi bi-search"></i> Rechercher
+                    </label>
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="N° vente, client, observations..."
+                           value="<?= htmlspecialchars($search) ?>">
+                    <small class="text-muted d-block mt-1">Cherche dans: N° vente, client, observations</small>
+                </div>
+
                 <div class="col-md-2">
                     <label class="form-label small">Du</label>
                     <input type="date" name="date_debut" class="form-control"
@@ -177,17 +211,59 @@ include __DIR__ . '/../partials/sidebar.php';
                     </select>
                 </div>
 
-                <div class="col-12 d-flex gap-2">
+                <div class="col-12 d-flex gap-2 flex-wrap">
                     <button type="submit" class="btn btn-primary btn-filter">
                         <i class="bi bi-search me-1"></i> Filtrer
                     </button>
                     <a href="<?= url_for('ventes/list.php') ?>" class="btn btn-outline-secondary btn-filter">
                         <i class="bi bi-arrow-clockwise me-1"></i> Réinitialiser
                     </a>
-                    <a href="<?= url_for('ventes/export_excel.php?date_debut=' . urlencode($dateDeb ?? '') . '&date_fin=' . urlencode($dateFin ?? '') . '&statut=' . urlencode($statut) . '&client_id=' . urlencode($clientId)) ?>" class="btn btn-success btn-filter">
+                    <a href="<?= url_for('ventes/export_excel.php?date_debut=' . urlencode($dateDeb ?? '') . '&date_fin=' . urlencode($dateFin ?? '') . '&statut=' . urlencode($statut) . '&client_id=' . urlencode($clientId) . '&search=' . urlencode($search)) ?>" class="btn btn-success btn-filter">
                         <i class="bi bi-file-earmark-excel me-1"></i> Exporter Excel
                     </a>
                 </div>
+
+                <!-- Affichage des filtres actifs -->
+                <?php
+                $activeFilters = [];
+                if (!empty($search)) $activeFilters['Recherche'] = $search;
+                if ($dateDeb) $activeFilters['Du'] = $dateDeb;
+                if ($dateFin) $activeFilters['Au'] = $dateFin;
+                if ($statut) $activeFilters['Statut'] = $statut;
+                if ($clientId > 0) {
+                    $clientName = 'Inconnu';
+                    foreach ($clients as $c) {
+                        if ($c['id'] == $clientId) {
+                            $clientName = $c['nom'];
+                            break;
+                        }
+                    }
+                    $activeFilters['Client'] = $clientName;
+                }
+                if ($canalId > 0) {
+                    $canalName = 'Inconnu';
+                    foreach ($canaux as $c) {
+                        if ($c['id'] == $canalId) {
+                            $canalName = $c['libelle'];
+                            break;
+                        }
+                    }
+                    $activeFilters['Canal'] = $canalName;
+                }
+                ?>
+                <?php if (!empty($activeFilters)): ?>
+                    <div class="col-12 mt-2 pt-2 border-top">
+                        <small class="text-muted d-block mb-2">Filtres actifs:</small>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <?php foreach ($activeFilters as $label => $value): ?>
+                                <span class="badge bg-info text-dark">
+                                    <strong><?= htmlspecialchars($label) ?></strong>: 
+                                    <?= htmlspecialchars(substr($value, 0, 25)) ?><?= strlen($value) > 25 ? '...' : '' ?>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </form>
         </div>
     </div>
@@ -207,12 +283,36 @@ include __DIR__ . '/../partials/sidebar.php';
                         <thead class="table-light">
                         <tr>
                             <th>N° vente</th>
-                            <th>Date</th>
-                            <th>Client</th>
+                            <th>
+                                <a href="?<?= http_build_query(array_merge($_GET, ['sort_by' => 'date', 'sort_dir' => $sortBy === 'date' && $sortDir === 'desc' ? 'asc' : 'desc'])) ?>" 
+                                   class="text-decoration-none text-dark">
+                                    Date 
+                                    <?php if ($sortBy === 'date'): ?>
+                                        <i class="bi <?= $sortDir === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up' ?>"></i>
+                                    <?php endif; ?>
+                                </a>
+                            </th>
+                            <th>
+                                <a href="?<?= http_build_query(array_merge($_GET, ['sort_by' => 'client', 'sort_dir' => $sortBy === 'client' && $sortDir === 'desc' ? 'asc' : 'desc'])) ?>" 
+                                   class="text-decoration-none text-dark">
+                                    Client 
+                                    <?php if ($sortBy === 'client'): ?>
+                                        <i class="bi <?= $sortDir === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up' ?>"></i>
+                                    <?php endif; ?>
+                                </a>
+                            </th>
                             <th>Canal</th>
                             <th>Commercial</th>
                             <th class="text-end">Montant HT</th>
-                            <th class="text-end">Montant TTC</th>
+                            <th class="text-end">
+                                <a href="?<?= http_build_query(array_merge($_GET, ['sort_by' => 'montant', 'sort_dir' => $sortBy === 'montant' && $sortDir === 'desc' ? 'asc' : 'desc'])) ?>" 
+                                   class="text-decoration-none text-dark">
+                                    Montant TTC
+                                    <?php if ($sortBy === 'montant'): ?>
+                                        <i class="bi <?= $sortDir === 'desc' ? 'bi-arrow-down' : 'bi-arrow-up' ?>"></i>
+                                    <?php endif; ?>
+                                </a>
+                            </th>
                             <th class="text-center">Statut</th>
                             <th class="text-center">Encaissement</th>
                             <th class="text-end">Actions</th>
