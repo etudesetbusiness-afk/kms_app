@@ -1,7 +1,8 @@
 <?php
-// ventes/list.php - avec recherche texte et tri
+// ventes/list.php - avec recherche texte, tri, et pagination
 require_once __DIR__ . '/../security.php';
 require_once __DIR__ . '/../lib/filters_helpers.php';
+require_once __DIR__ . '/../lib/pagination.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
 
@@ -93,6 +94,26 @@ $sql = "
     $whereSql
     $orderSql
 ";
+
+// Compter le total avant pagination
+$countSql = "
+    SELECT COUNT(*) as total
+    FROM ventes v
+    JOIN clients c ON c.id = v.client_id
+    JOIN canaux_vente cv ON cv.id = v.canal_vente_id
+    JOIN utilisateurs u ON u.id = v.utilisateur_id
+    $whereSql
+";
+$stmtCount = $pdo->prepare($countSql);
+$stmtCount->execute($params);
+$totalCount = $stmtCount->fetch()['total'] ?? 0;
+
+// Pagination
+$pagination = getPaginationParams($_GET, $totalCount, 25);
+$limitClause = getPaginationLimitClause($pagination['offset'], $pagination['per_page']);
+
+// Exécuter la requête avec LIMIT
+$sql .= "\n$limitClause";
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $ventes = $stmt->fetchAll();
@@ -112,7 +133,7 @@ include __DIR__ . '/../partials/sidebar.php';
         <h1 class="list-page-title h3">
             <i class="bi bi-cart-check-fill"></i>
             Ventes
-            <span class="count-badge ms-2"><?= count($ventes) ?></span>
+            <span class="count-badge ms-2"><?= $pagination['total_count'] ?></span>
         </h1>
         <?php if ($peutCreerVente): ?>
             <a href="<?= url_for('ventes/edit.php') ?>" class="btn btn-success btn-add-new">
@@ -271,6 +292,11 @@ include __DIR__ . '/../partials/sidebar.php';
     <!-- Liste des ventes -->
     <div class="card data-table-card">
         <div class="card-body">
+            <!-- Pagination top -->
+            <?php if ($pagination['total_count'] > 0): ?>
+                <?= renderPaginationControls($pagination, $_GET) ?>
+            <?php endif; ?>
+
             <?php if (empty($ventes)): ?>
                 <div class="empty-state">
                     <i class="bi bi-cart-x"></i>
@@ -434,6 +460,9 @@ include __DIR__ . '/../partials/sidebar.php';
                         <?php endforeach; ?>
                         </tbody>
                     </table>
+
+                    <!-- Pagination bottom -->
+                    <?= renderPaginationControls($pagination, $_GET) ?>
                 </div>
             <?php endif; ?>
         </div>
