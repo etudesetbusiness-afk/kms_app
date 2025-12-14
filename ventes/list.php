@@ -184,6 +184,9 @@ include __DIR__ . '/../partials/sidebar.php';
                     <a href="<?= url_for('ventes/list.php') ?>" class="btn btn-outline-secondary btn-filter">
                         <i class="bi bi-arrow-clockwise me-1"></i> Réinitialiser
                     </a>
+                    <a href="<?= url_for('ventes/export_excel.php?date_debut=' . urlencode($dateDeb ?? '') . '&date_fin=' . urlencode($dateFin ?? '') . '&statut=' . urlencode($statut) . '&client_id=' . urlencode($clientId)) ?>" class="btn btn-success btn-filter">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Exporter Excel
+                    </a>
                 </div>
             </form>
         </div>

@@ -129,6 +129,9 @@ include __DIR__ . '/../partials/sidebar.php';
                     <a href="<?= url_for('livraisons/list.php') ?>" class="btn btn-outline-secondary btn-filter">
                         <i class="bi bi-arrow-clockwise me-1"></i> Réinitialiser
                     </a>
+                    <a href="<?= url_for('livraisons/export_excel.php?date_debut=' . urlencode($dateDeb) . '&date_fin=' . urlencode($dateFin) . '&client_id=' . urlencode($clientId) . '&signe=' . urlencode($signe)) ?>" class="btn btn-success btn-filter">
+                        <i class="bi bi-file-earmark-excel me-1"></i> Exporter
+                    </a>
                 </div>
             </form>
         </div>

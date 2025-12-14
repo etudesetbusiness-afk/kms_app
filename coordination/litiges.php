@@ -190,10 +190,13 @@ async function postForm(url, data) {
                     <label class="form-label small">Au</label>
                     <input type="date" name="date_fin" class="form-control form-control-sm" value="<?= htmlspecialchars($dateFin) ?>">
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
+                <div class="col-md-2 d-flex align-items-end gap-2">
                     <button type="submit" class="btn btn-sm btn-primary w-100">
                         <i class="bi bi-search"></i> Filtrer
                     </button>
+                    <a href="<?= url_for('coordination/export_excel.php?date_debut=' . urlencode($dateDebut) . '&date_fin=' . urlencode($dateFin) . '&statut=' . urlencode($statut) . '&type=' . urlencode($type)) ?>" class="btn btn-sm btn-success">
+                        <i class="bi bi-file-earmark-excel"></i>
+                    </a>
                 </div>
             </form>
         </div>
