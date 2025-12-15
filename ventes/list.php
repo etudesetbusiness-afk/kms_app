@@ -4,6 +4,7 @@ require_once __DIR__ . '/../security.php';
 require_once __DIR__ . '/../lib/filters_helpers.php';
 require_once __DIR__ . '/../lib/pagination.php';
 require_once __DIR__ . '/../lib/user_preferences.php';
+require_once __DIR__ . '/../lib/date_helpers.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
 
@@ -13,8 +14,18 @@ $utilisateur = utilisateurConnecte();
 $user_id = $utilisateur['id'] ?? null;
 
 $today    = date('Y-m-d');
-$dateDeb  = $_GET['date_debut'] ?? null;
-$dateFin  = $_GET['date_fin'] ?? null;
+
+// Gestion des dates avec validation
+$date_start = validateAndFormatDate($_GET['date_start'] ?? $_GET['date_debut'] ?? null);
+$date_end = validateAndFormatDate($_GET['date_end'] ?? $_GET['date_fin'] ?? null);
+
+// Si aucune date fournie, utiliser le préset par défaut (30 jours)
+if (!$date_start || !$date_end) {
+    $range = getDateRangePreset('last_30d');
+    $date_start = $range['start'];
+    $date_end = $range['end'];
+}
+
 $statut   = $_GET['statut'] ?? '';
 $clientId = isset($_GET['client_id']) ? (int)$_GET['client_id'] : 0;
 $canalId  = isset($_GET['canal_id']) ? (int)$_GET['canal_id'] : 0;
@@ -42,14 +53,13 @@ $canaux = $stmt->fetchAll();
 $where  = [];
 $params = [];
 
-// Les filtres de date sont OPTIONNELS (non appliqués par défaut)
-if ($dateDeb !== null && $dateDeb !== '') {
+// Les filtres de date sont APPLIQUÉS par défaut avec le préset (30j)
+// Format: v.date_vente (anciens noms: date_debut/date_fin) → date_start/date_end
+if ($date_start && $date_end) {
     $where[] = "v.date_vente >= ?";
-    $params[] = $dateDeb;
-}
-if ($dateFin !== null && $dateFin !== '') {
-    $where[] = "v.date_vente <= ?";
-    $params[] = $dateFin;
+    $params[] = $date_start;
+    $where[] = "v.date_vente <= CONCAT(?, ' 23:59:59')";
+    $params[] = $date_end;
 }
 if ($statut !== '' && in_array($statut, ['EN_ATTENTE_LIVRAISON','LIVREE','ANNULEE','PARTIELLEMENT_LIVREE'], true)) {
     $where[] = "v.statut = ?";
@@ -171,6 +181,14 @@ include __DIR__ . '/../partials/sidebar.php';
     <!-- Filtres -->
     <div class="card filter-card">
         <div class="card-body">
+            <!-- Date Range Picker Component (Phase 3.3) -->
+            <?php 
+            // Passer les variables au composant
+            $date_start_input = htmlspecialchars($date_start);
+            $date_end_input = htmlspecialchars($date_end);
+            include __DIR__ . '/../components/date_range_picker.html'; 
+            ?>
+            
             <form class="row g-3 align-items-end" method="get" id="filter_form">
                 <!-- Recherche texte -->
                 <div class="col-md-4">
@@ -183,16 +201,6 @@ include __DIR__ . '/../partials/sidebar.php';
                     <small class="text-muted d-block mt-1">Cherche dans: N° vente, client, observations</small>
                 </div>
 
-                <div class="col-md-2">
-                    <label class="form-label small">Du</label>
-                    <input type="date" name="date_debut" class="form-control"
-                           value="<?= htmlspecialchars($dateDeb ?? '') ?>">
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label small">Au</label>
-                    <input type="date" name="date_fin" class="form-control"
-                           value="<?= htmlspecialchars($dateFin ?? '') ?>">
-                </div>
                 <div class="col-md-2">
                     <label class="form-label small">Statut</label>
                     <select name="statut" class="form-select">

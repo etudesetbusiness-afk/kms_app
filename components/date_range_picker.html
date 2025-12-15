@@ -1,0 +1,146 @@
+<!-- components/date_range_picker.html - Sélecteur de plage de dates avec Flatpickr -->
+
+<!-- Flatpickr CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<!-- Traduction FR pour Flatpickr -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
+
+<style>
+    .date-preset-btns .btn {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+    }
+    .date-preset-btns .btn.active {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    .flatpickr-calendar {
+        box-shadow: 0 3px 13px rgba(0,0,0,0.08);
+    }
+</style>
+
+<div class="row g-3 align-items-end mb-3" id="dateRangeFilter">
+    <!-- Présets rapides -->
+    <div class="col-auto">
+        <label class="form-label small fw-bold mb-2">Présets:</label>
+        <div class="date-preset-btns d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-sm btn-outline-primary preset-btn" data-preset="today">Aujourd'hui</button>
+            <button type="button" class="btn btn-sm btn-outline-primary preset-btn" data-preset="last_7d">7j</button>
+            <button type="button" class="btn btn-sm btn-outline-primary preset-btn" data-preset="last_30d">30j</button>
+            <button type="button" class="btn btn-sm btn-outline-primary preset-btn active" data-preset="last_90d">90j</button>
+            <button type="button" class="btn btn-sm btn-outline-primary preset-btn" data-preset="this_month">Ce mois</button>
+        </div>
+    </div>
+    
+    <!-- Calendriers -->
+    <div class="col-12">
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label for="dateStart" class="form-label small fw-bold">Du:</label>
+                <input type="text" class="form-control form-control-sm" id="dateStart" name="date_start" placeholder="YYYY-MM-DD">
+            </div>
+            <div class="col-md-6">
+                <label for="dateEnd" class="form-label small fw-bold">Au:</label>
+                <input type="text" class="form-control form-control-sm" id="dateEnd" name="date_end" placeholder="YYYY-MM-DD">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Boutons action -->
+    <div class="col-12">
+        <button type="button" class="btn btn-sm btn-primary" id="applyDateFilter">
+            <i class="bi bi-check-circle"></i> Appliquer
+        </button>
+        <button type="button" class="btn btn-sm btn-light" id="resetDateFilter">
+            <i class="bi bi-arrow-clockwise"></i> Réinitialiser
+        </button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Configuration Flatpickr
+    const dateConfig = {
+        dateFormat: 'Y-m-d',
+        locale: 'fr',
+        allowInput: true,
+        maxDate: new Date()  // Pas de dates futures
+    };
+    
+    // Initialiser les calendriers
+    const startPicker = flatpickr('#dateStart', {
+        ...dateConfig,
+        onChange: function(selectedDates) {
+            // Mettre à jour l'endDate picker (date min)
+            if (selectedDates.length > 0) {
+                endPicker.set('minDate', selectedDates[0]);
+            }
+        }
+    });
+    
+    const endPicker = flatpickr('#dateEnd', {
+        ...dateConfig,
+        onChange: function(selectedDates) {
+            // Mettre à jour le startDate picker (date max)
+            if (selectedDates.length > 0) {
+                startPicker.set('maxDate', selectedDates[0]);
+            }
+        }
+    });
+    
+    // Gestionnaires de présets
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const preset = this.dataset.preset;
+            
+            // Récupérer la plage pour ce préset via AJAX
+            fetch('<?php echo url_for("api/get_date_preset.php"); ?>', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({preset: preset})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.start && data.end) {
+                    startPicker.setDate(data.start);
+                    endPicker.setDate(data.end);
+                    
+                    // Activer le bouton
+                    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+    });
+    
+    // Appliquer le filtre
+    document.getElementById('applyDateFilter')?.addEventListener('click', function() {
+        const start = document.getElementById('dateStart').value;
+        const end = document.getElementById('dateEnd').value;
+        
+        if (start && end) {
+            const url = new URL(window.location);
+            url.searchParams.set('date_start', start);
+            url.searchParams.set('date_end', end);
+            url.searchParams.set('page', '1');  // Réinitialiser pagination
+            window.location = url.toString();
+        }
+    });
+    
+    // Réinitialiser le filtre
+    document.getElementById('resetDateFilter')?.addEventListener('click', function() {
+        startPicker.clear();
+        endPicker.clear();
+        document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-preset="last_90d"]')?.classList.add('active');
+        
+        const url = new URL(window.location);
+        url.searchParams.delete('date_start');
+        url.searchParams.delete('date_end');
+        url.searchParams.set('page', '1');
+        window.location = url.toString();
+    });
+});
+</script>
