@@ -130,7 +130,11 @@ $sqlStats = "
         SUM(CASE WHEN statut_traitement = 'EN_COURS' THEN 1 ELSE 0 END) as en_cours,
         SUM(CASE WHEN statut_traitement IN ('RESOLU', 'REMPLACEMENT_EFFECTUE', 'REMBOURSEMENT_EFFECTUE') THEN 1 ELSE 0 END) as resolus,
         SUM(montant_rembourse) as total_rembourse
-    FROM retours_litiges
+    FROM retours_litiges rl
+    INNER JOIN clients c ON rl.client_id = c.id
+    LEFT JOIN ventes v ON rl.vente_id = v.id
+    LEFT JOIN produits p ON rl.produit_id = p.id
+    LEFT JOIN utilisateurs u ON rl.responsable_suivi_id = u.id
     $whereSql
 ";
 $stmtStats = $pdo->prepare($sqlStats);

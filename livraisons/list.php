@@ -213,7 +213,7 @@ include __DIR__ . '/../partials/sidebar.php';
                     <a href="<?= url_for('livraisons/list.php') ?>" class="btn btn-outline-secondary btn-filter">
                         <i class="bi bi-arrow-clockwise me-1"></i> Réinitialiser
                     </a>
-                    <a href="<?= url_for('livraisons/export_excel.php?date_debut=' . urlencode($dateDeb) . '&date_fin=' . urlencode($dateFin) . '&client_id=' . urlencode($clientId) . '&signe=' . urlencode($signe) . '&search=' . urlencode($search)) ?>" class="btn btn-success btn-filter">
+                    <a href="<?= url_for('livraisons/export_excel.php?date_debut=' . urlencode($date_start) . '&date_fin=' . urlencode($date_end) . '&client_id=' . urlencode($clientId) . '&signe=' . urlencode($signe) . '&search=' . urlencode($search)) ?>" class="btn btn-success btn-filter">
                         <i class="bi bi-file-earmark-excel me-1"></i> Exporter
                     </a>
                 </div>
@@ -222,8 +222,8 @@ include __DIR__ . '/../partials/sidebar.php';
                 <?php
                 $activeFilters = [];
                 if (!empty($search)) $activeFilters['Recherche'] = $search;
-                if ($dateDeb) $activeFilters['Du'] = $dateDeb;
-                if ($dateFin) $activeFilters['Au'] = $dateFin;
+                if ($date_start) $activeFilters['Du'] = $date_start;
+                if ($date_end) $activeFilters['Au'] = $date_end;
                 if ($clientId > 0) {
                     $clientName = 'Inconnu';
                     foreach ($clients as $c) {
