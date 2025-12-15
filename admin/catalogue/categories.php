@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $action = $_POST['action'] ?? '';
     
-    if ($action === 'create' && aPermission('PRODUITS_CREER')) {
+    if ($action === 'create' && peut('PRODUITS_CREER')) {
         $nom = trim($_POST['nom'] ?? '');
         $actif = isset($_POST['actif']) ? 1 : 0;
         $ordre = (int)($_POST['ordre'] ?? 1);
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    if ($action === 'update' && aPermission('PRODUITS_MODIFIER')) {
+    if ($action === 'update' && peut('PRODUITS_MODIFIER')) {
         $id = (int)($_POST['id'] ?? 0);
         $nom = trim($_POST['nom'] ?? '');
         $actif = isset($_POST['actif']) ? 1 : 0;
@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    if ($action === 'delete' && aPermission('PRODUITS_SUPPRIMER')) {
+    if ($action === 'delete' && peut('PRODUITS_SUPPRIMER')) {
         $id = (int)($_POST['id'] ?? 0);
         
         if ($id > 0) {
@@ -122,7 +122,7 @@ include __DIR__ . '/../../partials/sidebar.php';
                 <h1 class="h3 mb-1">Catégories du Catalogue</h1>
                 <p class="text-muted mb-0">Gérer les catégories de produits</p>
             </div>
-            <?php if (aPermission('PRODUITS_CREER')): ?>
+            <?php if (peut('PRODUITS_CREER')): ?>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
                     <i class="bi bi-plus-circle me-1"></i> Nouvelle Catégorie
                 </button>
@@ -181,13 +181,13 @@ include __DIR__ . '/../../partials/sidebar.php';
                                         </td>
                                         <td class="text-end">
                                             <div class="btn-group btn-group-sm">
-                                                <?php if (aPermission('PRODUITS_MODIFIER')): ?>
+                                                <?php if (peut('PRODUITS_MODIFIER')): ?>
                                                     <button class="btn btn-outline-primary" 
                                                             onclick="editCategory(<?= htmlspecialchars(json_encode($cat)) ?>)">
                                                         <i class="bi bi-pencil"></i>
                                                     </button>
                                                 <?php endif; ?>
-                                                <?php if (aPermission('PRODUITS_SUPPRIMER')): ?>
+                                                <?php if (peut('PRODUITS_SUPPRIMER')): ?>
                                                     <button class="btn btn-outline-danger" 
                                                             onclick="deleteCategory(<?= $cat['id'] ?>, '<?= htmlspecialchars($cat['nom'], ENT_QUOTES) ?>')">
                                                         <i class="bi bi-trash"></i>

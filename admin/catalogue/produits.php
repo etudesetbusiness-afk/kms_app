@@ -111,7 +111,7 @@ include __DIR__ . '/../../partials/sidebar.php';
                 <h1 class="h3 mb-1">Gestion Catalogue - Produits</h1>
                 <p class="text-muted mb-0">Gérer les produits affichés dans le catalogue public</p>
             </div>
-            <?php if (aPermission('PRODUITS_CREER')): ?>
+            <?php if (peut('PRODUITS_CREER')): ?>
                 <a href="<?= url_for('admin/catalogue/produit_edit.php') ?>" class="btn btn-primary">
                     <i class="bi bi-plus-circle me-1"></i> Nouveau Produit
                 </a>
@@ -282,13 +282,13 @@ include __DIR__ . '/../../partials/sidebar.php';
                                                    class="btn btn-outline-secondary" target="_blank" title="Voir public">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <?php if (aPermission('PRODUITS_MODIFIER')): ?>
+                                                <?php if (peut('PRODUITS_MODIFIER')): ?>
                                                     <a href="<?= url_for('admin/catalogue/produit_edit.php?id=' . $p['id']) ?>" 
                                                        class="btn btn-outline-primary" title="Modifier">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                 <?php endif; ?>
-                                                <?php if (aPermission('PRODUITS_SUPPRIMER')): ?>
+                                                <?php if (peut('PRODUITS_SUPPRIMER')): ?>
                                                     <button class="btn btn-outline-danger" 
                                                             onclick="if(confirm('Supprimer ce produit ?')) window.location.href='<?= url_for('admin/catalogue/produit_delete.php?id=' . $p['id'] . '&csrf_token=' . genererCsrf()) ?>'"
                                                             title="Supprimer">
