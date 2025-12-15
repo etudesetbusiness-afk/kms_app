@@ -111,11 +111,16 @@ include __DIR__ . '/../../partials/sidebar.php';
                 <h1 class="h3 mb-1">Gestion Catalogue - Produits</h1>
                 <p class="text-muted mb-0">Gérer les produits affichés dans le catalogue public</p>
             </div>
-            <?php if (peut('PRODUITS_CREER')): ?>
-                <a href="<?= url_for('admin/catalogue/produit_edit.php') ?>" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i> Nouveau Produit
-                </a>
-            <?php endif; ?>
+            <div class="btn-group" role="group">
+                <?php if (peut('PRODUITS_CREER')): ?>
+                    <a href="<?= url_for('admin/catalogue/produit_edit.php') ?>" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i> Nouveau Produit
+                    </a>
+                    <a href="<?= url_for('admin/catalogue/import.php') ?>" class="btn btn-info">
+                        <i class="bi bi-upload me-1"></i> Importer Excel
+                    </a>
+                <?php endif; ?>
+            </div>
         </div>
 
         <!-- Filtres -->
@@ -289,11 +294,13 @@ include __DIR__ . '/../../partials/sidebar.php';
                                                     </a>
                                                 <?php endif; ?>
                                                 <?php if (peut('PRODUITS_SUPPRIMER')): ?>
-                                                    <button class="btn btn-outline-danger" 
-                                                            onclick="if(confirm('Supprimer ce produit ?')) window.location.href='<?= url_for('admin/catalogue/produit_delete.php?id=' . $p['id'] . '&csrf_token=' . genererCsrf()) ?>'"
-                                                            title="Supprimer">
-                                                        <i class="bi bi-trash"></i>
-                                                    </button>
+                                                    <form action="<?= url_for('admin/catalogue/produit_delete.php') ?>" method="POST" style="display:inline;" onsubmit="return confirm('Supprimer ce produit ?');">
+                                                        <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(getCsrfToken()) ?>">
+                                                        <button type="submit" class="btn btn-outline-danger" title="Supprimer">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
                                                 <?php endif; ?>
                                             </div>
                                         </td>

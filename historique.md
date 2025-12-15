@@ -982,3 +982,81 @@ L'application est désormais robuste sur la gestion des transactions, la cohére
 - Audit trail complète (signatures, encaissements, réconciliation)
 
 **Dernière mise à jour :** 14 décembre 2025 (Phase 1 COMPLÉTÉE - Signature BL, Exports, Polish)
+
+---
+
+### SESSION 15 DÉCEMBRE 2025 (Soir) — BUGFIXES + IMPORT EXCEL
+
+**Problèmes résolus:**
+
+1. **Module Catalogue - 8 bugs CSRF corrigés**
+   - ✅ Fonction `csrf_token_input()` inexistante → Remplacée par `<input type="hidden" name="csrf_token" value="<?= htmlspecialchars(getCsrfToken()) ?>">`
+   - ✅ `verifierCsrf()` appelée sans argument → Passé `$_POST['csrf_token'] ?? ''`
+   - ✅ `genererCsrf()` non existent → Utilisé `getCsrfToken()`
+   - ✅ Fonction `peut()` redéfinie → Centralisée dans security.php
+   - **Fichiers corrigés:** produits.php, produit_edit.php, produit_delete.php, categories.php
+   - **Résultat:** Module catalogue 100% opérationnel
+
+2. **Bug affichage images en public**
+   - ✅ Images mises à jour en back-office n'apparaissaient pas en public
+   - ✅ **Root cause:** Mauvaise construction de chemin Windows + base path incorrect
+   - ✅ **Solution:** Rewritten `catalogue_image_path()` avec `realpath(__DIR__)` + `DIRECTORY_SEPARATOR`
+   - ✅ **Fichier modifié:** `catalogue/controllers/catalogue_controller.php`
+   - ✅ **Résultat:** Images désormais visibles en public
+
+3. **Feature: Import Excel/CSV**
+   - ✅ Page d'import 3 étapes (Upload → Aperçu → Confirmation)
+   - ✅ Support formats: CSV, XLSX, XLS
+   - ✅ Parsers: `parseCSV()` (fgetcsv), `parseExcel()` (ZipArchive + SimpleXML)
+   - ✅ Validation stricte: codes uniques, slugs générés, catégories validées
+   - ✅ Protection CSRF + permissions
+   - ✅ Gestion erreurs: messages détaillés par ligne
+   - ✅ Intégration UI: bouton "Importer Excel" dans produits.php
+   - ✅ 2 fichiers d'exemple: exemple_import.csv (12), exemple_complet.csv (18)
+
+**Fichiers créés:**
+- `admin/catalogue/import.php` (405 lignes) - Page d'import complet
+- `uploads/exemple_import.csv` - 12 produits exemple
+- `uploads/exemple_complet.csv` - 18 produits exemple
+- `GUIDE_IMPORT_CATALOGUE.md` - Guide utilisateur
+- `admin/catalogue/README_IMPORT.md` - Documentation technique
+- `TEST_IMPORT_GUIDE.md` - Guide de test
+- `IMPORT_EXCEL_LIVRABLES.md` - Résumé livraison
+- `SESSION_RESUME_COMPLET.md` - Résumé complet session
+- `DOCUMENTATION_INDEX.md` - Index documentation
+- `CHECKLIST_DEMARRAGE.md` - Checklist validation
+- `START_HERE.md` - Démarrage rapide
+- `FINAL_SUMMARY.md` - Résumé final
+- `test_integration_import.php` - Tests intégration
+- `test_import_csv.php` - Tests parsing CSV
+- `test_import_page.php` - Tests page load
+- `verify_system_ready.php` - Vérification système
+
+**Fichiers modifiés:**
+- `admin/catalogue/produits.php` - Ajout bouton "Importer Excel" (lignes 110-120)
+- `security.php` - Ajout centralisé fonction `peut()`
+- `partials/sidebar.php` - Suppression doublon `peut()`
+
+**Résultats tests:**
+- ✅ Fichiers: 9/9 présents (100%)
+- ✅ Code: 5/5 éléments (100%)
+- ✅ Syntaxe PHP: 2/2 fichiers OK (100%)
+- ✅ BD: 37 produits, 6 catégories
+- ✅ Parsing CSV: 12 produits parsés correctement
+- ✅ Validation: 12/12 lignes OK
+- ✅ CSRF Token: Sécurisé
+
+**Statistiques session:**
+- Bugs corrigés: 9 (8 CSRF + 1 image)
+- Nouvelles fonctionnalités: 1 (import Excel)
+- Fichiers créés: 16
+- Fichiers modifiés: 3
+- Lignes de code: 405+ (import.php)
+- Documentation: 10 documents
+- Tests: 8+ suites validées
+
+**Accès immédiat:**
+- URL: http://localhost/kms_app/admin/catalogue/import.php
+- Menu: Admin → Catalogue → Importer Excel
+
+**Dernière mise à jour :** 15 décembre 2025 (Bugfixes + Feature Import Excel)

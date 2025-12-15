@@ -12,7 +12,7 @@ global $pdo;
 
 // Traitement des actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifierCsrf();
+    verifierCsrf($_POST['csrf_token'] ?? '');
     
     $action = $_POST['action'] ?? '';
     
@@ -210,7 +210,7 @@ include __DIR__ . '/../../partials/sidebar.php';
 <div class="modal fade" id="createModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
-            <?= csrf_token_input() ?>
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(getCsrfToken()) ?>">
             <input type="hidden" name="action" value="create">
             
             <div class="modal-header">
@@ -245,7 +245,7 @@ include __DIR__ . '/../../partials/sidebar.php';
 <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" class="modal-content">
-            <?= csrf_token_input() ?>
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(getCsrfToken()) ?>">
             <input type="hidden" name="action" value="update">
             <input type="hidden" name="id" id="edit_id">
             
@@ -279,7 +279,7 @@ include __DIR__ . '/../../partials/sidebar.php';
 
 <!-- Form Suppression (caché) -->
 <form method="POST" id="deleteForm" style="display:none;">
-    <?= csrf_token_input() ?>
+    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(getCsrfToken()) ?>">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="id" id="delete_id">
 </form>

@@ -37,7 +37,7 @@ $categories = $pdo->query("SELECT id, nom FROM catalogue_categories ORDER BY nom
 
 // Traitement du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifierCsrf();
+    verifierCsrf($_POST['csrf_token'] ?? '');
     
     $code = trim($_POST['code'] ?? '');
     $designation = trim($_POST['designation'] ?? '');
@@ -282,7 +282,7 @@ include __DIR__ . '/../../partials/sidebar.php';
         <?php endif; ?>
 
         <form method="POST" enctype="multipart/form-data">
-            <?= csrf_token_input() ?>
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(getCsrfToken()) ?>">
             
             <div class="row">
                 <!-- Colonne principale -->

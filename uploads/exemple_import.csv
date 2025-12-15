@@ -1,0 +1,13 @@
+code,designation,categorie_id,prix_unite
+BOIS-PIN-1,Pin Maritim 2x4 cm,1,450.50
+BOIS-CHENE-1,Chêne massif 4x4 cm,1,1250.00
+VERNIS-BRILLANT-1,Vernis Polyuréthane Brillant 1L,2,8500.00
+VERNIS-MAT-1,Vernis Polyuréthane Mat 1L,2,8500.00
+PEINTURE-BLANC-1,Peinture Acrylique Blanc 2L,3,5500.00
+PEINTURE-NOIR-1,Peinture Acrylique Noir 2L,3,5500.00
+COLLE-BOIS-1,Colle à bois 500ml,4,2000.00
+COLLE-UNIVERSELLE-1,Colle Universelle 500ml,4,1800.00
+PERCEUSE-PERCUSSION,Perceuse à percussion 20V,5,45000.00
+VISSEUSE-IMPACT,Visseuse à impact 18V,5,38000.00
+SCIE-CIRCULAIRE,Scie circulaire filaire 185mm,5,35000.00
+PONCEUSE-EXCENTRIQUE,Ponceuse excentrique 125mm,5,28000.00

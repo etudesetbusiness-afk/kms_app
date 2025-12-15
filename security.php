@@ -112,6 +112,15 @@ function verifierCsrf(string $tokenFormulaire): void
 }
 
 /**
+ * Vérifier si l'utilisateur a une permission.
+ */
+function peut(string $code): bool
+{
+    $permissions = $_SESSION['permissions'] ?? [];
+    return in_array($code, $permissions, true);
+}
+
+/**
  * Charge les infos & permissions en session après login.
  */
 function chargerPermissionsUtilisateur(int $utilisateurId): void

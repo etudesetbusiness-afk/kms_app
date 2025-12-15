@@ -7,11 +7,6 @@ $permissions = $_SESSION['permissions'] ?? [];
 $current_page = basename($_SERVER['PHP_SELF']);
 $current_dir = basename(dirname($_SERVER['PHP_SELF']));
 
-function peut(string $code): bool {
-    global $permissions;
-    return in_array($code, $permissions, true);
-}
-
 function is_active($page, $dir = null): bool {
     global $current_page, $current_dir;
     if ($dir && $current_dir === $dir) return true;

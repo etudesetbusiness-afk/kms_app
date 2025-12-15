@@ -151,8 +151,35 @@ function catalogue_get_related(int $categorieId, int $excludeId, int $limit = 12
  */
 function catalogue_image_path(?string $path): string
 {
-    if ($path && file_exists($_SERVER['DOCUMENT_ROOT'] . $path)) {
-        return $path;
+    if (!$path) {
+        return url_for('assets/img/logo-kms.png');
     }
+    
+    // Construire le chemin absolu du fichier image
+    // Les images sont dans /uploads/catalogue/ relatives à la racine de l'app (kms_app/)
+    $basePath = realpath(__DIR__ . '/../../uploads/catalogue/');
+    
+    if (!$basePath) {
+        // Si le dossier n'existe pas, retourner placeholder
+        return url_for('assets/img/logo-kms.png');
+    }
+    
+    // Vérifier les deux cas: chemin complet ou juste le nom du fichier
+    if (strpos($path, 'uploads/') !== false) {
+        // Chemin complet comme "uploads/catalogue/img_123.jpg"
+        $filename = basename($path);
+    } else {
+        // Juste le nom du fichier comme "img_123.jpg"
+        $filename = $path;
+    }
+    
+    // Vérifier si le fichier existe
+    $fullPath = $basePath . DIRECTORY_SEPARATOR . $filename;
+    
+    if (@file_exists($fullPath)) {
+        // Retourner le chemin URL correct
+        return url_for('uploads/catalogue/' . $filename);
+    }
+    
     return url_for('assets/img/logo-kms.png');
 }

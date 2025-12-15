@@ -10,7 +10,7 @@ exigerPermission('PRODUITS_SUPPRIMER');
 
 global $pdo;
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 
 if ($id <= 0) {
     $_SESSION['error'] = "ID invalide";
@@ -18,7 +18,7 @@ if ($id <= 0) {
     exit;
 }
 
-verifierCsrf();
+verifierCsrf($_POST['csrf_token'] ?? '');
 
 // Récupérer le produit
 $stmt = $pdo->prepare("SELECT * FROM catalogue_produits WHERE id = ?");

@@ -1,0 +1,19 @@
+code,designation,categorie_id,prix_unite,description
+SCIE-CIRCULAIRE,Scie circulaire filaire 185mm,5,35000.00,Scie circulaire professionnelle avec lame 185mm
+PONCEUSE-EXCENTRIQUE,Ponceuse excentrique 125mm,5,28000.00,Ponceuse électrique excentrique pour finitions lisses
+VISSEUSE-IMPACT,Visseuse à impact 18V,5,38000.00,Visseuse sans fil puissante pour vissage professionnel
+PERCEUSE-PERCUSSION,Perceuse à percussion 20V,5,45000.00,Perceuse avec percussion pour travail du béton
+MEULEUSE-ANGLE,Meuleuse d'angle 125mm,5,18000.00,Meuleuse pour coupes et meulage
+RABOT-ELECTRIQUE,Rabot électrique 82mm,5,52000.00,Rabot professionnel pour dégauchissage
+COLLE-UNIVERSELLE-1,Colle Universelle 500ml,4,1800.00,Colle multi-surfaces 500ml
+COLLE-BOIS-1,Colle à bois 500ml,4,2000.00,Colle spéciale bois 500ml
+COLLE-CYANOACRYLATE,Colle cyanoacrylate 20g,4,800.00,Colle instantanée ultra-rapide
+PEINTURE-NOIR-1,Peinture Acrylique Noir 2L,3,5500.00,Peinture acrylique brillante noir 2L
+PEINTURE-BLANC-1,Peinture Acrylique Blanc 2L,3,5500.00,Peinture acrylique brillante blanc 2L
+PEINTURE-GRIS,Peinture Acrylique Gris 2L,3,5500.00,Peinture acrylique brillante gris 2L
+VERNIS-MAT-1,Vernis Polyuréthane Mat 1L,2,8500.00,Vernis polyuréthane finition mate 1L
+VERNIS-BRILLANT-1,Vernis Polyuréthane Brillant 1L,2,8500.00,Vernis polyuréthane finition brillante 1L
+VERNIS-SATIN,Vernis Polyuréthane Satiné 1L,2,8500.00,Vernis polyuréthane finition satinée 1L
+BOIS-CHENE-1,Chêne massif 4x4 cm,1,1250.00,Bois de chêne massif raboté 4x4 cm
+BOIS-PIN-1,Pin Maritim 2x4 cm,1,450.50,Bois de pin traité 2x4 cm
+BOIS-SAPIN,Sapin blanc 3x5 cm,1,650.00,Bois de sapin blanc raboté 3x5 cm
