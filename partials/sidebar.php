@@ -108,9 +108,17 @@ function is_active($page, $dir = null): bool {
                 </div>
                 <div class="section-content">
                 <?php if (peut('PRODUITS_LIRE')): ?>
-                    <a href="<?= url_for('catalogue/index.php') ?>" class="sidebar-item <?= is_active('index.php', 'catalogue') ? 'active' : '' ?>">
+                    <a href="<?= url_for('catalogue/index.php') ?>" class="sidebar-item <?= is_active('index.php', 'catalogue') && $current_dir !== 'catalogue' ? 'active' : '' ?>">
                         <i class="bi bi-diagram-3"></i>
-                        <span>Catalogue produits</span>
+                        <span>Catalogue (public)</span>
+                    </a>
+                    <a href="<?= url_for('admin/catalogue/produits.php') ?>" class="sidebar-item sidebar-item-nested <?= ($current_dir === 'catalogue' && (is_active('produits.php') || is_active('produit_edit.php'))) ? 'active' : '' ?>">
+                        <i class="bi bi-box"></i>
+                        <span>Produits</span>
+                    </a>
+                    <a href="<?= url_for('admin/catalogue/categories.php') ?>" class="sidebar-item sidebar-item-nested <?= ($current_dir === 'catalogue' && is_active('categories.php')) ? 'active' : '' ?>">
+                        <i class="bi bi-tags"></i>
+                        <span>Catégories</span>
                     </a>
                 <?php endif; ?>
                 <?php if (peut('ACHATS_GERER')): ?>
