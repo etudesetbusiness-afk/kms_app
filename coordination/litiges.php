@@ -283,8 +283,8 @@ async function postForm(url, data) {
                 <?php
                 $activeFilters = [];
                 if (!empty($search)) $activeFilters['Recherche'] = $search;
-                if ($dateDebut) $activeFilters['Du'] = $dateDebut;
-                if ($dateFin) $activeFilters['Au'] = $dateFin;
+                if ($date_start) $activeFilters['Du'] = $date_start;
+                if ($date_end) $activeFilters['Au'] = $date_end;
                 if ($statut) $activeFilters['Statut'] = $statut;
                 if ($type) $activeFilters['Type'] = $type;
                 ?>
