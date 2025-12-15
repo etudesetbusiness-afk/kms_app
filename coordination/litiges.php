@@ -2,49 +2,75 @@
 // coordination/litiges.php - Gestion des retours et litiges clients
 require_once __DIR__ . '/../security.php';
 require_once __DIR__ . '/../lib/filters_helpers.php';
+require_once __DIR__ . '/../lib/pagination.php';
+require_once __DIR__ . '/../lib/user_preferences.php';
+require_once __DIR__ . '/../lib/date_helpers.php';
+require_once __DIR__ . '/../lib/cache.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
 
 global $pdo;
 
 $utilisateur = utilisateurConnecte();
+$user_id = $utilisateur['id'] ?? null;
+
+// Gestion des dates avec validation
+$date_start = validateAndFormatDate($_GET['date_start'] ?? $_GET['date_debut'] ?? null);
+$date_end = validateAndFormatDate($_GET['date_end'] ?? $_GET['date_fin'] ?? null);
+
+// Si aucune date fournie, utiliser le préset par défaut (90 jours pour litiges)
+if (!$date_start || !$date_end) {
+    $range = getDateRangePreset('last_90d');
+    $date_start = $range['start'];
+    $date_end = $range['end'];
+}
 
 // Filtres
 $statut = $_GET['statut'] ?? '';
 $type = $_GET['type'] ?? '';
-$dateDebut = $_GET['date_debut'] ?? '';
-$dateFin = $_GET['date_fin'] ?? '';
 $search = trim($_GET['search'] ?? '');
-$sortBy = $_GET['sort_by'] ?? 'date';
-$sortDir = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+// Charger les préférences utilisateur et les appliquer
+if ($user_id) {
+    $prefs = updateUserPreferencesFromGet($user_id, 'litiges', $_GET, ['date', 'statut', 'montant']);
+    $sortBy = $prefs['sort_by'];
+    $sortDir = $prefs['sort_dir'];
+    $per_page = $prefs['per_page'];
+} else {
+    $sortBy = $_GET['sort_by'] ?? 'date';
+    $sortDir = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+    $per_page = 25;
+}
 
 $where = [];
 $params = [];
 
 if ($statut !== '') {
-    $where[] = "rl.statut_traitement = :statut";
-    $params['statut'] = $statut;
+    $where[] = "rl.statut_traitement = ?";
+    $params[] = $statut;
 }
 
 if ($type !== '') {
-    $where[] = "rl.type_probleme = :type";
-    $params['type'] = $type;
+    $where[] = "rl.type_probleme = ?";
+    $params[] = $type;
 }
 
-if ($dateDebut !== '') {
-    $where[] = "rl.date_retour >= :date_debut";
-    $params['date_debut'] = $dateDebut;
-}
-
-if ($dateFin !== '') {
-    $where[] = "rl.date_retour <= :date_fin";
-    $params['date_fin'] = $dateFin;
+// Filtres de dates (appliqués par défaut avec préset 90j)
+if ($date_start && $date_end) {
+    $where[] = "rl.date_retour >= ?";
+    $params[] = $date_start;
+    $where[] = "rl.date_retour <= CONCAT(?, ' 23:59:59')";
+    $params[] = $date_end;
 }
 
 // Recherche texte
 if (!empty($search)) {
-    $where[] = "(c.nom LIKE :search OR p.designation LIKE :search OR v.numero LIKE :search OR rl.motif LIKE :search)";
-    $params['search'] = '%' . $search . '%';
+    $where[] = "(c.nom LIKE ? OR p.designation LIKE ? OR v.numero LIKE ? OR rl.motif LIKE ?)";
+    $searchTerm = '%' . $search . '%';
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
 }
 
 $whereSql = count($where) > 0 ? 'WHERE ' . implode(' AND ', $where) : '';
@@ -58,6 +84,23 @@ if ($sortBy === 'client') {
 } else {
     $orderSql = "ORDER BY rl.date_retour $sortDir, rl.id DESC";
 }
+
+// Récupérer le nombre total de lignes
+$count_sql = "
+    SELECT COUNT(*) as cnt
+    FROM retours_litiges rl
+    INNER JOIN clients c ON rl.client_id = c.id
+    LEFT JOIN ventes v ON rl.vente_id = v.id
+    LEFT JOIN produits p ON rl.produit_id = p.id
+    LEFT JOIN utilisateurs u ON rl.responsable_suivi_id = u.id
+    $whereSql
+";
+$count_stmt = $pdo->prepare($count_sql);
+$count_stmt->execute($params);
+$total_count = $count_stmt->fetch()['cnt'];
+
+// Récupérer les paramètres de pagination
+$pagination = getPaginationParams($_GET, $total_count, $per_page);
 
 $sql = "
     SELECT rl.*,
@@ -74,7 +117,7 @@ $sql = "
     LEFT JOIN utilisateurs u ON rl.responsable_suivi_id = u.id
     $whereSql
     $orderSql
-";
+    " . getPaginationLimitClause($pagination['offset'], $pagination['per_page']);
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -171,6 +214,13 @@ async function postForm(url, data) {
     <!-- Filtres -->
     <div class="card mb-4">
         <div class="card-body">
+            <!-- Date Range Picker Component (Phase 3.3) -->
+            <?php 
+            $date_start_input = htmlspecialchars($date_start);
+            $date_end_input = htmlspecialchars($date_end);
+            include __DIR__ . '/../components/date_range_picker.html'; 
+            ?>
+            
             <form method="get" class="row g-3" id="filter_form">
                 <!-- Recherche texte -->
                 <div class="col-md-4">
@@ -411,6 +461,9 @@ async function postForm(url, data) {
                         <?php endif; ?>
                     </tbody>
                 </table>
+                
+                <!-- Contrôles de pagination (Phase 3.1) -->
+                <?php echo renderPaginationControls($pagination, $_GET); ?>
             </div>
         </div>
     </div>

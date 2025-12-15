@@ -1,48 +1,77 @@
 <?php
-// livraisons/list.php - avec recherche texte et tri
+// livraisons/list.php - avec recherche texte, tri, pagination, et préférences utilisateur
 require_once __DIR__ . '/../security.php';
 require_once __DIR__ . '/../lib/filters_helpers.php';
+require_once __DIR__ . '/../lib/pagination.php';
+require_once __DIR__ . '/../lib/user_preferences.php';
+require_once __DIR__ . '/../lib/date_helpers.php';
+require_once __DIR__ . '/../lib/cache.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
 
 global $pdo;
 
-$dateDeb  = $_GET['date_debut'] ?? '';
-$dateFin  = $_GET['date_fin'] ?? '';
+$utilisateur = utilisateurConnecte();
+$user_id = $utilisateur['id'] ?? null;
+
+// Gestion des dates avec validation
+$date_start = validateAndFormatDate($_GET['date_start'] ?? $_GET['date_debut'] ?? null);
+$date_end = validateAndFormatDate($_GET['date_end'] ?? $_GET['date_fin'] ?? null);
+
+// Si aucune date fournie, utiliser le préset par défaut (30 jours)
+if (!$date_start || !$date_end) {
+    $range = getDateRangePreset('last_30d');
+    $date_start = $range['start'];
+    $date_end = $range['end'];
+}
+
 $clientId = isset($_GET['client_id']) ? (int)$_GET['client_id'] : 0;
 $signe    = $_GET['signe'] ?? ''; // '', '0', '1'
 $search   = trim($_GET['search'] ?? '');
-$sortBy   = $_GET['sort_by'] ?? 'date';  // date, client, numero
-$sortDir  = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
 
-// Clients
-$stmt = $pdo->query("SELECT id, nom FROM clients ORDER BY nom");
-$clients = $stmt->fetchAll();
+// Charger les préférences utilisateur et les appliquer
+if ($user_id) {
+    $prefs = updateUserPreferencesFromGet($user_id, 'livraisons', $_GET, ['date', 'client', 'statut']);
+    $sortBy = $prefs['sort_by'];
+    $sortDir = $prefs['sort_dir'];
+    $per_page = $prefs['per_page'];
+} else {
+    $sortBy = $_GET['sort_by'] ?? 'date';
+    $sortDir = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+    $per_page = 25;
+}
+
+// Clients pour filtre (cachés 24h)
+$clients = cached('livraisons_clients_list', function() use ($pdo) {
+    return $pdo->query("SELECT id, nom FROM clients ORDER BY nom")->fetchAll();
+}, 86400);
 
 $where  = [];
 $params = [];
 
-if ($dateDeb !== '') {
-    $where[] = "b.date_bl >= :date_debut";
-    $params['date_debut'] = $dateDeb;
-}
-if ($dateFin !== '') {
-    $where[] = "b.date_bl <= :date_fin";
-    $params['date_fin'] = $dateFin;
+// Filtres de dates (appliqués par défaut avec préset 30j)
+if ($date_start && $date_end) {
+    $where[] = "b.date_bl >= ?";
+    $params[] = $date_start;
+    $where[] = "b.date_bl <= CONCAT(?, ' 23:59:59')";
+    $params[] = $date_end;
 }
 if ($clientId > 0) {
-    $where[] = "b.client_id = :client_id";
-    $params['client_id'] = $clientId;
+    $where[] = "b.client_id = ?";
+    $params[] = $clientId;
 }
 if ($signe !== '' && in_array($signe, ['0','1'], true)) {
-    $where[] = "b.signe_client = :signe";
-    $params['signe'] = (int)$signe;
+    $where[] = "b.signe_client = ?";
+    $params[] = (int)$signe;
 }
 
 // Recherche texte
 if (!empty($search)) {
-    $where[] = "(b.numero LIKE :search OR c.nom LIKE :search OR v.numero LIKE :search)";
-    $params['search'] = '%' . $search . '%';
+    $where[] = "(b.numero LIKE ? OR c.nom LIKE ? OR v.numero LIKE ?)";
+    $searchTerm = '%' . $search . '%';
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
 }
 
 $whereSql = '';
@@ -60,6 +89,22 @@ if ($sortBy === 'client') {
     $orderSql = "ORDER BY b.date_bl $sortDir, b.id DESC";
 }
 
+// Récupérer le nombre total de lignes
+$count_sql = "
+    SELECT COUNT(*) as cnt
+    FROM bons_livraison b
+    JOIN clients c ON c.id = b.client_id
+    LEFT JOIN ventes v ON v.id = b.vente_id
+    $whereSql
+";
+$count_stmt = $pdo->prepare($count_sql);
+$count_stmt->execute($params);
+$total_count = $count_stmt->fetch()['cnt'];
+
+// Récupérer les paramètres de pagination
+$pagination = getPaginationParams($_GET, $total_count, $per_page);
+
+// Requête paginée
 $sql = "
     SELECT
         b.*,
@@ -70,7 +115,8 @@ $sql = "
     LEFT JOIN ventes v ON v.id = b.vente_id
     $whereSql
     $orderSql
-";
+    " . getPaginationLimitClause($pagination['offset'], $pagination['per_page']);
+
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $bons = $stmt->fetchAll();
@@ -88,7 +134,7 @@ include __DIR__ . '/../partials/sidebar.php';
         <h1 class="list-page-title h3">
             <i class="bi bi-truck"></i>
             Bons de livraison
-            <span class="count-badge ms-2"><?= count($bons) ?></span>
+            <span class="count-badge ms-2"><?= $pagination['total_count'] ?></span>
         </h1>
         <a href="<?= url_for('ventes/list.php') ?>" class="btn btn-outline-secondary btn-filter">
             <i class="bi bi-arrow-left me-1"></i> Retour aux ventes
@@ -111,6 +157,13 @@ include __DIR__ . '/../partials/sidebar.php';
 
     <div class="card filter-card">
         <div class="card-body">
+            <!-- Date Range Picker Component (Phase 3.3) -->
+            <?php 
+            $date_start_input = htmlspecialchars($date_start);
+            $date_end_input = htmlspecialchars($date_end);
+            include __DIR__ . '/../components/date_range_picker.html'; 
+            ?>
+            
             <form method="get" class="row g-3 align-items-end" id="filter_form">
                 <!-- Recherche texte -->
                 <div class="col-md-4">
@@ -313,6 +366,9 @@ include __DIR__ . '/../partials/sidebar.php';
                         </tbody>
                     </table>
                 </div>
+                
+                <!-- Contrôles de pagination (Phase 3.1) -->
+                <?php echo renderPaginationControls($pagination, $_GET); ?>
             <?php endif; ?>
         </div>
     </div>
