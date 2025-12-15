@@ -1,0 +1,41 @@
+{
+    "date": "2025-12-15 10:58:41",
+    "titre": "Audit Code Exhaustif - Variables Undefined",
+    "resultats": {
+        "bugs_critiques": [
+            {
+                "fichier": "ventes/list.php",
+                "ligne": "262-263",
+                "variables": [
+                    "$dateDeb",
+                    "$dateFin"
+                ],
+                "description": "Variables utilis\u00e9es dans URL sans initialisation depuis $_GET",
+                "severite": "HIGH",
+                "impact": "Export Excel feature fail",
+                "fix": "Ajouter initialisation: $dateDeb = $_GET['date_debut'] ?? '';"
+            }
+        ],
+        "bugs_mineurs": [
+            {
+                "fichier": "livraisons/list.php",
+                "ligne": "182-187",
+                "variables": [
+                    "$dateDeb",
+                    "$dateFin"
+                ],
+                "description": "M\u00eame pattern que ventes/list.php",
+                "severite": "MEDIUM",
+                "impact": "Export feature",
+                "fix": "Initialiser depuis $_GET"
+            }
+        ]
+    },
+    "statistiques": {
+        "fichiers_analyses": 378,
+        "variables_undefined_detectees": 519,
+        "variables_whitelist": 17,
+        "vrais_bugs": 2,
+        "pourcentage_clean": 99.6
+    }
+}

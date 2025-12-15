@@ -2052,17 +2052,22 @@ INSERT INTO `role_permission` (`role_id`, `permission_id`) VALUES
 (2, 10),
 (2, 11),
 (2, 19),
+(2, 18),
 (3, 1),
 (3, 5),
 (3, 6),
 (3, 7),
 (3, 8),
+(3, 9),
 (3, 10),
 (3, 11),
+(3, 18),
 (3, 19),
 (4, 1),
 (4, 3),
 (4, 10),
+(4, 12),
+(4, 18),
 (5, 10),
 (5, 13),
 (5, 14),
@@ -2078,7 +2083,6 @@ INSERT INTO `role_permission` (`role_id`, `permission_id`) VALUES
 (6, 19),
 (6, 23);
 
--- --------------------------------------------------------
 
 --
 -- Structure de la table `ruptures_signalees`
@@ -2560,11 +2564,9 @@ INSERT INTO `utilisateur_role` (`utilisateur_id`, `role_id`) VALUES
 (10, 5),
 (11, 6),
 (12, 6),
-(13, 2),
-(13, 3),
-(13, 4);
+(13, 6),
+(14, 6);
 
--- --------------------------------------------------------
 
 --
 -- Structure de la table `ventes`

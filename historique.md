@@ -4,7 +4,7 @@
 
 **Nom:** KMS Gestion - Application de gestion commerciale intégrée  
 **Client:** Kenne Multi-Services (KMS)  
-**Dépôt GitHub:** https://github.com/peghstartupassistance-jpg/kms_app  
+**Dépôt GitHub:** https://github.com/etudesetbusiness-afk/kms_app
 **Production:** https://kennemulti-services.com/kms_app  
 **Début:** Novembre 2025  
 **Status:** En production
@@ -403,7 +403,7 @@
 **Configuration Git & CI/CD:**
 
 **Repository GitHub:**
-- Dépôt : https://github.com/peghstartupassistance-jpg/kms_app
+- Dépôt : https://github.com/etudesetbusiness-afk/kms_app
 - Branche : `main`
 - Utilisateur : KMS Gestion Dev <kms@kenne-multiservices.com>
 
@@ -487,7 +487,7 @@ git push origin main
 
 **Déploiement:**
 - Production : https://kennemulti-services.com/kms_app
-- GitHub : https://github.com/peghstartupassistance-jpg/kms_app
+- GitHub : https://github.com/etudesetbusiness-afk/kms_app
 - FTP auto : Bluehost via GitHub Actions
 
 ---

@@ -44,10 +44,10 @@ J'ai créé un script qui gère tout automatiquement :
 Une fois le push réussi, vérifiez :
 
 1. **Sur GitHub :**
-   https://github.com/peghstartupassistance-jpg/kms_app
+   https://github.com/etudesetbusiness-afk/kms_app
    
 2. **Déploiement automatique :**
-   https://github.com/peghstartupassistance-jpg/kms_app/actions
+   https://github.com/etudesetbusiness-afk/kms_app/actions
    
 3. **Site en production :**
    https://kennemulti-services.com/kms_app

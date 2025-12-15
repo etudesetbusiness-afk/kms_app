@@ -69,5 +69,5 @@ git log --oneline -n 3
 Write-Host ""
 Write-Host "🎉 Synchronisation terminée!" -ForegroundColor Green
 Write-Host ""
-Write-Host "🌐 Vérifiez sur: https://github.com/peghstartupassistance-jpg/kms_app" -ForegroundColor Cyan
+Write-Host "🌐 Vérifiez sur: https://github.com/etudesetbusiness-afk/kms_app" -ForegroundColor Cyan
 Write-Host "🚀 Déploiement auto: https://kennemulti-services.com/kms_app" -ForegroundColor Cyan

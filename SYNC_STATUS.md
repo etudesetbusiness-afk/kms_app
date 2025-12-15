@@ -2,10 +2,10 @@
 
 ## ⚠️ VÉRIFICATION MANUELLE REQUISE
 
-**Dépôt GitHub:** https://github.com/peghstartupassistance-jpg/kms_app
+**Dépôt GitHub:** https://github.com/etudesetbusiness-afk/kms_app
 
 **Configuration Git:**
-- ✅ Remote configuré : `origin` → https://github.com/peghstartupassistance-jpg/kms_app.git
+- ✅ Remote configuré : `origin` → https://github.com/etudesetbusiness-afk/kms_app.git
 - ✅ Branche : `main`
 - ✅ Utilisateur : KMS Gestion Dev <kms@kenne-multiservices.com>
 - ✅ Commit créé : `90e721b`
@@ -15,7 +15,7 @@
 ### 1. Vérifier si le push a réussi
 
 **Ouvrez votre navigateur et allez sur :**
-https://github.com/peghstartupassistance-jpg/kms_app
+https://github.com/etudesetbusiness-afk/kms_app
 
 **Vérifications à faire :**
 - ✓ Le dépôt contient-il des fichiers ?
@@ -27,7 +27,7 @@ https://github.com/peghstartupassistance-jpg/kms_app
 Félicitations ! Vérifiez ensuite le déploiement automatique :
 
 1. **Sur GitHub**, allez dans l'onglet "Actions" :
-   https://github.com/peghstartupassistance-jpg/kms_app/actions
+   https://github.com/etudesetbusiness-afk/kms_app/actions
    
 2. Un workflow "FTP Deploy" devrait s'être déclenché automatiquement
 
@@ -168,10 +168,10 @@ La commande `git push origin main --force` a été utilisée avec succès :
 ### Vérification dans 1-2 minutes :
 
 1. **Dépôt GitHub :**
-   https://github.com/peghstartupassistance-jpg/kms_app
+   https://github.com/etudesetbusiness-afk/kms_app
    
 2. **Déploiement automatique :**
-   https://github.com/peghstartupassistance-jpg/kms_app/actions
+   https://github.com/etudesetbusiness-afk/kms_app/actions
    
 3. **Production :**
    https://kennemulti-services.com/kms_app

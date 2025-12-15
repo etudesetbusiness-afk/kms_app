@@ -32,6 +32,10 @@ $canalId  = isset($_GET['canal_id']) ? (int)$_GET['canal_id'] : 0;
 $encaissement = $_GET['encaissement'] ?? '';
 $search   = trim($_GET['search'] ?? '');
 
+// Aliases pour compatibilité avec les formulaires existants
+$dateDeb = $date_start;
+$dateFin = $date_end;
+
 // Charger les préférences utilisateur et les appliquer
 if ($user_id) {
     $prefs = updateUserPreferencesFromGet($user_id, 'ventes', $_GET, ['date', 'client', 'montant']);
