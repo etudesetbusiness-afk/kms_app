@@ -367,6 +367,12 @@ textarea.form-control {
     border: 1px solid #10b981;
 }
 
+.geoloc-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
 .geoloc-error {
     background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
     color: #991b1b;
@@ -702,41 +708,80 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('date_prospection').value = now.toISOString().split('T')[0];
     document.getElementById('heure_prospection').value = now.toTimeString().split(' ')[0];
     
-    // Géolocalisation
+    // Géolocalisation améliorée avec précision
     if (navigator.geolocation) {
         const geoStatus = document.getElementById('geolocStatus');
         geoStatus.style.display = 'block';
+        geoStatus.className = 'geoloc-status';
+        geoStatus.innerHTML = '<i class="bi bi-hourglass-split"></i> Recherche de votre position...';
         
-        navigator.geolocation.getCurrentPosition(
+        let watchId;
+        let bestPosition = null;
+        let bestAccuracy = Infinity;
+        
+        // Utiliser watchPosition pour obtenir une position de plus en plus précise
+        watchId = navigator.geolocation.watchPosition(
             function(position) {
-                // Succès - Coordonnées récupérées
-                document.getElementById('latitude').value = position.coords.latitude;
-                document.getElementById('longitude').value = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
                 
-                // Géocodage inversé pour obtenir l'adresse
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const adresse = data.display_name || '';
-                        document.getElementById('adresse_gps').value = adresse;
-                        
-                        // Extraire le quartier/secteur si possible
-                        if (data.address) {
-                            const secteur = data.address.suburb || data.address.neighbourhood || data.address.city_district || data.address.city || '';
-                            if (secteur && !document.getElementById('secteur').value) {
-                                document.getElementById('secteur').value = secteur;
-                            }
-                        }
-                        
-                        geoStatus.className = 'geoloc-status geoloc-success';
-                        geoStatus.innerHTML = '<i class="bi bi-check-circle"></i> Position enregistrée : ' + 
-                                            (data.address?.suburb || data.address?.neighbourhood || 'Localisation capturée');
-                    })
-                    .catch(err => {
-                        console.error('Erreur géocodage:', err);
-                        geoStatus.className = 'geoloc-status geoloc-success';
-                        geoStatus.innerHTML = '<i class="bi bi-check-circle"></i> Position GPS enregistrée';
-                    });
+                // Garder la position la plus précise
+                if (accuracy < bestAccuracy) {
+                    bestAccuracy = accuracy;
+                    bestPosition = position;
+                    
+                    // Mettre à jour les champs avec la meilleure position
+                    document.getElementById('latitude').value = position.coords.latitude;
+                    document.getElementById('longitude').value = position.coords.longitude;
+                    
+                    // Afficher la précision
+                    let precisionText = '';
+                    let statusClass = 'geoloc-status';
+                    if (accuracy <= 20) {
+                        precisionText = '✓ Précision excellente (' + Math.round(accuracy) + 'm)';
+                        statusClass += ' geoloc-success';
+                    } else if (accuracy <= 50) {
+                        precisionText = '✓ Bonne précision (' + Math.round(accuracy) + 'm)';
+                        statusClass += ' geoloc-success';
+                    } else if (accuracy <= 100) {
+                        precisionText = '⚠️ Précision moyenne (' + Math.round(accuracy) + 'm)';
+                        statusClass += ' geoloc-warning';
+                    } else {
+                        precisionText = '⚠️ Précision faible (' + Math.round(accuracy) + 'm) - Patientez...';
+                        statusClass += ' geoloc-warning';
+                    }
+                    
+                    geoStatus.className = statusClass;
+                    geoStatus.innerHTML = '<i class="bi bi-geo-alt-fill"></i> ' + precisionText;
+                    
+                    // Géocodage inversé uniquement si précision acceptable
+                    if (accuracy <= 100) {
+                        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const adresse = data.display_name || '';
+                                document.getElementById('adresse_gps').value = adresse;
+                                
+                                // Extraire le quartier/secteur si possible
+                                if (data.address) {
+                                    const secteur = data.address.suburb || data.address.neighbourhood || data.address.city_district || data.address.city || '';
+                                    if (secteur && !document.getElementById('secteur').value) {
+                                        document.getElementById('secteur').value = secteur;
+                                    }
+                                }
+                                
+                                geoStatus.innerHTML = '<i class="bi bi-check-circle"></i> ' + precisionText + 
+                                    ' - ' + (data.address?.suburb || data.address?.neighbourhood || 'Position enregistrée');
+                            })
+                            .catch(err => {
+                                console.error('Erreur géocodage:', err);
+                            });
+                    }
+                }
+                
+                // Arrêter après avoir obtenu une position précise (< 30m) ou après 15 secondes
+                if (accuracy <= 30) {
+                    navigator.geolocation.clearWatch(watchId);
+                }
             },
             function(error) {
                 // Erreur de géolocalisation
@@ -759,10 +804,20 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             {
                 enableHighAccuracy: true,
-                timeout: 10000,
+                timeout: 15000,
                 maximumAge: 0
             }
         );
+        
+        // Arrêter la surveillance après 20 secondes max
+        setTimeout(() => {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                if (bestPosition) {
+                    geoStatus.innerHTML += ' <small>(verrouillé)</small>';
+                }
+            }
+        }, 20000);
     } else {
         document.getElementById('geolocStatus').style.display = 'none';
     }

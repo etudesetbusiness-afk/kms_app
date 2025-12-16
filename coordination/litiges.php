@@ -25,6 +25,10 @@ if (!$date_start || !$date_end) {
     $date_end = $range['end'];
 }
 
+// Alias pour compatibilité formulaire/export
+$dateDebut = $date_start;
+$dateFin = $date_end;
+
 // Filtres
 $statut = $_GET['statut'] ?? '';
 $type = $_GET['type'] ?? '';
