@@ -1,12 +1,11 @@
 <?php
 /**
- * lib/export_xlsx.php - Génération de fichiers XLSX sans dépendance externe
- * Utilise la fonction ZipArchive de PHP (built-in)
+ * lib/export_xlsx.php - Export Excel avec fallback CSV si ZIP non disponible
  */
 
 class ExportXLSX {
     /**
-     * Génère un fichier XLSX simple directement en output
+     * Génère un fichier XLSX ou CSV (fallback) directement en output
      * 
      * @param array $data Tableau de données [[col1, col2, ...], ...]
      * @param array $headers En-têtes colonne
@@ -14,9 +13,10 @@ class ExportXLSX {
      * @param string $sheetName Nom de la feuille
      */
     public static function generate($data, $headers, $filename, $sheetName = 'Sheet1') {
-        // Vérifier que ZipArchive est disponible
+        // Si ZipArchive n'est pas disponible, utiliser CSV
         if (!extension_loaded('zip')) {
-            die('Erreur: Extension ZIP PHP non disponible. Utilisez le format CSV à la place.');
+            self::generateCSV($data, $headers, str_replace('.xlsx', '.csv', $filename));
+            return;
         }
         
         // Créer un fichier ZIP temporaire
@@ -24,7 +24,9 @@ class ExportXLSX {
         $zip = new ZipArchive();
         
         if ($zip->open($tempZip, ZipArchive::CREATE) !== true) {
-            die('Erreur: Impossible de créer le fichier XLSX');
+            // Fallback CSV si impossible de créer le ZIP
+            self::generateCSV($data, $headers, str_replace('.xlsx', '.csv', $filename));
+            return;
         }
         
         // Ajouter les fichiers nécessaires à une structure XLSX
@@ -93,6 +95,35 @@ class ExportXLSX {
     }
     
     /**
+     * Génère un fichier CSV (fallback quand ZIP n'est pas disponible)
+     */
+    public static function generateCSV($data, $headers, $filename) {
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        // BOM UTF-8 pour Excel
+        echo "\xEF\xBB\xBF";
+        
+        $output = fopen('php://output', 'w');
+        
+        // Écrire les en-têtes
+        if (!empty($headers)) {
+            fputcsv($output, $headers, ';');
+        }
+        
+        // Écrire les données
+        foreach ($data as $row) {
+            fputcsv($output, $row, ';');
+        }
+        
+        fclose($output);
+        exit;
+    }
+    
+    /**
      * Construit le XML du contenu de la feuille
      */
     private static function buildSheetXml($data, $headers) {
@@ -122,7 +153,7 @@ class ExportXLSX {
             foreach ($row as $cell) {
                 $colLetter = self::getColumnLetter($colIndex);
                 // Déterminer si c'est un nombre ou du texte
-                $isNumber = is_numeric($cell) && !empty($cell);
+                $isNumber = is_numeric($cell) && $cell !== '';
                 if ($isNumber) {
                     $xml .= '<c r="' . $colLetter . $rowIndex . '" t="n"><v>' . (float)$cell . '</v></c>';
                 } else {

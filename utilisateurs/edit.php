@@ -4,14 +4,22 @@ require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('UTILISATEURS_GERER');
 
+// Utiliser $pdo du scope global (créé dans db/db.php)
 global $pdo;
+if (!isset($pdo)) {
+    require_once __DIR__ . '/../db/db.php';
+}
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $modeEdition = $id > 0;
 
 // Récupérer la liste des rôles
-$stmt = $pdo->query("SELECT id, code, nom FROM roles ORDER BY code");
-$roles = $stmt->fetchAll();
+try {
+    $stmt = $pdo->query("SELECT id, code, nom FROM roles ORDER BY code");
+    $roles = $stmt->fetchAll();
+} catch (Exception $e) {
+    $roles = [];
+}
 
 // Initialisation des champs
 $login        = '';

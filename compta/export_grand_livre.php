@@ -5,7 +5,11 @@ exigerConnexion();
 exigerPermission('COMPTABILITE_LIRE');
 require_once __DIR__ . '/../lib/export_xlsx.php';
 
+// Garantir que $pdo est disponible
 global $pdo;
+if (!isset($pdo)) {
+    require_once __DIR__ . '/../db/db.php';
+}
 
 $compte_id = (int)($_GET['compte_id'] ?? 0);
 $exercice_id = (int)($_GET['exercice_id'] ?? 0);
@@ -24,12 +28,13 @@ if (!$compte) {
 }
 
 // Récupérer l'exercice
+// Colonnes: id, annee, date_ouverture, date_cloture, est_clos
 if ($exercice_id) {
-    $stmt = $pdo->prepare("SELECT * FROM compta_exercices WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, annee, date_ouverture, date_cloture, est_clos FROM compta_exercices WHERE id = ?");
     $stmt->execute([$exercice_id]);
     $exercice = $stmt->fetch();
 } else {
-    $stmt = $pdo->query("SELECT * FROM compta_exercices WHERE est_actif = 1 LIMIT 1");
+    $stmt = $pdo->query("SELECT id, annee, date_ouverture, date_cloture, est_clos FROM compta_exercices WHERE est_clos = 0 LIMIT 1");
     $exercice = $stmt->fetch();
     $exercice_id = $exercice['id'] ?? 0;
 }
@@ -73,7 +78,7 @@ $data = [];
 // En-têtes du rapport
 $data[] = ['GRAND LIVRE - KENNE MULTI-SERVICES'];
 $data[] = ['Compte: ' . $compte['numero'] . ' - ' . $compte['libelle']];
-$data[] = ['Exercice: ' . ($exercice['code'] ?? 'N/A')];
+$data[] = ['Exercice: ' . ($exercice['annee'] ?? 'N/A')];
 $data[] = ['Édité le ' . date('d/m/Y H:i')];
 $data[] = [];
 

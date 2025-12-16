@@ -5,7 +5,11 @@ exigerConnexion();
 exigerPermission('CAISSE_LIRE');
 require_once __DIR__ . '/../lib/export_xlsx.php';
 
+// Garantir que $pdo est disponible
 global $pdo;
+if (!isset($pdo)) {
+    require_once __DIR__ . '/../db/db.php';
+}
 
 $dateDebut = $_GET['date_debut'] ?? date('Y-m-d');
 $dateFin = $_GET['date_fin'] ?? date('Y-m-d');

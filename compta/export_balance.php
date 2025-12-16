@@ -4,18 +4,23 @@ require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('COMPTABILITE_LIRE');
 
+// Garantir que $pdo est disponible
 global $pdo;
+if (!isset($pdo)) {
+    require_once __DIR__ . '/../db/db.php';
+}
 
 $exercice_id = (int)($_GET['exercice_id'] ?? 0);
 
 // Récupérer l'exercice
+// Colonnes: id, annee, date_ouverture, date_cloture, est_clos
 if ($exercice_id) {
-    $stmt = $pdo->prepare("SELECT id, code, date_debut, date_fin, est_actif FROM compta_exercices WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, annee, date_ouverture, date_cloture, est_clos FROM compta_exercices WHERE id = ?");
     $stmt->execute([$exercice_id]);
     $exercice = $stmt->fetch(PDO::FETCH_ASSOC);
 } else {
     // Exercice actif par défaut
-    $stmt = $pdo->query("SELECT id, code, date_debut, date_fin, est_actif FROM compta_exercices WHERE est_actif = 1 LIMIT 1");
+    $stmt = $pdo->query("SELECT id, annee, date_ouverture, date_cloture, est_clos FROM compta_exercices WHERE est_clos = 0 LIMIT 1");
     $exercice = $stmt->fetch(PDO::FETCH_ASSOC);
     $exercice_id = $exercice['id'] ?? 0;
 }
@@ -66,7 +71,7 @@ foreach ($comptes as $compte) {
 
 // Générer le CSV
 header('Content-Type: text/csv; charset=UTF-8');
-header('Content-Disposition: attachment; filename="balance_' . $exercice['code'] . '_' . date('Y-m-d_His') . '.csv"');
+header('Content-Disposition: attachment; filename="balance_' . $exercice['annee'] . '_' . date('Y-m-d_His') . '.csv"');
 header('Pragma: no-cache');
 header('Expires: 0');
 
@@ -77,7 +82,7 @@ $output = fopen('php://output', 'w');
 
 // En-tête
 fputcsv($output, ['BALANCE GÉNÉRALE - KENNE MULTI-SERVICES'], ';');
-fputcsv($output, ['Exercice: ' . $exercice['code'] . ' (' . date('d/m/Y', strtotime($exercice['date_debut'])) . ' - ' . date('d/m/Y', strtotime($exercice['date_fin'])) . ')'], ';');
+fputcsv($output, ['Exercice: ' . $exercice['annee'] . ' (' . date('d/m/Y', strtotime($exercice['date_ouverture'])) . ' - ' . date('d/m/Y', strtotime($exercice['date_cloture'])) . ')'], ';');
 fputcsv($output, ['Édité le ' . date('d/m/Y H:i')], ';');
 fputcsv($output, [], ';');
 
