@@ -98,11 +98,11 @@ $logoutUrl = ($appBaseUrl !== '' ? $appBaseUrl : '') . '/logout.php';
                         <div class="profile-name"><?= htmlspecialchars($utilisateur['nom_complet'] ?? $utilisateur['login']) ?></div>
                         <div class="profile-role">
                             <?php
-                            $roles = [];
+                            $userRolesDisplay = [];
                             if ($_SESSION['role'] ?? false) {
-                                $roles[] = $_SESSION['role'];
+                                $userRolesDisplay[] = $_SESSION['role'];
                             }
-                            echo count($roles) > 0 ? implode(' • ', $roles) : 'Utilisateur';
+                            echo count($userRolesDisplay) > 0 ? implode(' • ', $userRolesDisplay) : 'Utilisateur';
                             ?>
                         </div>
                     </div>
