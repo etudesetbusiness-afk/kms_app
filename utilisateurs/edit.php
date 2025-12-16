@@ -4,9 +4,11 @@ require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('UTILISATEURS_GERER');
 
-// Utiliser $pdo du scope global (créé dans db/db.php)
-global $pdo;
-if (!isset($pdo)) {
+// $pdo est créé dans db/db.php qui est inclus par security.php
+// Il devrait être disponible dans le scope global
+// Si le require_once fonctionne, $pdo est dans le scope courant
+if (!isset($pdo) || !($pdo instanceof PDO)) {
+    // Fallback: inclure directement
     require_once __DIR__ . '/../db/db.php';
 }
 
@@ -14,11 +16,14 @@ $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $modeEdition = $id > 0;
 
 // Récupérer la liste des rôles
-try {
-    $stmt = $pdo->query("SELECT id, code, nom FROM roles ORDER BY code");
-    $roles = $stmt->fetchAll();
-} catch (Exception $e) {
-    $roles = [];
+$roles = [];
+if (isset($pdo) && $pdo instanceof PDO) {
+    try {
+        $stmt = $pdo->query("SELECT id, code, nom FROM roles ORDER BY code");
+        $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        error_log("Erreur chargement roles: " . $e->getMessage());
+    }
 }
 
 // Initialisation des champs
