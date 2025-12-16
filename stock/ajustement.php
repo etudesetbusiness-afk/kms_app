@@ -188,7 +188,7 @@ include __DIR__ . '/../partials/sidebar.php';
                         </div>
 
                         <form method="post" id="formAjustement">
-                            <input type="hidden" name="csrf_token" value="<?= genererCsrf() ?>">
+                            <input type="hidden" name="csrf_token" value="<?= getCsrfToken() ?>">
                             <input type="hidden" name="produit_id" value="<?= $produit['id'] ?>">
 
                             <div class="mb-3">

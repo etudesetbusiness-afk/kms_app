@@ -133,7 +133,7 @@ include __DIR__ . '/../partials/sidebar.php';
 
     <!-- KPI : État du bilan -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm bg-success bg-opacity-10">
                 <div class="card-body">
                     <h6 class="text-muted small mb-2"><i class="bi bi-bank"></i> TOTAL ACTIF</h6>
@@ -145,19 +145,31 @@ include __DIR__ . '/../partials/sidebar.php';
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm bg-danger bg-opacity-10">
                 <div class="card-body">
-                    <h6 class="text-muted small mb-2"><i class="bi bi-shield-exclamation"></i> TOTAL PASSIF</h6>
+                    <h6 class="text-muted small mb-2"><i class="bi bi-shield-exclamation"></i> PASSIF + RÉSULTAT</h6>
                     <h3 class="text-danger">
-                        <?= number_format($bilan_complet['total_passif'], 0, ',', ' ') ?>
+                        <?= number_format($bilan_complet['total_passif'] + $bilan_complet['resultat'], 0, ',', ' ') ?>
                     </h3>
-                    <small class="text-muted">Dettes et capitaux</small>
+                    <small class="text-muted">Passif: <?= number_format($bilan_complet['total_passif'], 0, ',', ' ') ?> + Rés: <?= number_format($bilan_complet['resultat'], 0, ',', ' ') ?></small>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-primary bg-opacity-10">
+                <div class="card-body">
+                    <h6 class="text-muted small mb-2"><i class="bi bi-graph-up"></i> RÉSULTAT EXERCICE</h6>
+                    <h3 class="<?= $bilan_complet['resultat'] >= 0 ? 'text-success' : 'text-danger' ?>">
+                        <?= number_format($bilan_complet['resultat'], 0, ',', ' ') ?>
+                    </h3>
+                    <small class="text-muted"><?= $bilan_complet['resultat'] >= 0 ? 'Bénéfice' : 'Perte' ?></small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
             <div class="card border-0 shadow-sm <?= abs($bilan_complet['ecart']) < 0.01 ? 'bg-info' : 'bg-warning' ?> bg-opacity-10">
                 <div class="card-body">
                     <h6 class="text-muted small mb-2"><i class="bi bi-shuffle"></i> ÉCART</h6>

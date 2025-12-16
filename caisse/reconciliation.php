@@ -335,7 +335,7 @@ include __DIR__ . '/../partials/sidebar.php';
                 </div>
                 <div class="card-body p-4" style="display: block; min-height: 300px;">
                     <form method="POST" style="display: block;">
-                        <input type="hidden" name="csrf_token" value="<?= genererCsrf(); ?>">
+                        <input type="hidden" name="csrf_token" value="<?= getCsrfToken(); ?>">
                         
                         <p class="text-muted small">Saisissez les montants réellement comptés par mode de paiement:</p>
                         

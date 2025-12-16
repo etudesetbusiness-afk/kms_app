@@ -113,6 +113,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: valider_piece.php');
         exit;
     }
+    
+    // ===== VALIDER EN MASSE =====
+    if ($action_form === 'valider_masse') {
         $pieces = $_POST['pieces_ids'] ?? [];
         if (empty($pieces)) {
             $_SESSION['flash_error'] = "Sélectionnez au moins une pièce";

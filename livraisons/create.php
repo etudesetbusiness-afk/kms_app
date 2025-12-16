@@ -187,8 +187,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Aucun article à livrer");
         }
         
-        // Mettre à jour le statut de la vente
-        $nouveauStatut = $livraison_partielle ? 'PARTIELLEMENT_LIVREE' : 'LIVREE';
+        // Vérifier le statut global de livraison (toutes les lignes sont-elles livrées ?)
+        $stmt = $pdo->prepare("
+            SELECT 
+                SUM(vl.quantite) as total_commande,
+                COALESCE(SUM(
+                    (SELECT COALESCE(SUM(bll.quantite), 0) FROM bons_livraison_lignes bll 
+                     JOIN bons_livraison bl ON bl.id = bll.bon_livraison_id 
+                     WHERE bll.produit_id = vl.produit_id AND bl.vente_id = vl.vente_id)
+                ), 0) as total_livre
+            FROM ventes_lignes vl
+            WHERE vl.vente_id = ?
+        ");
+        $stmt->execute([$vente_id]);
+        $totaux = $stmt->fetch();
+        
+        // Si tout est livré, statut = LIVREE, sinon PARTIELLEMENT_LIVREE
+        $nouveauStatut = ((float)$totaux['total_livre'] >= (float)$totaux['total_commande']) 
+            ? 'LIVREE' 
+            : 'PARTIELLEMENT_LIVREE';
         
         $stmt = $pdo->prepare("UPDATE ventes SET statut = ? WHERE id = ?");
         $stmt->execute([$nouveauStatut, $vente_id]);

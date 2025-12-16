@@ -21,7 +21,10 @@ $data = json_decode(file_get_contents('php://input'), true);
 // Vérifier CSRF (si envoyé via header ou champ token dans body)
 // On supporte `X-CSRF-Token` ou `csrf` dans le payload
 $csrfToken = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($data['csrf'] ?? null);
-if (!verifierCsrf($csrfToken)) {
+$tokenSession = $_SESSION['csrf_token'] ?? '';
+
+// Validation manuelle du token CSRF (verifierCsrf() fait exit, pas adapté aux APIs JSON)
+if (!$tokenSession || !$csrfToken || !hash_equals($tokenSession, $csrfToken)) {
     http_response_code(403);
     echo json_encode([
         'success' => false,

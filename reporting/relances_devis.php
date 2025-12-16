@@ -241,7 +241,7 @@ include __DIR__ . '/../partials/sidebar.php';
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post">
-                <input type="hidden" name="csrf_token" value="<?= genererCsrf() ?>">
+                <input type="hidden" name="csrf_token" value="<?= getCsrfToken() ?>">
                 <input type="hidden" name="devis_id" id="modal_devis_id">
                 
                 <div class="modal-header">

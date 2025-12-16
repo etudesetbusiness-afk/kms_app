@@ -18,6 +18,17 @@ $isEdit = $id > 0;
 $stmt = $pdo->query("SELECT id, code, libelle FROM canaux_vente ORDER BY code");
 $canaux = $stmt->fetchAll();
 
+// Promotions actives
+$stmt = $pdo->query("
+    SELECT id, nom, pourcentage_remise, montant_remise, date_debut, date_fin
+    FROM promotions 
+    WHERE actif = 1 
+      AND date_debut <= CURDATE() 
+      AND date_fin >= CURDATE()
+    ORDER BY nom
+");
+$promotions = $stmt->fetchAll();
+
 // Produits - Charger seulement ceux utilisés en mode édition
 $produitsById = [];
 if ($isEdit) {
@@ -410,6 +421,36 @@ include __DIR__ . '/../partials/sidebar.php';
                             <?php endforeach; ?>
                         </select>
                     </div>
+
+                    <!-- Promotion -->
+                    <?php if (!empty($promotions)): ?>
+                    <div class="col-md-4">
+                        <label class="form-label small"><i class="bi bi-percent text-success"></i> Appliquer une promotion</label>
+                        <select name="promotion_id" id="promotion_id" class="form-select">
+                            <option value="">-- Aucune promotion --</option>
+                            <?php foreach ($promotions as $promo): 
+                                $promoLabel = htmlspecialchars($promo['nom']);
+                                if (!empty($promo['pourcentage_remise']) && (float)$promo['pourcentage_remise'] > 0) {
+                                    $promoLabel .= ' (-' . number_format($promo['pourcentage_remise'], 0) . '%)';
+                                } elseif (!empty($promo['montant_remise']) && (float)$promo['montant_remise'] > 0) {
+                                    $promoLabel .= ' (-' . number_format($promo['montant_remise'], 0, ',', ' ') . ' FCFA)';
+                                }
+                            ?>
+                                <option value="<?= (int)$promo['id'] ?>" 
+                                        data-pourcentage="<?= (float)($promo['pourcentage_remise'] ?? 0) ?>"
+                                        data-montant="<?= (float)($promo['montant_remise'] ?? 0) ?>">
+                                    <?= $promoLabel ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <div class="form-text">La remise sera appliquée à toutes les lignes</div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" id="btnAppliquerPromo" class="btn btn-outline-success btn-sm" onclick="appliquerPromotion()">
+                            <i class="bi bi-check-lg"></i> Appliquer
+                        </button>
+                    </div>
+                    <?php endif; ?>
 
                     <div class="col-12">
                         <label class="form-label small">Commentaires (facultatif)</label>
@@ -841,6 +882,66 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(err => console.error('Erreur chargement modes:', err));
     }
 });
+
+/**
+ * Applique la promotion sélectionnée à toutes les lignes de vente
+ */
+function appliquerPromotion() {
+    const select = document.getElementById('promotion_id');
+    if (!select || !select.value) {
+        alert('Veuillez sélectionner une promotion');
+        return;
+    }
+    
+    const option = select.options[select.selectedIndex];
+    const pourcentage = parseFloat(option.dataset.pourcentage) || 0;
+    const montantFixe = parseFloat(option.dataset.montant) || 0;
+    
+    // Récupérer toutes les lignes du tableau
+    const tbody = document.querySelector('table tbody');
+    const rows = tbody.querySelectorAll('tr');
+    
+    let nbLignesModifiees = 0;
+    
+    rows.forEach(row => {
+        const inputPU = row.querySelector('input[name="prix_unitaire[]"]');
+        const inputQte = row.querySelector('input[name="quantite[]"]');
+        const inputRemise = row.querySelector('input[name="remise[]"]');
+        
+        if (!inputPU || !inputQte || !inputRemise) return;
+        
+        const pu = parseFloat(inputPU.value.replace(',', '.')) || 0;
+        const qte = parseFloat(inputQte.value.replace(',', '.')) || 0;
+        
+        if (pu <= 0 || qte <= 0) return; // Ligne vide
+        
+        let remise = 0;
+        
+        if (pourcentage > 0) {
+            // Remise en pourcentage sur le montant de la ligne
+            remise = (pu * qte) * (pourcentage / 100);
+        } else if (montantFixe > 0) {
+            // Montant fixe par ligne
+            remise = montantFixe;
+        }
+        
+        inputRemise.value = remise.toFixed(2);
+        nbLignesModifiees++;
+        
+        // Déclencher le recalcul du montant
+        if (inputRemise.onchange) {
+            inputRemise.onchange();
+        } else {
+            inputRemise.dispatchEvent(new Event('change'));
+        }
+    });
+    
+    if (nbLignesModifiees > 0) {
+        alert('✓ Promotion appliquée à ' + nbLignesModifiees + ' ligne(s)');
+    } else {
+        alert('Aucune ligne avec produit et quantité trouvée');
+    }
+}
 </script>
 
 <?php include __DIR__ . '/../partials/footer.php'; ?>
