@@ -1,0 +1,284 @@
+{
+  "audit_date": "2025-12-16 00:00:00",
+  "audit_version": "1.0",
+  "total_files": 9,
+  "files": [
+    {
+      "path": "ventes/export_excel.php",
+      "lines": 79,
+      "current_header": "Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "format": ".xlsx",
+      "has_bom": false,
+      "charset_declared": false,
+      "output_method": "fputcsv",
+      "separator": ";",
+      "status": "PARTIELLEMENT_OK",
+      "fixes_needed": [
+        "❌ Pas de BOM UTF-8 => risque d'encodage avec Excel",
+        "⚠️ Header XLSX mais output par fputcsv (CSV) => incompatibilité MIME",
+        "⚠️ Pas de charset en header => Excel peut mal interpréter"
+      ],
+      "notes": "Header XLSX utilisant fputcsv: conflit. Excel acceptera le fichier mais en tant que CSV, pas Excel natif."
+    },
+    {
+      "path": "caisse/export_excel.php",
+      "lines": 144,
+      "current_header": "Content-Type: application/vnd.ms-excel; charset=UTF-8",
+      "format": ".xls",
+      "has_bom": true,
+      "charset_declared": true,
+      "output_method": "direct_html_table",
+      "separator": "n/a",
+      "status": "PROBLEMES_MAJEURS",
+      "fixes_needed": [
+        "❌ BOM UTF-8 AVANT les headers HTTP => ERREUR (headers already sent)",
+        "⚠️ Charset déclaré mais HTML+table en sortie (pas CSV)",
+        "❌ Format .xls + charset=UTF-8 => conflit (XLS natif ne supporte pas UTF-8 directement)",
+        "⚠️ Utilise HTML+CSS pour styling => dépend du parseur Excel",
+        "⚠️ Pas d'appel fclose() visible"
+      ],
+      "notes": "CRITIQUE: BOM echo avant headers causera 'headers already sent'. HTML-to-XLS conversion peu fiable."
+    },
+    {
+      "path": "caisse/export_journal.php",
+      "lines": 145,
+      "current_header": "Content-Type: text/csv; charset=UTF-8",
+      "format": ".csv",
+      "has_bom": true,
+      "charset_declared": true,
+      "output_method": "fputcsv",
+      "separator": ";",
+      "status": "OK",
+      "fixes_needed": [],
+      "notes": "✓ Correct: text/csv, BOM UTF-8, fputcsv, charset déclaré. Séparateur semicolon approprié pour locales francophones."
+    },
+    {
+      "path": "compta/export_balance.php",
+      "lines": 132,
+      "current_header": "Content-Type: text/csv; charset=UTF-8",
+      "format": ".csv",
+      "has_bom": true,
+      "charset_declared": true,
+      "output_method": "fputcsv",
+      "separator": ";",
+      "status": "OK",
+      "fixes_needed": [],
+      "notes": "✓ Correct: text/csv, BOM UTF-8, fputcsv, charset déclaré. Données comptables bien structurées."
+    },
+    {
+      "path": "compta/export_grand_livre.php",
+      "lines": 130,
+      "current_header": "Content-Type: text/csv; charset=UTF-8",
+      "format": ".csv",
+      "has_bom": true,
+      "charset_declared": true,
+      "output_method": "fputcsv",
+      "separator": ";",
+      "status": "OK",
+      "fixes_needed": [],
+      "notes": "✓ Correct: text/csv, BOM UTF-8, fputcsv, charset déclaré. Grand livre comptable bien formalisé."
+    },
+    {
+      "path": "compta/export_bilan.php",
+      "lines": 212,
+      "current_header": "Content-Type: application/vnd.ms-excel; charset=UTF-8",
+      "format": ".xls",
+      "has_bom": true,
+      "charset_declared": true,
+      "output_method": "direct_html_table",
+      "separator": "n/a",
+      "status": "PROBLEMES_MAJEURS",
+      "fixes_needed": [
+        "❌ BOM UTF-8 AVANT les headers HTTP => ERREUR (headers already sent)",
+        "⚠️ Format .xls + charset=UTF-8 => conflit (XLS natif ne supporte pas UTF-8)",
+        "⚠️ Utilise HTML+CSS pour styling => risque incompatibilité Excel",
+        "⚠️ Pas de fputcsv => sortie directe HTML",
+        "⚠️ Pas d'appel fclose()"
+      ],
+      "notes": "CRITIQUE: Même problème que caisse/export_excel.php. HTML-to-XLS peu fiable. À migrer vers CSV ou XLSX natif."
+    },
+    {
+      "path": "livraisons/export_excel.php",
+      "lines": 84,
+      "current_header": "Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "format": ".xlsx",
+      "has_bom": false,
+      "charset_declared": false,
+      "output_method": "fputcsv",
+      "separator": ";",
+      "status": "PARTIELLEMENT_OK",
+      "fixes_needed": [
+        "❌ Pas de BOM UTF-8 => risque d'encodage avec Excel",
+        "⚠️ Header XLSX mais output par fputcsv (CSV) => incompatibilité MIME",
+        "⚠️ Pas de charset en header => Excel peut mal interpréter",
+        "✓ Présence de Cache-Control headers"
+      ],
+      "notes": "Même problème que ventes/export_excel.php. Conflit MIME XLSX/CSV."
+    },
+    {
+      "path": "coordination/export_excel.php",
+      "lines": 81,
+      "current_header": "Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "format": ".xlsx",
+      "has_bom": false,
+      "charset_declared": false,
+      "output_method": "fputcsv",
+      "separator": ";",
+      "status": "PARTIELLEMENT_OK",
+      "fixes_needed": [
+        "❌ Pas de BOM UTF-8 => risque d'encodage avec Excel",
+        "⚠️ Header XLSX mais output par fputcsv (CSV) => incompatibilité MIME",
+        "⚠️ Pas de charset en header => Excel peut mal interpréter",
+        "✓ Présence de Cache-Control headers"
+      ],
+      "notes": "Même pattern que ventes et livraisons. Conflit MIME."
+    }
+  ],
+  "summary": {
+    "files_ok": 3,
+    "files_broken": 2,
+    "files_partiellement_ok": 3,
+    "files_unknown": 0,
+    "total_audited": 9,
+    "conformite_globale": "60%"
+  },
+  "problemes_identifies": {
+    "CRITIQUE": [
+      {
+        "type": "headers_already_sent",
+        "files": ["caisse/export_excel.php", "compta/export_bilan.php"],
+        "description": "BOM UTF-8 (\\xEF\\xBB\\xBF) echo AVANT les headers => causera erreur 'headers already sent'",
+        "impact": "HIGH",
+        "solution": "Déplacer echo BOM APRÈS tous les headers ou utiliser ob_start()"
+      },
+      {
+        "type": "mime_type_mismatch",
+        "files": ["ventes/export_excel.php", "livraisons/export_excel.php", "coordination/export_excel.php"],
+        "description": "Header MIME type .xlsx/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet mais output CSV via fputcsv",
+        "impact": "MEDIUM",
+        "solution": "Soit changer en text/csv, soit utiliser une vraie librairie XLSX (PHPExcel, OpenSpout)"
+      },
+      {
+        "type": "html_to_xls_conversion",
+        "files": ["caisse/export_excel.php", "compta/export_bilan.php"],
+        "description": "HTML+table directement en tant que XLS => peu fiable selon les versions Excel",
+        "impact": "MEDIUM",
+        "solution": "Migrer vers CSV sécurisé ou utiliser librairie XLSX (recommandé: OpenSpout pour perf)"
+      }
+    ],
+    "AVERTISSEMENTS": [
+      {
+        "type": "missing_bom_utf8",
+        "files": ["ventes/export_excel.php", "livraisons/export_excel.php", "coordination/export_excel.php"],
+        "description": "Pas de BOM UTF-8 => caractères accentués peuvent mal s'afficher dans Excel",
+        "solution": "Ajouter echo '\\xEF\\xBB\\xBF'; APRÈS les headers ou avant fputcsv"
+      },
+      {
+        "type": "missing_charset",
+        "files": ["ventes/export_excel.php", "livraisons/export_excel.php", "coordination/export_excel.php"],
+        "description": "Pas de charset déclaré en header => ambiguïté encodage",
+        "solution": "Ajouter charset=UTF-8 au header Content-Type"
+      }
+    ]
+  },
+  "fixes_strategy": {
+    "priorite_1_critique": [
+      {
+        "action": "FIX: caisse/export_excel.php",
+        "etapes": [
+          "1. Déplacer 'echo \"\\xEF\\xBB\\xBF\";' APRÈS les headers HTTP (ligne 51 => après header Expires)",
+          "2. OU utiliser ob_start() avant les headers et ob_get_clean() à la fin",
+          "3. Tester avec un fichier de caisse avec accents"
+        ],
+        "type": "URGENT"
+      },
+      {
+        "action": "FIX: compta/export_bilan.php",
+        "etapes": [
+          "1. Même correction que caisse/export_excel.php",
+          "2. Considérer migration vers OpenSpout pour XLSX natif (bilan = document complexe)",
+          "3. Tester équilibre avec caractères spéciaux"
+        ],
+        "type": "URGENT"
+      }
+    ],
+    "priorite_2_important": [
+      {
+        "action": "FIX: ventes/export_excel.php, livraisons/export_excel.php, coordination/export_excel.php",
+        "etapes": [
+          "1. OPTION A (rapide): Changer header => text/csv; charset=UTF-8 + ajouter BOM",
+          "2. OPTION B (recommandé): Utiliser OpenSpout pour vrai XLSX natif",
+          "3. Tester avec données contenant: accents, caractères spéciaux, montants"
+        ],
+        "type": "IMPORTANT"
+      }
+    ],
+    "priorite_3_maintenance": [
+      {
+        "action": "Harmoniser tous les exports",
+        "etapes": [
+          "1. Créer fonction helper: function exportToCSV($data, $headers, $filename) {}",
+          "2. Créer fonction helper: function exportToXLSX($data, $headers, $filename) {} (avec OpenSpout)",
+          "3. Mettre à jour les 9 fichiers pour utiliser ces helpers",
+          "4. Ajouter tests unitaires pour encodage UTF-8"
+        ],
+        "type": "MAINTENANCE"
+      }
+    ]
+  },
+  "recommendations": {
+    "court_terme": [
+      "✓ Corriger d'urgence: caisse/export_excel.php, compta/export_bilan.php (headers already sent)",
+      "✓ Ajouter BOM UTF-8 à: ventes/export_excel.php, livraisons/export_excel.php, coordination/export_excel.php",
+      "✓ Tester chaque export avec données réelles contenant accents, caractères spéciaux"
+    ],
+    "moyen_terme": [
+      "→ Migrer les exports CSV (.xls, .xlsx) vers text/csv avec BOM UTF-8",
+      "→ Ou installer OpenSpout (https://github.com/openspout/openspout) pour XLSX natif",
+      "→ Créer des fonctions helpers réutilisables pour standardiser"
+    ],
+    "long_terme": [
+      "→ Utiliser une librairie d'export (OpenSpout, PHPExcel) au lieu de mélanges HTML+CSV",
+      "→ Ajouter des tests d'intégration pour chaque type d'export",
+      "→ Documenter les conventions d'export dans README"
+    ]
+  },
+  "tests_recommandes": [
+    {
+      "test": "Encodage UTF-8",
+      "fichiers": "tous",
+      "critere": "Vérifier accents (é, è, ê), caractères spéciaux (€, ©) s'affichent correctement dans Excel"
+    },
+    {
+      "test": "Headers HTTP",
+      "fichiers": "caisse/export_excel.php, compta/export_bilan.php",
+      "critere": "Exécuter en CLI: php -r 'include \"caisse/export_excel.php\";' pour vérifier pas d'erreur 'headers already sent'"
+    },
+    {
+      "test": "Ouverture fichier",
+      "fichiers": "tous",
+      "critere": "Télécharger et ouvrir dans Excel, LibreOffice, Google Sheets => doit s'ouvrir correctement"
+    },
+    {
+      "test": "Données spéciales",
+      "fichiers": "tous",
+      "critere": "Tester avec: montants décimaux, dates format français, guillemets, points-virgules, sauts de ligne"
+    }
+  ],
+  "metadata": {
+    "project": "KMS Gestion",
+    "audit_scope": "Exports Excel/CSV - 9 fichiers",
+    "examined_elements": [
+      "Content-Type headers",
+      "BOM UTF-8 presence",
+      "Charset declarations",
+      "Output methods (fputcsv, HTML, etc)",
+      "File extensions",
+      "MIME type consistency",
+      "Security headers (Cache-Control, Pragma)",
+      "Complete file content review"
+    ],
+    "auditor": "GitHub Copilot",
+    "recommendations_count": 8
+  }
+}

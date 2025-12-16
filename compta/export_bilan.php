@@ -1,5 +1,5 @@
 <?php
-// compta/export_bilan.php - Export du bilan comptable en Excel
+// compta/export_bilan.php - Export du bilan comptable en CSV
 require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('COMPTABILITE_LIRE');
@@ -71,141 +71,76 @@ foreach ($comptes as $compte) {
 $totalActif = array_sum(array_column($actif, 'solde'));
 $totalPassif = array_sum(array_column($passif, 'solde'));
 
-// Headers pour téléchargement Excel
-header('Content-Type: application/vnd.ms-excel; charset=UTF-8');
-header('Content-Disposition: attachment; filename="bilan_comptable_' . $exercice['annee'] . '.xls"');
+// Headers pour téléchargement CSV
+header('Content-Type: text/csv; charset=UTF-8');
+header('Content-Disposition: attachment; filename="bilan_comptable_' . $exercice['annee'] . '.csv"');
+header('Cache-Control: no-cache, no-store, must-revalidate');
 header('Pragma: no-cache');
 header('Expires: 0');
 
-echo "\xEF\xBB\xBF"; // BOM UTF-8
-?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <style>
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-        th { background-color: #2c3e50; color: white; font-weight: bold; }
-        .header { font-size: 18px; font-weight: bold; margin-bottom: 20px; text-align: center; }
-        .section-title { background-color: #34495e; color: white; font-weight: bold; font-size: 14px; }
-        .total-row { background-color: #3498db; color: white; font-weight: bold; font-size: 13px; }
-        .numero { width: 15%; }
-        .libelle { width: 60%; }
-        .montant { width: 25%; text-align: right; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>KENNE MULTI-SERVICES</h1>
-        <h2>BILAN COMPTABLE</h2>
-        <h3>Exercice : <?= htmlspecialchars($exercice['annee']) ?></h3>
-        <p>Du <?= date('d/m/Y', strtotime($exercice['date_debut'])) ?> 
-           au <?= date('d/m/Y', strtotime($exercice['date_fin'])) ?></p>
-        <p>Date d'export : <?= date('d/m/Y H:i') ?></p>
-    </div>
-    
-    <table>
-        <tr>
-            <th colspan="3" style="text-align: center; font-size: 16px;">ACTIF</th>
-        </tr>
-        <tr>
-            <th class="numero">N° Compte</th>
-            <th class="libelle">Libellé</th>
-            <th class="montant">Montant (FCFA)</th>
-        </tr>
-        
-        <?php 
-        $currentClasse = '';
-        foreach ($actif as $compte): 
-            if ($currentClasse != $compte['classe']) {
-                $currentClasse = $compte['classe'];
-                $classeLib = [
-                    '2' => 'IMMOBILISATIONS',
-                    '3' => 'STOCKS',
-                    '4' => 'CRÉANCES',
-                    '5' => 'TRÉSORERIE - ACTIF'
-                ];
-        ?>
-        <tr class="section-title">
-            <td colspan="3">CLASSE <?= $currentClasse ?> - <?= $classeLib[$currentClasse] ?? '' ?></td>
-        </tr>
-        <?php } ?>
-        <tr>
-            <td><?= htmlspecialchars($compte['numero_compte']) ?></td>
-            <td><?= htmlspecialchars($compte['libelle']) ?></td>
-            <td class="montant"><?= number_format($compte['solde'], 0, ',', ' ') ?></td>
-        </tr>
-        <?php endforeach; ?>
-        
-        <?php if (empty($actif)): ?>
-        <tr>
-            <td colspan="3" style="text-align: center; color: #666;">Aucun compte à l'actif</td>
-        </tr>
-        <?php endif; ?>
-        
-        <tr class="total-row">
-            <td colspan="2"><strong>TOTAL ACTIF</strong></td>
-            <td class="montant"><strong><?= number_format($totalActif, 0, ',', ' ') ?></strong></td>
-        </tr>
-    </table>
-    
-    <table>
-        <tr>
-            <th colspan="3" style="text-align: center; font-size: 16px;">PASSIF</th>
-        </tr>
-        <tr>
-            <th class="numero">N° Compte</th>
-            <th class="libelle">Libellé</th>
-            <th class="montant">Montant (FCFA)</th>
-        </tr>
-        
-        <?php 
-        $currentClasse = '';
-        foreach ($passif as $compte): 
-            if ($currentClasse != $compte['classe']) {
-                $currentClasse = $compte['classe'];
-                $classeLib = [
-                    '1' => 'CAPITAUX PROPRES',
-                    '4' => 'DETTES',
-                    '5' => 'TRÉSORERIE - PASSIF'
-                ];
-        ?>
-        <tr class="section-title">
-            <td colspan="3">CLASSE <?= $currentClasse ?> - <?= $classeLib[$currentClasse] ?? '' ?></td>
-        </tr>
-        <?php } ?>
-        <tr>
-            <td><?= htmlspecialchars($compte['numero_compte']) ?></td>
-            <td><?= htmlspecialchars($compte['libelle']) ?></td>
-            <td class="montant"><?= number_format($compte['solde'], 0, ',', ' ') ?></td>
-        </tr>
-        <?php endforeach; ?>
-        
-        <?php if (empty($passif)): ?>
-        <tr>
-            <td colspan="3" style="text-align: center; color: #666;">Aucun compte au passif</td>
-        </tr>
-        <?php endif; ?>
-        
-        <tr class="total-row">
-            <td colspan="2"><strong>TOTAL PASSIF</strong></td>
-            <td class="montant"><strong><?= number_format($totalPassif, 0, ',', ' ') ?></strong></td>
-        </tr>
-    </table>
-    
-    <table style="margin-top: 20px;">
-        <tr style="background-color: <?= abs($totalActif - $totalPassif) < 1 ? '#27ae60' : '#e74c3c' ?>; color: white;">
-            <td colspan="2" style="font-weight: bold; font-size: 14px;">ÉQUILIBRE DU BILAN</td>
-            <td class="montant" style="font-weight: bold; font-size: 14px;">
-                Écart : <?= number_format(abs($totalActif - $totalPassif), 0, ',', ' ') ?> FCFA
-            </td>
-        </tr>
-        <tr>
-            <td colspan="3" style="text-align: center; font-style: italic; color: #666;">
-                <?= abs($totalActif - $totalPassif) < 1 ? '✓ Bilan équilibré' : '⚠ Bilan non équilibré' ?>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
+// BOM UTF-8
+echo "\xEF\xBB\xBF";
+
+// Créer un flux mémoire pour fputcsv
+$output = fopen('php://output', 'w');
+
+// En-tête du rapport
+fputcsv($output, ['KENNE MULTI-SERVICES'], ';');
+fputcsv($output, ['BILAN COMPTABLE'], ';');
+fputcsv($output, ['Exercice: ' . $exercice['annee']], ';');
+fputcsv($output, ['Du ' . date('d/m/Y', strtotime($exercice['date_debut'])) . ' au ' . date('d/m/Y', strtotime($exercice['date_fin']))], ';');
+fputcsv($output, ['Date d\'export: ' . date('d/m/Y H:i')], ';');
+fputcsv($output, [], ';'); // Ligne vide
+
+// Section ACTIF
+fputcsv($output, ['ACTIF'], ';');
+fputcsv($output, ['N° Compte', 'Libellé', 'Classe', 'Montant (FCFA)'], ';');
+
+$classeLib = [
+    '2' => 'IMMOBILISATIONS',
+    '3' => 'STOCKS',
+    '4' => 'CRÉANCES',
+    '5' => 'TRÉSORERIE - ACTIF'
+];
+
+$currentClasse = '';
+foreach ($actif as $compte) {
+    if ($currentClasse != $compte['classe']) {
+        $currentClasse = $compte['classe'];
+        fputcsv($output, ['CLASSE ' . $currentClasse . ' - ' . ($classeLib[$currentClasse] ?? '')], ';');
+    }
+    fputcsv($output, [$compte['numero_compte'], $compte['libelle'], $compte['classe'], $compte['solde']], ';');
+}
+
+fputcsv($output, ['TOTAL ACTIF', '', '', $totalActif], ';');
+fputcsv($output, [], ';'); // Ligne vide
+
+// Section PASSIF
+fputcsv($output, ['PASSIF'], ';');
+fputcsv($output, ['N° Compte', 'Libellé', 'Classe', 'Montant (FCFA)'], ';');
+
+$classeLib = [
+    '1' => 'CAPITAUX PROPRES',
+    '4' => 'DETTES',
+    '5' => 'TRÉSORERIE - PASSIF'
+];
+
+$currentClasse = '';
+foreach ($passif as $compte) {
+    if ($currentClasse != $compte['classe']) {
+        $currentClasse = $compte['classe'];
+        fputcsv($output, ['CLASSE ' . $currentClasse . ' - ' . ($classeLib[$currentClasse] ?? '')], ';');
+    }
+    fputcsv($output, [$compte['numero_compte'], $compte['libelle'], $compte['classe'], $compte['solde']], ';');
+}
+
+fputcsv($output, ['TOTAL PASSIF', '', '', $totalPassif], ';');
+fputcsv($output, [], ';'); // Ligne vide
+
+// Équilibre du bilan
+$ecart = abs($totalActif - $totalPassif);
+fputcsv($output, ['ÉQUILIBRE DU BILAN'], ';');
+fputcsv($output, ['Écart (FCFA)', $ecart], ';');
+fputcsv($output, ['Statut', $ecart < 1 ? 'Bilan équilibré' : 'Bilan non équilibré'], ';');
+
+fclose($output);
