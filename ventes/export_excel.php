@@ -1,12 +1,13 @@
 <?php
 /**
- * Export Ventes en Excel
+ * Export Ventes en Excel XLSX
  * GET params: date_debut, date_fin, statut, client_id
  */
 
 require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
+require_once __DIR__ . '/../lib/export_xlsx.php';
 
 global $pdo;
 
@@ -52,27 +53,40 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $ventes = $stmt->fetchAll();
 
-// Header Excel
-header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment; filename="Ventes_' . date('Y-m-d') . '.xlsx"');
-header('Cache-Control: no-cache, no-store, must-revalidate');
+// Préparer les données pour l'export
+$data = [];
 
-// Créer le fichier Excel avec des lignes CSV-like (Excel accepte)
-$output = fopen('php://output', 'w');
-fputcsv($output, ['N° Vente', 'Date', 'Client', 'Montant TTC (FCFA)', 'Statut', 'Encaissement', 'BL', 'Dernière Livraison'], ';');
+// En-tête du rapport
+$data[] = ['RAPPORT DE VENTES'];
+$data[] = ['Période: ' . date('d/m/Y', strtotime($dateDebut)) . ' au ' . date('d/m/Y', strtotime($dateFin))];
+if ($statut) $data[] = ['Statut: ' . $statut];
+if ($clientId > 0) {
+    $stmtClient = $pdo->prepare("SELECT nom FROM clients WHERE id = ?");
+    $stmtClient->execute([$clientId]);
+    $client = $stmtClient->fetch();
+    if ($client) $data[] = ['Client: ' . $client['nom']];
+}
+$data[] = ['Date d\'export: ' . date('d/m/Y H:i')];
+$data[] = [];
 
+// En-têtes du tableau
+$data[] = ['N° Vente', 'Date', 'Client', 'Montant TTC (FCFA)', 'Statut', 'Encaissement', 'BL', 'Dernière Livraison'];
+
+// Données des ventes
 foreach ($ventes as $v) {
-    fputcsv($output, [
+    $data[] = [
         $v['numero'],
         date('d/m/Y', strtotime($v['date_vente'])),
         $v['client_nom'],
-        number_format($v['montant_total_ttc'], 0, ',', ' '),
+        $v['montant_total_ttc'],
         $v['statut'],
         $v['statut_encaissement'],
         $v['nb_bl'],
         $v['derniere_livraison'] ? date('d/m/Y', strtotime($v['derniere_livraison'])) : '-'
-    ], ';');
+    ];
 }
 
-fclose($output);
-exit;
+// Générer le fichier XLSX
+$filename = 'Ventes_' . date('Y-m-d') . '.xlsx';
+ExportXLSX::generate($data, [], $filename, 'Ventes');
+

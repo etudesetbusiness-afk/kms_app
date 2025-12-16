@@ -1,12 +1,13 @@
 <?php
 /**
- * Export Litiges & Retours en Excel
+ * Export Litiges & Retours en Excel XLSX
  * GET params: date_debut, date_fin, statut, type
  */
 
 require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
+require_once __DIR__ . '/../lib/export_xlsx.php';
 
 global $pdo;
 
@@ -53,28 +54,37 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $litiges = $stmt->fetchAll();
 
-// Header Excel
-header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment; filename="Litiges_' . date('Y-m-d') . '.xlsx"');
-header('Cache-Control: no-cache, no-store, must-revalidate');
+// Préparer les données pour l'export
+$data = [];
 
-$output = fopen('php://output', 'w');
-fputcsv($output, ['Date', 'Client', 'Vente', 'Produit', 'Type', 'Statut', 'Remboursement', 'Avoir', 'Total Impact'], ';');
+// En-tête du rapport
+$data[] = ['RAPPORT DE LITIGES ET RETOURS'];
+$data[] = ['Période: ' . date('d/m/Y', strtotime($dateDebut)) . ' au ' . date('d/m/Y', strtotime($dateFin))];
+if ($statut) $data[] = ['Statut: ' . $statut];
+if ($type) $data[] = ['Type: ' . $type];
+$data[] = ['Date d\'export: ' . date('d/m/Y H:i')];
+$data[] = [];
 
+// En-têtes du tableau
+$data[] = ['Date', 'Client', 'Vente', 'Produit', 'Type', 'Statut', 'Remboursement', 'Avoir', 'Total Impact'];
+
+// Données des litiges
 foreach ($litiges as $l) {
     $totalImpact = ($l['montant_rembourse'] ?? 0) + ($l['montant_avoir'] ?? 0);
-    fputcsv($output, [
+    $data[] = [
         date('d/m/Y', strtotime($l['date_retour'])),
         $l['client_nom'],
         $l['vente_numero'] ?: '-',
         $l['code_produit'] . ' - ' . $l['produit_nom'],
         $l['type_probleme'],
         $l['statut_traitement'],
-        number_format($l['montant_rembourse'] ?? 0, 0, ',', ' '),
-        number_format($l['montant_avoir'] ?? 0, 0, ',', ' '),
-        number_format($totalImpact, 0, ',', ' ')
-    ], ';');
+        $l['montant_rembourse'] ?? 0,
+        $l['montant_avoir'] ?? 0,
+        $totalImpact
+    ];
 }
 
-fclose($output);
-exit;
+// Générer le fichier XLSX
+$filename = 'Litiges_' . date('Y-m-d') . '.xlsx';
+ExportXLSX::generate($data, [], $filename, 'Litiges et Retours');
+

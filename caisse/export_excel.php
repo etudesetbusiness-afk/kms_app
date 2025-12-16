@@ -1,8 +1,9 @@
 <?php
-// caisse/export_excel.php - Export du journal de caisse en Excel
+// caisse/export_excel.php - Export du journal de caisse en vrai Excel XLSX
 require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('CAISSE_LIRE');
+require_once __DIR__ . '/../lib/export_xlsx.php';
 
 global $pdo;
 
@@ -46,26 +47,28 @@ foreach ($operations as $op) {
 }
 $solde = $totalEncaissements - $totalDecaissements;
 
-// Headers pour téléchargement Excel - Utiliser le format CSV compatible Excel moderne
-header('Content-Type: text/csv; charset=UTF-8');
-header('Content-Disposition: attachment; filename="journal_caisse_' . $dateDebut . '_' . $dateFin . '.csv"');
-header('Pragma: no-cache');
-header('Expires: 0');
-header('Cache-Control: no-cache, no-store, must-revalidate');
+// Préparer les données pour l'export
+$data = [];
+foreach ($operations as $op) {
+    $data[] = [
+        date('d/m/Y H:i', strtotime($op['date_operation'])),
+        $op['type_operation'],
+        $op['reference'] ?? '',
+        $op['libelle'],
+        $op['client_nom'] ?? '',
+        $op['mode_paiement'] ?? '',
+        $op['montant'],
+        $op['caissier'] ?? ''
+    ];
+}
 
-// BOM UTF-8 pour meilleure compatibilité Excel
-echo "\xEF\xBB\xBF";
+// Ajouter les lignes de totaux
+$data[] = ['', '', '', '', '', 'Total Encaissements:', $totalEncaissements, ''];
+$data[] = ['', '', '', '', '', 'Total Décaissements:', $totalDecaissements, ''];
+$data[] = ['', '', '', '', '', 'SOLDE NET:', $solde, ''];
 
-$output = fopen('php://output', 'w');
-
-// En-tête
-fputcsv($output, ['KENNE MULTI-SERVICES - JOURNAL DE CAISSE'], ';');
-fputcsv($output, ['Période : ' . date('d/m/Y', strtotime($dateDebut)) . ' au ' . date('d/m/Y', strtotime($dateFin))], ';');
-fputcsv($output, ['Édité le : ' . date('d/m/Y H:i')], ';');
-fputcsv($output, [], ';');
-
-// Colonnes
-fputcsv($output, [
+// En-têtes
+$headers = [
     'Date',
     'Type',
     'Référence',
@@ -74,28 +77,10 @@ fputcsv($output, [
     'Mode paiement',
     'Montant (FCFA)',
     'Caissier'
-], ';');
+];
 
-// Données
-foreach ($operations as $op) {
-    fputcsv($output, [
-        date('d/m/Y H:i', strtotime($op['date_operation'])),
-        htmlspecialchars($op['type_operation']),
-        htmlspecialchars($op['reference'] ?? ''),
-        htmlspecialchars($op['libelle']),
-        htmlspecialchars($op['client_nom'] ?? ''),
-        htmlspecialchars($op['mode_paiement'] ?? ''),
-        number_format($op['montant'], 0, ',', ' '),
-        htmlspecialchars($op['caissier'] ?? '')
-    ], ';');
-}
+// Générer le fichier XLSX
+$filename = 'journal_caisse_' . $dateDebut . '_' . $dateFin . '.xlsx';
+ExportXLSX::generate($data, $headers, $filename, 'Journal de Caisse');
 
-// Totaux
-fputcsv($output, [], ';');
-fputcsv($output, ['', '', '', '', '', 'Total Encaissements:', number_format($totalEncaissements, 0, ',', ' ')], ';');
-fputcsv($output, ['', '', '', '', '', 'Total Décaissements:', number_format($totalDecaissements, 0, ',', ' ')], ';');
-fputcsv($output, ['', '', '', '', '', 'SOLDE NET:', number_format($solde, 0, ',', ' ')], ';');
-
-fclose($output);
-exit;
 

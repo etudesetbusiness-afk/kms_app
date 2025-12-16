@@ -1,8 +1,9 @@
 <?php
-// compta/export_grand_livre.php - Export CSV du grand livre
+// compta/export_grand_livre.php - Export du grand livre en XLSX
 require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('COMPTABILITE_LIRE');
+require_once __DIR__ . '/../lib/export_xlsx.php';
 
 global $pdo;
 
@@ -66,64 +67,54 @@ foreach ($ecritures as $ecriture) {
 
 $solde = $total_debit - $total_credit;
 
-// Générer CSV
-header('Content-Type: text/csv; charset=UTF-8');
-header('Content-Disposition: attachment; filename="grand_livre_' . $compte['numero'] . '_' . date('Y-m-d_His') . '.csv"');
-header('Pragma: no-cache');
-header('Expires: 0');
+// Préparer les données pour l'export XLSX
+$data = [];
 
-echo "\xEF\xBB\xBF";
+// En-têtes du rapport
+$data[] = ['GRAND LIVRE - KENNE MULTI-SERVICES'];
+$data[] = ['Compte: ' . $compte['numero'] . ' - ' . $compte['libelle']];
+$data[] = ['Exercice: ' . ($exercice['code'] ?? 'N/A')];
+$data[] = ['Édité le ' . date('d/m/Y H:i')];
+$data[] = [];
 
-$output = fopen('php://output', 'w');
-
-// En-tête
-fputcsv($output, ['GRAND LIVRE - KENNE MULTI-SERVICES'], ';');
-fputcsv($output, ['Compte: ' . $compte['numero'] . ' - ' . $compte['libelle']], ';');
-fputcsv($output, ['Exercice: ' . ($exercice['code'] ?? 'N/A')], ';');
-fputcsv($output, ['Édité le ' . date('d/m/Y H:i')], ';');
-fputcsv($output, [], ';');
-
-// Colonnes
-fputcsv($output, [
-    'Date',
-    'N° Pièce',
-    'Journal',
-    'Libellé',
-    'Débit',
-    'Crédit',
-    'Solde'
-], ';');
+// En-têtes des colonnes
+$data[] = ['Date', 'N° Pièce', 'Journal', 'Libellé', 'Débit', 'Crédit', 'Solde'];
 
 // Écritures
 $solde_cumule = 0;
 foreach ($ecritures as $ecriture) {
     $solde_cumule += $ecriture['debit'] - $ecriture['credit'];
     
-    fputcsv($output, [
+    $data[] = [
         date('d/m/Y', strtotime($ecriture['date_piece'])),
         $ecriture['numero_piece'],
         $ecriture['journal_code'],
         $ecriture['libelle'],
-        $ecriture['debit'] > 0 ? number_format($ecriture['debit'], 2, ',', ' ') : '',
-        $ecriture['credit'] > 0 ? number_format($ecriture['credit'], 2, ',', ' ') : '',
-        number_format($solde_cumule, 2, ',', ' ')
-    ], ';');
+        $ecriture['debit'] > 0 ? $ecriture['debit'] : '',
+        $ecriture['credit'] > 0 ? $ecriture['credit'] : '',
+        $solde_cumule
+    ];
 }
 
 // Totaux
-fputcsv($output, [], ';');
-fputcsv($output, [
+$data[] = [];
+$data[] = [
     '',
     '',
     '',
     'TOTAUX',
-    number_format($total_debit, 2, ',', ' ') . ' FCFA',
-    number_format($total_credit, 2, ',', ' ') . ' FCFA',
-    number_format($solde, 2, ',', ' ') . ' FCFA'
-], ';');
+    $total_debit,
+    $total_credit,
+    $solde
+];
 
-fputcsv($output, [], ';');
-fputcsv($output, ['Solde: ' . number_format($solde, 2, ',', ' ') . ' FCFA (' . ($solde >= 0 ? 'Débiteur' : 'Créditeur') . ')'], ';');
+// Solde final
+$data[] = [];
+$data[] = [
+    'Solde: ' . $solde . ' FCFA (' . ($solde >= 0 ? 'Débiteur' : 'Créditeur') . ')'
+];
 
-fclose($output);
-exit;
+// Générer le fichier XLSX
+$filename = 'grand_livre_' . $compte['numero'] . '_' . date('Y-m-d_His') . '.xlsx';
+ExportXLSX::generate($data, [], $filename, 'Grand Livre');
+

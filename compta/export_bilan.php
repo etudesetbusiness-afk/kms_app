@@ -1,8 +1,9 @@
 <?php
-// compta/export_bilan.php - Export du bilan comptable en CSV
+// compta/export_bilan.php - Export du bilan comptable en vrai Excel XLSX
 require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('COMPTABILITE_LIRE');
+require_once __DIR__ . '/../lib/export_xlsx.php';
 
 global $pdo;
 
@@ -71,30 +72,20 @@ foreach ($comptes as $compte) {
 $totalActif = array_sum(array_column($actif, 'solde'));
 $totalPassif = array_sum(array_column($passif, 'solde'));
 
-// Headers pour téléchargement CSV
-header('Content-Type: text/csv; charset=UTF-8');
-header('Content-Disposition: attachment; filename="bilan_comptable_' . $exercice['annee'] . '.csv"');
-header('Cache-Control: no-cache, no-store, must-revalidate');
-header('Pragma: no-cache');
-header('Expires: 0');
+// Préparer les données pour l'export XLSX
+$data = [];
 
-// BOM UTF-8
-echo "\xEF\xBB\xBF";
-
-// Créer un flux mémoire pour fputcsv
-$output = fopen('php://output', 'w');
-
-// En-tête du rapport
-fputcsv($output, ['KENNE MULTI-SERVICES'], ';');
-fputcsv($output, ['BILAN COMPTABLE'], ';');
-fputcsv($output, ['Exercice: ' . $exercice['annee']], ';');
-fputcsv($output, ['Du ' . date('d/m/Y', strtotime($exercice['date_debut'])) . ' au ' . date('d/m/Y', strtotime($exercice['date_fin']))], ';');
-fputcsv($output, ['Date d\'export: ' . date('d/m/Y H:i')], ';');
-fputcsv($output, [], ';'); // Ligne vide
+// En-têtes du rapport
+$data[] = ['KENNE MULTI-SERVICES'];
+$data[] = ['BILAN COMPTABLE'];
+$data[] = ['Exercice: ' . $exercice['annee']];
+$data[] = ['Du ' . date('d/m/Y', strtotime($exercice['date_debut'])) . ' au ' . date('d/m/Y', strtotime($exercice['date_fin']))];
+$data[] = ['Date d\'export: ' . date('d/m/Y H:i')];
+$data[] = [];
 
 // Section ACTIF
-fputcsv($output, ['ACTIF'], ';');
-fputcsv($output, ['N° Compte', 'Libellé', 'Classe', 'Montant (FCFA)'], ';');
+$data[] = ['ACTIF'];
+$data[] = ['N° Compte', 'Libellé', 'Classe', 'Montant (FCFA)'];
 
 $classeLib = [
     '2' => 'IMMOBILISATIONS',
@@ -107,17 +98,17 @@ $currentClasse = '';
 foreach ($actif as $compte) {
     if ($currentClasse != $compte['classe']) {
         $currentClasse = $compte['classe'];
-        fputcsv($output, ['CLASSE ' . $currentClasse . ' - ' . ($classeLib[$currentClasse] ?? '')], ';');
+        $data[] = ['CLASSE ' . $currentClasse . ' - ' . ($classeLib[$currentClasse] ?? '')];
     }
-    fputcsv($output, [$compte['numero_compte'], $compte['libelle'], $compte['classe'], $compte['solde']], ';');
+    $data[] = [$compte['numero_compte'], $compte['libelle'], $compte['classe'], $compte['solde']];
 }
 
-fputcsv($output, ['TOTAL ACTIF', '', '', $totalActif], ';');
-fputcsv($output, [], ';'); // Ligne vide
+$data[] = ['TOTAL ACTIF', '', '', $totalActif];
+$data[] = [];
 
 // Section PASSIF
-fputcsv($output, ['PASSIF'], ';');
-fputcsv($output, ['N° Compte', 'Libellé', 'Classe', 'Montant (FCFA)'], ';');
+$data[] = ['PASSIF'];
+$data[] = ['N° Compte', 'Libellé', 'Classe', 'Montant (FCFA)'];
 
 $classeLib = [
     '1' => 'CAPITAUX PROPRES',
@@ -129,18 +120,20 @@ $currentClasse = '';
 foreach ($passif as $compte) {
     if ($currentClasse != $compte['classe']) {
         $currentClasse = $compte['classe'];
-        fputcsv($output, ['CLASSE ' . $currentClasse . ' - ' . ($classeLib[$currentClasse] ?? '')], ';');
+        $data[] = ['CLASSE ' . $currentClasse . ' - ' . ($classeLib[$currentClasse] ?? '')];
     }
-    fputcsv($output, [$compte['numero_compte'], $compte['libelle'], $compte['classe'], $compte['solde']], ';');
+    $data[] = [$compte['numero_compte'], $compte['libelle'], $compte['classe'], $compte['solde']];
 }
 
-fputcsv($output, ['TOTAL PASSIF', '', '', $totalPassif], ';');
-fputcsv($output, [], ';'); // Ligne vide
+$data[] = ['TOTAL PASSIF', '', '', $totalPassif];
+$data[] = [];
 
 // Équilibre du bilan
 $ecart = abs($totalActif - $totalPassif);
-fputcsv($output, ['ÉQUILIBRE DU BILAN'], ';');
-fputcsv($output, ['Écart (FCFA)', $ecart], ';');
-fputcsv($output, ['Statut', $ecart < 1 ? 'Bilan équilibré' : 'Bilan non équilibré'], ';');
+$data[] = ['ÉQUILIBRE DU BILAN'];
+$data[] = ['Écart (FCFA)', $ecart];
+$data[] = ['Statut', $ecart < 1 ? 'Bilan équilibré' : 'Bilan non équilibré'];
 
-fclose($output);
+// Générer le fichier XLSX
+$filename = 'bilan_comptable_' . $exercice['annee'] . '.xlsx';
+ExportXLSX::generate($data, [], $filename, 'Bilan Comptable');

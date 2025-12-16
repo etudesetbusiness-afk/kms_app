@@ -80,7 +80,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    if ($action_form === 'valider_masse') {
+    // ===== INVALIDER UNE PIECE =====
+    if ($action_form === 'invalider_une') {
+        $piece_id = (int)($_POST['piece_id'] ?? 0);
+        if ($piece_id > 0) {
+            $stmtPiece = $pdo->prepare("SELECT * FROM compta_pieces WHERE id = ?");
+            $stmtPiece->execute([$piece_id]);
+            $piece = $stmtPiece->fetch();
+            
+            if (!$piece) {
+                $_SESSION['flash_error'] = "Pièce introuvable";
+            } elseif (!$piece['est_validee']) {
+                $_SESSION['flash_error'] = "Cette pièce n'est pas validée";
+            } else {
+                // Invalider la pièce
+                $utilisateur_id = $_SESSION['user_id'] ?? 1;
+                $stmt = $pdo->prepare("
+                    UPDATE compta_pieces 
+                    SET est_validee = 0,
+                        validee_par_id = ?,
+                        date_validation = NOW(),
+                        updated_at = NOW() 
+                    WHERE id = ?
+                ");
+                if ($stmt->execute([$utilisateur_id, $piece_id])) {
+                    $_SESSION['flash_success'] = "Pièce #" . htmlspecialchars($piece['numero_piece']) . " invalidée (retour en brouillon)";
+                } else {
+                    $_SESSION['flash_error'] = "Erreur lors de l'invalidation";
+                }
+            }
+        }
+        header('Location: valider_piece.php');
+        exit;
+    }
         $pieces = $_POST['pieces_ids'] ?? [];
         if (empty($pieces)) {
             $_SESSION['flash_error'] = "Sélectionnez au moins une pièce";

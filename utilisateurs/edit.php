@@ -276,31 +276,37 @@ include __DIR__ . '/../partials/sidebar.php';
                            autocomplete="new-password">
                 </div>
 
-                <div class="col-md-8">
+                <div class="col-12">
                     <label class="form-label small">Rôles</label>
-                    <div class="row g-2">
-                        <?php foreach ($roles as $role): ?>
-                            <?php $checked = in_array((int)$role['id'], $rolesActuels, true); ?>
-                            <div class="col-md-4">
-                                <div class="form-check">
-                                    <input
-                                        class="form-check-input"
-                                        type="checkbox"
-                                        name="roles[]"
-                                        id="role_<?= (int)$role['id'] ?>"
-                                        value="<?= (int)$role['id'] ?>"
-                                        <?= $checked ? 'checked' : '' ?>
-                                    >
-                                    <label class="form-check-label small" for="role_<?= (int)$role['id'] ?>">
-                                        <strong><?= htmlspecialchars($role['code']) ?></strong><br>
-                                        <span class="text-muted">
-                                            <?= htmlspecialchars($role['nom']) ?>
-                                        </span>
-                                    </label>
+                    <?php if (empty($roles)): ?>
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-1"></i> 
+                            Aucun rôle disponible dans le système
+                        </div>
+                    <?php else: ?>
+                        <div class="row g-2">
+                            <?php foreach ($roles as $role): ?>
+                                <?php $checked = in_array((int)$role['id'], $rolesActuels, true); ?>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="form-check">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            name="roles[]"
+                                            id="role_<?= (int)$role['id'] ?>"
+                                            value="<?= (int)$role['id'] ?>"
+                                            <?= $checked ? 'checked' : '' ?>
+                                        >
+                                        <label class="form-check-label" for="role_<?= (int)$role['id'] ?>">
+                                            <strong><?= htmlspecialchars($role['code']) ?></strong>
+                                            <br>
+                                            <small class="text-muted"><?= htmlspecialchars($role['nom']) ?></small>
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
             </div>

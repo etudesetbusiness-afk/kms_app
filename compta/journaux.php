@@ -215,6 +215,34 @@ if ($action === 'detail' && $piece_id > 0) {
                                     </p>
                                 </div>
                                 <div class="col-md-3">
+                                    <small class="text-muted">Actions Validation</small>
+                                    <div class="btn-group btn-group-sm w-100" role="group">
+                                        <?php if (!$piece['est_validee'] && $est_equilibree && in_array('COMPTABILITE_ECRIRE', $_SESSION['permissions'] ?? [])): ?>
+                                            <form method="post" action="<?= url_for('compta/valider_piece.php') ?>" style="display: inline;">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(getCsrfToken()) ?>">
+                                                <input type="hidden" name="action_form" value="valider_une">
+                                                <input type="hidden" name="piece_id" value="<?= (int)$piece['id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-check-circle me-1"></i> Valider
+                                                </button>
+                                            </form>
+                                        <?php elseif ($piece['est_validee'] && in_array('COMPTABILITE_ECRIRE', $_SESSION['permissions'] ?? [])): ?>
+                                            <form method="post" action="<?= url_for('compta/valider_piece.php') ?>" style="display: inline;">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(getCsrfToken()) ?>">
+                                                <input type="hidden" name="action_form" value="invalider_une">
+                                                <input type="hidden" name="piece_id" value="<?= (int)$piece['id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-warning">
+                                                    <i class="bi bi-x-circle me-1"></i> Invalider
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <button class="btn btn-sm btn-secondary" disabled>
+                                                <i class="bi bi-lock me-1"></i> Pas d'accès
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
                                     <small class="text-muted">Équilibre</small>
                                     <p>
                                         <?php if ($est_equilibree): ?>

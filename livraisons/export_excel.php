@@ -1,12 +1,13 @@
 <?php
 /**
- * Export Bons de Livraison en Excel
- * GET params: date_debut, date_fin, statut, client_id
+ * Export Bons de Livraison en Excel XLSX
+ * GET params: date_debut, date_fin, statut, client_id, signe
  */
 
 require_once __DIR__ . '/../security.php';
 exigerConnexion();
 exigerPermission('VENTES_LIRE');
+require_once __DIR__ . '/../lib/export_xlsx.php';
 
 global $pdo;
 
@@ -58,16 +59,28 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $bons = $stmt->fetchAll();
 
-// Header Excel
-header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-header('Content-Disposition: attachment; filename="BonsLivraison_' . date('Y-m-d') . '.xlsx"');
-header('Cache-Control: no-cache, no-store, must-revalidate');
+// Préparer les données pour l'export
+$data = [];
 
-$output = fopen('php://output', 'w');
-fputcsv($output, ['N° BL', 'Date', 'Client', 'Vente', 'Statut', 'Signé', 'Transport', 'Articles'], ';');
+// En-tête du rapport
+$data[] = ['RAPPORT DE BONS DE LIVRAISON'];
+$data[] = ['Période: ' . date('d/m/Y', strtotime($dateDebut)) . ' au ' . date('d/m/Y', strtotime($dateFin))];
+if ($statut) $data[] = ['Statut: ' . $statut];
+if ($clientId > 0) {
+    $stmtClient = $pdo->prepare("SELECT nom FROM clients WHERE id = ?");
+    $stmtClient->execute([$clientId]);
+    $client = $stmtClient->fetch();
+    if ($client) $data[] = ['Client: ' . $client['nom']];
+}
+$data[] = ['Date d\'export: ' . date('d/m/Y H:i')];
+$data[] = [];
 
+// En-têtes du tableau
+$data[] = ['N° BL', 'Date', 'Client', 'Vente', 'Statut', 'Signé', 'Transport', 'Articles'];
+
+// Données des bons de livraison
 foreach ($bons as $b) {
-    fputcsv($output, [
+    $data[] = [
         $b['numero'],
         date('d/m/Y', strtotime($b['date_bl'])),
         $b['client_nom'],
@@ -76,8 +89,12 @@ foreach ($bons as $b) {
         $b['signe_client'] ? 'OUI' : 'NON',
         $b['transport_assure_par'] ?: '-',
         $b['nb_lignes']
-    ], ';');
+    ];
 }
+
+// Générer le fichier XLSX
+$filename = 'BonsLivraison_' . date('Y-m-d') . '.xlsx';
+ExportXLSX::generate($data, [], $filename, 'Bons de Livraison');
 
 fclose($output);
 exit;
