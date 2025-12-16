@@ -84,7 +84,9 @@ $data = [];
 $data[] = ['KENNE MULTI-SERVICES'];
 $data[] = ['BILAN COMPTABLE'];
 $data[] = ['Exercice: ' . $exercice['annee']];
-$data[] = ['Du ' . date('d/m/Y', strtotime($exercice['date_ouverture'])) . ' au ' . date('d/m/Y', strtotime($exercice['date_cloture']))];
+$dateOuverture = $exercice['date_ouverture'] ? date('d/m/Y', strtotime($exercice['date_ouverture'])) : 'Non définie';
+$dateCloture = $exercice['date_cloture'] ? date('d/m/Y', strtotime($exercice['date_cloture'])) : 'En cours';
+$data[] = ['Du ' . $dateOuverture . ' au ' . $dateCloture];
 $data[] = ['Date d\'export: ' . date('d/m/Y H:i')];
 $data[] = [];
 

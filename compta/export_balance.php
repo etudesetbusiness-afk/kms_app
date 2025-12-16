@@ -82,7 +82,9 @@ $output = fopen('php://output', 'w');
 
 // En-tête
 fputcsv($output, ['BALANCE GÉNÉRALE - KENNE MULTI-SERVICES'], ';');
-fputcsv($output, ['Exercice: ' . $exercice['annee'] . ' (' . date('d/m/Y', strtotime($exercice['date_ouverture'])) . ' - ' . date('d/m/Y', strtotime($exercice['date_cloture'])) . ')'], ';');
+$dateOuverture = $exercice['date_ouverture'] ? date('d/m/Y', strtotime($exercice['date_ouverture'])) : 'Non définie';
+$dateCloture = $exercice['date_cloture'] ? date('d/m/Y', strtotime($exercice['date_cloture'])) : 'En cours';
+fputcsv($output, ['Exercice: ' . $exercice['annee'] . ' (' . $dateOuverture . ' - ' . $dateCloture . ')'], ';');
 fputcsv($output, ['Édité le ' . date('d/m/Y H:i')], ';');
 fputcsv($output, [], ';');
 
