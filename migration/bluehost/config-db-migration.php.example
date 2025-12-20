@@ -1,0 +1,73 @@
+<?php
+/**
+ * Configuration de connexion à la base de données - Version Migration Bluehost
+ * 
+ * INSTRUCTIONS :
+ * 1. Copiez ce fichier vers : db/db.php (remplacez l'existant)
+ * 2. Remplacez les valeurs par vos identifiants Bluehost
+ * 3. Les valeurs entre crochets [xxx] sont des exemples à remplacer
+ * 
+ * @version Migration Bluehost 1.0
+ */
+
+// ============================================================
+// CONFIGURATION - À MODIFIER AVEC VOS IDENTIFIANTS BLUEHOST
+// ============================================================
+
+// Hôte MySQL (généralement 'localhost' sur Bluehost mutualisé)
+$host = 'localhost';
+
+// Nom de la base de données Bluehost
+$dbname = 'kdfvxvmy_kms_gestion';
+
+// Utilisateur MySQL Bluehost
+$username = 'kdfvxvmy_WPEUF';
+
+// Mot de passe MySQL
+$password = 'adminKMs_app#2025';
+
+// Jeu de caractères (ne pas modifier sauf si nécessaire)
+$charset = 'utf8mb4';
+
+// ============================================================
+// CONNEXION PDO - NE PAS MODIFIER CETTE SECTION
+// ============================================================
+
+try {
+    $pdo = new PDO(
+        "mysql:host=$host;dbname=$dbname;charset=$charset",
+        $username,
+        $password,
+        [
+            // Activer les exceptions pour les erreurs
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            
+            // Retourner les résultats sous forme de tableaux associatifs
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            
+            // Désactiver l'émulation des requêtes préparées (plus sécurisé)
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+    
+} catch (PDOException $e) {
+    // En production, ne pas afficher les détails de l'erreur
+    // Vous pouvez logger l'erreur dans un fichier à la place
+    
+    // Mode développement (à commenter en production)
+    // die("Erreur de connexion : " . $e->getMessage());
+    
+    // Mode production (à décommenter en production)
+    error_log("Erreur de connexion BDD: " . $e->getMessage());
+    die("Erreur de connexion à la base de données. Veuillez contacter l'administrateur.");
+}
+
+// ============================================================
+// CONFIGURATION OPTIONNELLE
+// ============================================================
+
+// Fuseau horaire MySQL (Cameroun = UTC+1)
+$pdo->exec("SET time_zone = '+01:00'");
+
+// Mode SQL strict (recommandé)
+// $pdo->exec("SET sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'");

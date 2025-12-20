@@ -1059,4 +1059,68 @@ L'application est désormais robuste sur la gestion des transactions, la cohére
 - URL: http://localhost/kms_app/admin/catalogue/import.php
 - Menu: Admin → Catalogue → Importer Excel
 
-**Dernière mise à jour :** 15 décembre 2025 (Bugfixes + Feature Import Excel)
+---
+
+### SESSION 19 DÉCEMBRE 2025 — MIGRATION BLUEHOST + BUGFIXES PRODUCTION
+
+**Problème principal résolu:**
+- ❌ Erreur import SQL sur Bluehost: `Access denied; you need SUPER or SET_USER_ID privilege`
+- ✅ **Solution:** Création d'un générateur de migration automatique
+
+**Dossier migration créé:** `/migration/bluehost/`
+
+| Fichier | Description |
+|---------|-------------|
+| `generate_migration.php` | Script PHP de génération du SQL compatible |
+| `migration_kms_gestion.sql` | SQL nettoyé (4016 lignes) prêt pour import |
+| `README.md` | Guide complet de migration vers Bluehost |
+| `config-db-migration.php.example` | Template configuration DB Bluehost |
+
+**Éléments supprimés du SQL pour compatibilité hébergement mutualisé:**
+
+| Élément | Détail |
+|---------|--------|
+| 1 procédure | `cleanup_sms_codes` avec `DEFINER=root@localhost` |
+| 4 triggers | `after_inscription_formation_insert/update`, `after_reservation_hotel_insert/update` |
+| 2 DEFINER vues | `v_pipeline_commercial`, `v_ventes_livraison_encaissement` |
+
+**Caractéristiques du générateur:**
+- Lecture automatique de `kms_gestion.sql`
+- Suppression des blocs `DELIMITER $$ ... DELIMITER ;` contenant triggers
+- Nettoyage des vues (`CREATE VIEW` sans DEFINER)
+- Suppression des procédures stockées
+- Ajout en-tête avec instructions d'import
+- Accessible via CLI ou navigateur web
+
+**Bugs production corrigés cette session:**
+
+1. ✅ **Export litiges** - Variables `$dateDebut`/`$dateFin` non définies dans `coordination/litiges.php`
+2. ✅ **Bouton voir litige** - Corrigé avec le fix export (même fichier)
+3. ✅ **Géolocalisation précision** - Remplacé `getCurrentPosition` par `watchPosition` avec feedback précision
+4. ✅ **Parse error valider_piece.php** - Restauré `if` statement manquant
+5. ✅ **CSRF signature modale** - Correction vérification API sans formulaire POST
+6. ✅ **Formulaire clôture caisse** - `genererCsrf()` → `getCsrfToken()`
+7. ✅ **Affichage bilan OHADA** - Ajout affichage PASSIF + RÉSULTAT
+8. ✅ **Rôles utilisateur** - Conflit variable `$roles` dans header.php
+
+**Usage migration Bluehost:**
+```bash
+# Générer le SQL compatible
+php migration/bluehost/generate_migration.php
+
+# Ou via navigateur
+http://localhost/kms_app/migration/bluehost/generate_migration.php
+```
+
+**Étapes déploiement Bluehost:**
+1. Générer `migration_kms_gestion.sql`
+2. Créer base + utilisateur dans cPanel
+3. Importer via phpMyAdmin
+4. Configurer `db/db.php` avec identifiants Bluehost
+
+**Statistiques session:**
+- Fichiers créés: 4 (dossier migration)
+- Bugs corrigés: 8
+- Lignes SQL nettoyées: 78 (triggers + procédures)
+
+**Dernière mise à jour :** 19 décembre 2025 (Migration Bluehost + Bugfixes)

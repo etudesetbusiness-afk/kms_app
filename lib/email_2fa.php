@@ -2,7 +2,11 @@
 /**
  * Authentification 2FA par Email
  * Alternative simple au TOTP - Pas besoin d'application tierce
+ * 
+ * @version 2.0 - Support SMTP pour Bluehost
  */
+
+require_once __DIR__ . '/email_config.php';
 
 class Email2FA {
     private $pdo;
@@ -119,7 +123,7 @@ class Email2FA {
     }
     
     /**
-     * Envoyer le code par email
+     * Envoyer le code par email via SMTP
      */
     public function sendCode($email, $code, $userName = '') {
         $subject = "KMS Gestion - Code de vérification";
@@ -176,34 +180,32 @@ class Email2FA {
         </html>
         ";
         
-        // Headers pour email HTML
-        $headers = "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-        $headers .= "From: KMS Gestion <noreply@kms-gestion.local>\r\n";
-        $headers .= "X-Mailer: PHP/" . phpversion();
+        // Utiliser le nouveau système d'envoi SMTP
+        $result = EmailSender::send($email, $subject, $message);
         
-        // Tentative d'envoi
-        $sent = @mail($email, $subject, $message, $headers);
-        
-        if ($sent) {
-            // Logger l'envoi réussi
+        if ($result['success']) {
             error_log("Email 2FA envoyé avec succès à: " . $email);
             return ['success' => true, 'message' => 'Code envoyé par email'];
         } else {
-            // En mode développement, afficher le code dans les logs
-            error_log("========================================");
-            error_log("MODE DÉVELOPPEMENT - Code 2FA Email");
-            error_log("Email: " . $email);
-            error_log("Code: " . $code);
-            error_log("========================================");
+            error_log("Échec envoi Email 2FA à: " . $email . " - " . ($result['message'] ?? 'Erreur inconnue'));
             
-            // Retourner quand même succès en dev (car mail() ne fonctionne pas toujours en local)
-            return [
-                'success' => true, 
-                'message' => 'Code généré (vérifiez les logs si email non reçu)',
-                'dev_mode' => true,
-                'dev_code' => $code // En dev seulement !
-            ];
+            // En mode développement local, afficher le code dans les logs
+            if ($_SERVER['SERVER_NAME'] === 'localhost' || strpos($_SERVER['SERVER_NAME'], '127.0.0.1') !== false) {
+                error_log("========================================");
+                error_log("MODE DÉVELOPPEMENT - Code 2FA Email");
+                error_log("Email: " . $email);
+                error_log("Code: " . $code);
+                error_log("========================================");
+                
+                return [
+                    'success' => true, 
+                    'message' => 'Code généré (vérifiez les logs si email non reçu)',
+                    'dev_mode' => true,
+                    'dev_code' => $code
+                ];
+            }
+            
+            return ['success' => false, 'message' => 'Échec envoi email. Veuillez réessayer.'];
         }
     }
     
