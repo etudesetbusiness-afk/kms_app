@@ -281,6 +281,15 @@ include __DIR__ . '/../../partials/sidebar.php';
             <?php unset($_SESSION['success']); ?>
         <?php endif; ?>
 
+        <?php
+        // Trace visible et log pour vérifier que le bon fichier est servi en prod
+        $renderId = $is_edit ? 'edit-' . $id : 'create-new';
+        error_log('[produit_edit] Render start ' . $renderId . ' on ' . php_sapi_name());
+        ?>
+        <div class="alert alert-info py-2 px-3 mb-3" style="border-left: 4px solid #0d6efd;">
+            DEBUG PAGE: produit_edit.php (<?= htmlspecialchars($renderId) ?>)
+        </div>
+
         <form method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(getCsrfToken()) ?>">
             
@@ -382,68 +391,99 @@ include __DIR__ . '/../../partials/sidebar.php';
                         </div>
                     </div>
 
-                    <!-- ===== DEBUG: SECTION IMAGES COMMENCE ICI ===== -->
-                    <div class="alert alert-warning mb-3">
-                        <strong>DEBUG:</strong> Si vous voyez ce message, c'est que le PHP fonctionne jusqu'ici. 
-                        La section Images devrait apparaître juste en dessous.
-                    </div>
+                    <?php
+                    // Wrap the Images block to surface any runtime errors instead of silently stopping the render
+                    error_log('[produit_edit] About to render images block for ' . ($produit['id'] ?? 'new'));
+                    error_log('[produit_edit] $produit status: ' . ($produit ? 'EXISTS' : 'NULL'));
+                    error_log('[produit_edit] image_principale: ' . ($produit['image_principale'] ?? 'NONE'));
+                    error_log('[produit_edit] galerie_images raw: ' . ($produit['galerie_images'] ?? 'NONE'));
+                    error_log('[produit_edit] $galerie_images array: ' . json_encode($galerie_images));
                     
-                    <!-- Images -->
-                    <div class="card shadow-sm mb-4 border-danger border-3" id="section-images" style="background: #fff3cd;">
-                        <div class="card-header text-white" style="background-color: #dc3545 !important;">
-                            <h5 class="card-title mb-0">
-                                <i class="bi bi-images me-2"></i>
-                                🔴 IMAGES DU PRODUIT (SI VOUS VOYEZ CECI, ÇA MARCHE)
-                            </h5>
+                    try {
+                    ?>
+                        <!-- ===== DEBUG: SECTION IMAGES COMMENCE ICI ===== -->
+                        <div class="alert alert-warning mb-3">
+                            <strong>DEBUG:</strong> Si vous voyez ce message, c'est que le PHP fonctionne jusqu'ici. 
+                            La section Images devrait apparaître juste en dessous.
+                            Mode: <?= $is_edit ? 'EDIT' : 'CREATE' ?>
                         </div>
-                        <div class="card-body">
-                            <!-- Image principale -->
-                            <div class="mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-image text-primary me-1"></i>
-                                    Image principale
-                                </label>
-                                <?php if ($produit && $produit['image_principale']): ?>
-                                    <div class="mb-3">
-                                        <img src="<?= htmlspecialchars(url_for('uploads/catalogue/' . $produit['image_principale'])) ?>" 
-                                             alt="" class="img-thumbnail" style="max-width: 200px;">
-                                        <p class="text-muted small mt-1 mb-0">
-                                            <i class="bi bi-info-circle"></i> Image actuelle (sera remplacée si vous uploadez une nouvelle image)
-                                        </p>
-                                    </div>
-                                <?php endif; ?>
-                                <input type="file" name="image_principale" class="form-control form-control-lg" accept="image/*">
-                                <small class="text-muted d-block mt-2">
-                                    <i class="bi bi-file-earmark-image"></i> Format accepté: JPG, PNG, GIF, WEBP (max 5 MB)
-                                </small>
+                        
+                        <!-- Images -->
+                        <div class="card shadow-sm mb-4 border-danger border-3" id="section-images" style="background: #fff3cd;">
+                            <div class="card-header text-white" style="background-color: #dc3545 !important;">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-images me-2"></i>
+                                    🔴 IMAGES DU PRODUIT (SI VOUS VOYEZ CECI, ÇA MARCHE)
+                                </h5>
                             </div>
+                            <div class="card-body">
+                                <!-- Image principale -->
+                                <div class="mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-image text-primary me-1"></i>
+                                        Image principale
+                                    </label>
+                                    <?php if ($produit && !empty($produit['image_principale'])): ?>
+                                        <div class="mb-3">
+                                            <?php
+                                            error_log('[produit_edit] Displaying existing image: ' . $produit['image_principale']);
+                                            $img_url = url_for('uploads/catalogue/' . $produit['image_principale']);
+                                            error_log('[produit_edit] Image URL: ' . $img_url);
+                                            ?>
+                                            <img src="<?= htmlspecialchars($img_url) ?>" 
+                                                 alt="" class="img-thumbnail" style="max-width: 200px;">
+                                            <p class="text-muted small mt-1 mb-0">
+                                                <i class="bi bi-info-circle"></i> Image actuelle (sera remplacée si vous uploadez une nouvelle image)
+                                            </p>
+                                        </div>
+                                    <?php endif; ?>
+                                    <input type="file" name="image_principale" class="form-control form-control-lg" accept="image/*">
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="bi bi-file-earmark-image"></i> Format accepté: JPG, PNG, GIF, WEBP (max 5 MB)
+                                    </small>
+                                </div>
 
-                            <!-- Galerie -->
-                            <div class="p-3 border rounded" style="background-color: #f8f9fa;">
-                                <label class="form-label fw-bold">
-                                    <i class="bi bi-images text-primary me-1"></i>
-                                    Galerie d'images
-                                </label>
-                                <?php if (!empty($galerie_images)): ?>
-                                    <div class="row mb-3">
-                                        <?php foreach ($galerie_images as $img): ?>
-                                            <div class="col-md-3 mb-2">
-                                                <img src="<?= htmlspecialchars(url_for('uploads/catalogue/' . $img)) ?>" 
-                                                     alt="" class="img-thumbnail w-100">
-                                            </div>
-                                        <?php endforeach; ?>
-                                    </div>
-                                    <p class="text-muted small mb-2">
-                                        <i class="bi bi-info-circle"></i> Images actuelles de la galerie
-                                    </p>
-                                <?php endif; ?>
-                                <input type="file" name="galerie_images[]" class="form-control form-control-lg" accept="image/*" multiple>
-                                <small class="text-muted d-block mt-2">
-                                    <i class="bi bi-card-image"></i> Vous pouvez sélectionner plusieurs fichiers en même temps
-                                </small>
+                                <!-- Galerie -->
+                                <div class="p-3 border rounded" style="background-color: #f8f9fa;">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-images text-primary me-1"></i>
+                                        Galerie d'images
+                                    </label>
+                                    <?php if (!empty($galerie_images) && is_array($galerie_images)): ?>
+                                        <?php error_log('[produit_edit] Displaying gallery, count: ' . count($galerie_images)); ?>
+                                        <div class="row mb-3">
+                                            <?php foreach ($galerie_images as $idx => $img): ?>
+                                                <?php error_log('[produit_edit] Gallery image ' . $idx . ': ' . $img); ?>
+                                                <div class="col-md-3 mb-2">
+                                                    <img src="<?= htmlspecialchars(url_for('uploads/catalogue/' . $img)) ?>" 
+                                                         alt="" class="img-thumbnail w-100">
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        <p class="text-muted small mb-2">
+                                            <i class="bi bi-info-circle"></i> Images actuelles de la galerie
+                                        </p>
+                                    <?php endif; ?>
+                                    <input type="file" name="galerie_images[]" class="form-control form-control-lg" accept="image/*" multiple>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="bi bi-card-image"></i> Vous pouvez sélectionner plusieurs fichiers en même temps
+                                    </small>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    <?php
+                    } catch (Throwable $e) {
+                        error_log('[produit_edit] Section images ERROR for produit id ' . ($produit['id'] ?? 'new') . ': ' . $e->getMessage());
+                        error_log('[produit_edit] Error trace: ' . $e->getTraceAsString());
+                    ?>
+                        <div class="alert alert-danger border-3 border-danger">
+                            <strong>❌ Section Images en erreur :</strong><br>
+                            <?= htmlspecialchars($e->getMessage()) ?><br>
+                            <small>Ligne: <?= $e->getLine() ?> dans <?= basename($e->getFile()) ?></small>
+                        </div>
+                    <?php
+                    }
+                    ?>
                 </div>
 
                 <!-- Colonne latérale -->
