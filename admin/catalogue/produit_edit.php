@@ -382,12 +382,18 @@ include __DIR__ . '/../../partials/sidebar.php';
                         </div>
                     </div>
 
+                    <!-- ===== DEBUG: SECTION IMAGES COMMENCE ICI ===== -->
+                    <div class="alert alert-warning mb-3">
+                        <strong>DEBUG:</strong> Si vous voyez ce message, c'est que le PHP fonctionne jusqu'ici. 
+                        La section Images devrait apparaître juste en dessous.
+                    </div>
+                    
                     <!-- Images -->
-                    <div class="card shadow-sm mb-4" id="section-images">
-                        <div class="card-header bg-white" style="background-color: #f8f9fa !important;">
+                    <div class="card shadow-sm mb-4 border-danger border-3" id="section-images" style="background: #fff3cd;">
+                        <div class="card-header text-white" style="background-color: #dc3545 !important;">
                             <h5 class="card-title mb-0">
-                                <i class="bi bi-images text-primary me-2"></i>
-                                Images du produit
+                                <i class="bi bi-images me-2"></i>
+                                🔴 IMAGES DU PRODUIT (SI VOUS VOYEZ CECI, ÇA MARCHE)
                             </h5>
                         </div>
                         <div class="card-body">
