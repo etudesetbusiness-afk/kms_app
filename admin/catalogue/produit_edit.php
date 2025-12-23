@@ -383,29 +383,43 @@ include __DIR__ . '/../../partials/sidebar.php';
                     </div>
 
                     <!-- Images -->
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title mb-0">Images</h5>
+                    <div class="card shadow-sm mb-4" id="section-images">
+                        <div class="card-header bg-white" style="background-color: #f8f9fa !important;">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-images text-primary me-2"></i>
+                                Images du produit
+                            </h5>
                         </div>
                         <div class="card-body">
                             <!-- Image principale -->
-                            <div class="mb-4">
-                                <label class="form-label">Image principale</label>
+                            <div class="mb-4 p-3 border rounded" style="background-color: #f8f9fa;">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-image text-primary me-1"></i>
+                                    Image principale
+                                </label>
                                 <?php if ($produit && $produit['image_principale']): ?>
-                                    <div class="mb-2">
+                                    <div class="mb-3">
                                         <img src="<?= htmlspecialchars(url_for('uploads/catalogue/' . $produit['image_principale'])) ?>" 
                                              alt="" class="img-thumbnail" style="max-width: 200px;">
+                                        <p class="text-muted small mt-1 mb-0">
+                                            <i class="bi bi-info-circle"></i> Image actuelle (sera remplacée si vous uploadez une nouvelle image)
+                                        </p>
                                     </div>
                                 <?php endif; ?>
-                                <input type="file" name="image_principale" class="form-control" accept="image/*">
-                                <small class="text-muted">Format: JPG, PNG, GIF, WEBP (max 5 MB)</small>
+                                <input type="file" name="image_principale" class="form-control form-control-lg" accept="image/*">
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-file-earmark-image"></i> Format accepté: JPG, PNG, GIF, WEBP (max 5 MB)
+                                </small>
                             </div>
 
                             <!-- Galerie -->
-                            <div>
-                                <label class="form-label">Galerie d'images</label>
+                            <div class="p-3 border rounded" style="background-color: #f8f9fa;">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-images text-primary me-1"></i>
+                                    Galerie d'images
+                                </label>
                                 <?php if (!empty($galerie_images)): ?>
-                                    <div class="row mb-2">
+                                    <div class="row mb-3">
                                         <?php foreach ($galerie_images as $img): ?>
                                             <div class="col-md-3 mb-2">
                                                 <img src="<?= htmlspecialchars(url_for('uploads/catalogue/' . $img)) ?>" 
@@ -413,9 +427,14 @@ include __DIR__ . '/../../partials/sidebar.php';
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
+                                    <p class="text-muted small mb-2">
+                                        <i class="bi bi-info-circle"></i> Images actuelles de la galerie
+                                    </p>
                                 <?php endif; ?>
-                                <input type="file" name="galerie_images[]" class="form-control" accept="image/*" multiple>
-                                <small class="text-muted">Plusieurs fichiers acceptés</small>
+                                <input type="file" name="galerie_images[]" class="form-control form-control-lg" accept="image/*" multiple>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-card-image"></i> Vous pouvez sélectionner plusieurs fichiers en même temps
+                                </small>
                             </div>
                         </div>
                     </div>
