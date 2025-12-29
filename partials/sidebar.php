@@ -103,13 +103,17 @@ function is_active($page, $dir = null): bool {
                 </div>
                 <div class="section-content">
                 <?php if (peut('PRODUITS_LIRE')): ?>
+                    <a href="<?= url_for('produits/list.php') ?>" class="sidebar-item <?= is_active('list.php', 'produits') || is_active('edit.php', 'produits') || is_active('detail.php', 'produits') ? 'active' : '' ?>">
+                        <i class="bi bi-box-seam-fill"></i>
+                        <span>Produits Internes</span>
+                    </a>
                     <a href="<?= url_for('catalogue/index.php') ?>" class="sidebar-item <?= is_active('index.php', 'catalogue') && $current_dir !== 'catalogue' ? 'active' : '' ?>">
                         <i class="bi bi-diagram-3"></i>
-                        <span>Catalogue (public)</span>
+                        <span>Catalogue Public</span>
                     </a>
                     <a href="<?= url_for('admin/catalogue/produits.php') ?>" class="sidebar-item sidebar-item-nested <?= ($current_dir === 'catalogue' && (is_active('produits.php') || is_active('produit_edit.php'))) ? 'active' : '' ?>">
                         <i class="bi bi-box"></i>
-                        <span>Produits</span>
+                        <span>Gérer produits</span>
                     </a>
                     <a href="<?= url_for('admin/catalogue/categories.php') ?>" class="sidebar-item sidebar-item-nested <?= ($current_dir === 'catalogue' && is_active('categories.php')) ? 'active' : '' ?>">
                         <i class="bi bi-tags"></i>
