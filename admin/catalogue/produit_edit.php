@@ -203,6 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors[] = "Erreur: " . $e->getMessage();
             }
         }
+    }
     
     if (!empty($errors)) {
         error_log('[produit_edit.php] Validation errors: ' . implode(' | ', $errors));
