@@ -37,6 +37,15 @@ $categories = $pdo->query("SELECT id, nom FROM catalogue_categories ORDER BY nom
 
 // Traitement du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Log pour déboguer
+    error_log('[produit_edit.php] POST request received for product id=' . $id);
+    error_log('[produit_edit.php] POST data: ' . json_encode([
+        'code' => $_POST['code'] ?? null,
+        'designation' => $_POST['designation'] ?? null,
+        'categorie_id' => $_POST['categorie_id'] ?? null,
+        'csrf_token' => substr($_POST['csrf_token'] ?? '', 0, 10) . '...'
+    ]));
+    
     verifierCsrf($_POST['csrf_token'] ?? '');
     
     $code = trim($_POST['code'] ?? '');
@@ -144,6 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 if ($is_edit) {
                     // Mise à jour
+                    error_log('[produit_edit.php] Executing UPDATE for product id=' . $id);
                     $sql = "UPDATE catalogue_produits SET
                         code = ?, slug = ?, designation = ?, categorie_id = ?,
                         prix_unite = ?, prix_gros = ?, description = ?,
@@ -151,42 +161,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         actif = ?, updated_at = NOW()
                         WHERE id = ?";
                     $stmt = $pdo->prepare($sql);
-                    $stmt->execute([
+                    $result = $stmt->execute([
                         $code, $slug, $designation, $categorie_id,
                         $prix_unite, $prix_gros, $description,
                         $caracteristiques_json, $image_principale, $galerie_json,
                         $actif, $id
                     ]);
+                    error_log('[produit_edit.php] UPDATE result: ' . ($result ? 'SUCCESS' : 'FAILED'));
                     
                     $_SESSION['success'] = "Produit modifié avec succès";
+                    
+                    error_log('[produit_edit.php] Redirecting to edit page with id=' . $id);
+                    header('Location: ' . url_for('admin/catalogue/produit_edit.php?id=' . $id));
+                    exit;
                 } else {
                     // Création
+                    error_log('[produit_edit.php] Executing INSERT for new product');
                     $sql = "INSERT INTO catalogue_produits 
                         (code, slug, designation, categorie_id, prix_unite, prix_gros, description, 
                          caracteristiques_json, image_principale, galerie_images, actif)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     $stmt = $pdo->prepare($sql);
-                    $stmt->execute([
+                    $result = $stmt->execute([
                         $code, $slug, $designation, $categorie_id,
                         $prix_unite, $prix_gros, $description,
                         $caracteristiques_json, $image_principale, $galerie_json,
                         $actif
                     ]);
+                    error_log('[produit_edit.php] INSERT result: ' . ($result ? 'SUCCESS' : 'FAILED'));
                     
                     $_SESSION['success'] = "Produit créé avec succès";
                     $id = $pdo->lastInsertId();
+                    
+                    error_log('[produit_edit.php] New product created with id=' . $id);
+                    header('Location: ' . url_for('admin/catalogue/produit_edit.php?id=' . $id));
+                    exit;
                 }
                 
-                header('Location: ' . url_for('admin/catalogue/produit_edit.php?id=' . $id));
-                exit;
-                
             } catch (Exception $e) {
+                error_log('[produit_edit.php] Exception caught: ' . $e->getMessage());
                 $errors[] = "Erreur: " . $e->getMessage();
             }
         }
-    }
     
     if (!empty($errors)) {
+        error_log('[produit_edit.php] Validation errors: ' . implode(' | ', $errors));
         $_SESSION['error'] = implode('<br>', $errors);
     }
 }
