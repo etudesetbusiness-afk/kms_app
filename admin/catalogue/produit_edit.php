@@ -98,8 +98,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
         // Traitement de la galerie d'images
-        $galerie_images = $produit['galerie_images'] ? json_decode($produit['galerie_images'], true) : [];
+        // En édition, préserver les images existantes si aucun nouvel upload
+        $galerie_images = [];
+        if ($is_edit && $produit['galerie_images']) {
+            $galerie_images = json_decode($produit['galerie_images'], true) ?: [];
+        }
         
+        // Ajouter les nouveaux uploads à la galerie existante
         if (isset($_FILES['galerie_images'])) {
             foreach ($_FILES['galerie_images']['tmp_name'] as $key => $tmp_name) {
                 if ($_FILES['galerie_images']['error'][$key] === UPLOAD_ERR_OK) {
@@ -118,7 +123,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         
-        $galerie_json = !empty($galerie_images) ? json_encode($galerie_images) : null;
+        // Encoder la galerie: préserver [] pour les créations sans images, ou la valeur existante
+        $galerie_json = !empty($galerie_images) ? json_encode($galerie_images) : (($is_edit && $produit['galerie_images']) ? $produit['galerie_images'] : '[]');
         
         // Caractéristiques JSON (optionnel)
         $caracteristiques_json = null;
