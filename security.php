@@ -121,6 +121,52 @@ function peut(string $code): bool
 }
 
 /**
+ * Vérifie si l'utilisateur connecté a un rôle spécifique.
+ */
+function aRole(string $codeRole): bool
+{
+    global $pdo;
+    $utilisateur = utilisateurConnecte();
+    if (!$utilisateur) return false;
+    
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) FROM roles r
+        JOIN utilisateur_role ur ON r.id = ur.role_id
+        WHERE ur.utilisateur_id = ? AND r.code = ?
+    ");
+    $stmt->execute([$utilisateur['id'], $codeRole]);
+    return (int)$stmt->fetchColumn() > 0;
+}
+
+/**
+ * Helpers rapides pour vérifier les rôles métier.
+ */
+function estAdmin(): bool
+{
+    $utilisateur = utilisateurConnecte();
+    if ($utilisateur && $utilisateur['login'] === 'admin') return true;
+    return aRole('ADMIN');
+}
+
+function estDirection(): bool
+{
+    return aRole('DIRECTION');
+}
+
+function estTerrain(): bool
+{
+    return aRole('TERRAIN');
+}
+
+/**
+ * Détermine si l'utilisateur peut voir toutes les prospections/reportings (ADMIN ou DIRECTION).
+ */
+function peutVoirToutesProspections(): bool
+{
+    return estAdmin() || estDirection();
+}
+
+/**
  * Charge les infos & permissions en session après login.
  */
 function chargerPermissionsUtilisateur(int $utilisateurId): void

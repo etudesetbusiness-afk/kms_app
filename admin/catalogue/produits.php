@@ -313,7 +313,7 @@ include __DIR__ . '/../../partials/sidebar.php';
 
                 <!-- Pagination -->
                 <?php if ($total_count > 0): ?>
-                    <?= renderPaginationControls($pagination, $total_count) ?>
+                    <?= renderPaginationControls($pagination, $_GET) ?>
                 <?php endif; ?>
             </div>
         </div>

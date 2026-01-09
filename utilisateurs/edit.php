@@ -326,7 +326,7 @@ include __DIR__ . '/../partials/sidebar.php';
         </div>
 
         <div class="card-footer d-flex justify-content-end gap-2">
-            <a href="/utilisateurs/list.php" class="btn btn-outline-secondary">
+            <a href="<?= url_for('utilisateurs/list.php') ?>" class="btn btn-outline-secondary">
                 Annuler
             </a>
             <button type="submit" class="btn btn-primary">

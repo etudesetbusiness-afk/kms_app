@@ -11,7 +11,45 @@
 
 ---
 
-## 🎯 Outils de Démonstration (Décembre 2025)
+## � SESSION 30 DÉCEMBRE 2025 — CORRECTION ÉDITION PRODUITS CATALOGUE
+
+**Problème initial:**
+- Impossible de modifier un produit catalogue (local et production)
+- Champs JSON (`caracteristiques_json`, `galerie_images`) mal traités
+- Champs images non affichés
+- Boutons Enregistrer/Annuler invisibles (masqués par le footer template)
+
+**Corrections apportées:**
+
+1. **Réécriture complète de `admin/catalogue/produit_edit.php`**
+   - Décodage/encodage JSON robuste via `safeJsonDecode()`
+   - Préservation des données du formulaire en cas d'erreur de validation
+   - Gestion fiable des images (principale + galerie)
+   - Conservation des images existantes lors des modifications
+   - Suppression propre de l'ancienne image principale si remplacée
+
+2. **Correction pagination `admin/catalogue/produits.php`**
+   - Passage de `$_GET` au lieu de `$currentPage` pour `renderPaginationControls()`
+
+3. **Repositionnement des boutons d'action**
+   - Bouton "Enregistrer" déplacé dans l'en-tête (à côté de "Retour")
+   - Utilisation de `form="form-produit"` pour soumettre depuis l'extérieur du `<form>`
+   - Évite le masquage par la barre footer du template
+
+**Fichiers modifiés:**
+- `admin/catalogue/produit_edit.php` - Réécriture complète
+- `admin/catalogue/produits.php` - Correction pagination
+
+**État final:**
+- ✅ Chargement correct des données produit (texte, prix, catégorie)
+- ✅ Affichage et édition des caractéristiques JSON
+- ✅ Champs upload images visibles (principale + galerie)
+- ✅ Bouton Enregistrer visible et fonctionnel
+- ✅ Modification produit opérationnelle
+
+---
+
+## �🎯 Outils de Démonstration (Décembre 2025)
 
 **Générateur de données cohérentes** - Système complet pour créer des jeux de données réalistes
 
