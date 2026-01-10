@@ -506,7 +506,7 @@ include __DIR__ . '/../../partials/sidebar.php';
                                 <thead class="table-light">
                                     <tr>
                                         <th>Indicateur</th>
-                                        <th style="width:100px;">Objectif</th>
+                                        <th style="width:140px;">Objectif</th>
                                         <th style="width:100px;">Réalisé</th>
                                         <th style="width:100px;">Écart</th>
                                     </tr>
@@ -517,6 +517,7 @@ include __DIR__ . '/../../partials/sidebar.php';
                                         <td class="jour-cell"><?= $label ?></td>
                                         <td data-label="Objectif">
                                               <input type="number" step="0.01" class="form-control text-end obj-input" 
+                                                  style="min-width: 120px;" 
                                                   name="resultats[<?= $code ?>][objectif]" min="0" 
                                                   value="<?= (float)($defaultObjectives[$code] ?? 0) ?>" 
                                                   data-indicateur="<?= $code ?>">
