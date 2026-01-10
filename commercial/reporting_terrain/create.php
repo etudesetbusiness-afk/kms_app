@@ -34,6 +34,14 @@ $indicateurs = [
     'montant_commandes' => 'Montant commandes (FCFA)',
     'encaissements' => 'Encaissements (FCFA)'
 ];
+$defaultObjectives = [
+    'visites_terrain'    => 50,
+    'contacts_qualifies' => 10,
+    'devis_emis'         => 5,
+    'commandes_obtenues' => 5,
+    'montant_commandes'  => 500000,
+    'encaissements'      => 500000,
+];
 $objections_list = [
     'prix_eleve' => 'Prix jugé élevé',
     'qualite_pas_regardee' => 'Client final ne regarde pas qualité',
@@ -508,9 +516,10 @@ include __DIR__ . '/../../partials/sidebar.php';
                                     <tr>
                                         <td class="jour-cell"><?= $label ?></td>
                                         <td data-label="Objectif">
-                                            <input type="number" step="0.01" class="form-control text-end obj-input" 
-                                                   name="resultats[<?= $code ?>][objectif]" min="0" value="0" 
-                                                   data-indicateur="<?= $code ?>">
+                                              <input type="number" step="0.01" class="form-control text-end obj-input" 
+                                                  name="resultats[<?= $code ?>][objectif]" min="0" 
+                                                  value="<?= (float)($defaultObjectives[$code] ?? 0) ?>" 
+                                                  data-indicateur="<?= $code ?>">
                                         </td>
                                         <td data-label="Réalisé">
                                             <input type="number" step="0.01" class="form-control text-end real-input" 
