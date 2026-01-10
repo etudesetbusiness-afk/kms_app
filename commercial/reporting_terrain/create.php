@@ -58,8 +58,30 @@ include __DIR__ . '/../../partials/sidebar.php';
 /* Mobile-first styles */
 .form-control, .form-select, .btn {
     font-size: 16px !important; /* Prevent zoom on iOS */
-    min-height: 48px;
 }
+
+/* Desktop: normal height, Mobile: larger touch targets */
+@media (min-width: 768px) {
+    .form-control, .form-select {
+        min-height: 38px;
+    }
+}
+@media (max-width: 767.98px) {
+    .form-control, .form-select {
+        min-height: 48px;
+        font-size: 16px !important;
+    }
+    /* Textareas plus grands sur mobile */
+    textarea.form-control {
+        min-height: 80px !important;
+    }
+    /* Inputs de texte pleine largeur sur mobile */
+    .mobile-full-width {
+        width: 100% !important;
+        margin-bottom: 0.5rem;
+    }
+}
+
 .accordion-button {
     font-weight: 600;
     padding: 1rem;
@@ -71,38 +93,105 @@ include __DIR__ . '/../../partials/sidebar.php';
 .accordion-button:not(.collapsed)::after {
     filter: brightness(0) invert(1);
 }
+
+/* Tables - Desktop layout */
 .table-responsive {
     font-size: 14px;
 }
 .table input[type="number"],
 .table input[type="text"] {
-    min-width: 80px;
+    min-width: 60px;
 }
-.section-title {
-    background: linear-gradient(135deg, var(--bs-primary) 0%, #4a6cf7 100%);
-    color: white;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    margin-bottom: 1rem;
-}
-.btn-submit-fixed {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 1rem;
-    background: white;
-    border-top: 1px solid #dee2e6;
-    z-index: 1050;
-}
-@media (min-width: 768px) {
-    .btn-submit-fixed {
-        position: static;
-        background: transparent;
+
+/* ========================================== */
+/* MOBILE TABLE STACK - Transformation tables */
+/* ========================================== */
+@media (max-width: 767.98px) {
+    /* Hide table headers on mobile */
+    .table-mobile-stack thead {
+        display: none;
+    }
+    
+    .table-mobile-stack,
+    .table-mobile-stack tbody,
+    .table-mobile-stack tr,
+    .table-mobile-stack td {
+        display: block;
+        width: 100%;
+    }
+    
+    .table-mobile-stack tr {
+        background: #f8f9fa;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+    }
+    
+    .table-mobile-stack td {
+        display: flex;
+        flex-direction: column;
+        padding: 0.5rem 0;
         border: none;
-        padding: 0;
+        text-align: left;
+    }
+    
+    .table-mobile-stack td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 12px;
+        color: #6c757d;
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+    
+    /* Jour header - make it stand out */
+    .table-mobile-stack td.jour-cell {
+        background: linear-gradient(135deg, var(--bs-primary) 0%, #4a6cf7 100%);
+        color: white !important;
+        border-radius: 0.5rem;
+        padding: 0.75rem !important;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        font-size: 16px;
+    }
+    .table-mobile-stack td.jour-cell::before {
+        display: none;
+    }
+    
+    /* Inputs pleine largeur sur mobile */
+    .table-mobile-stack input,
+    .table-mobile-stack select {
+        width: 100% !important;
+        min-height: 48px !important;
+    }
+    
+    /* Textarea dans table */
+    .table-mobile-stack textarea {
+        width: 100% !important;
+        min-height: 80px !important;
     }
 }
+
+/* ========================================== */
+/* SECTION OBJECTIONS / ARGUMENTS - MOBILE   */
+/* ========================================== */
+.checkbox-row {
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s;
+}
+.checkbox-row:hover {
+    background-color: #e9ecef;
+    border-color: #0d6efd;
+}
+.checkbox-row .form-check {
+    margin-bottom: 0;
+}
+
 /* Checkboxes bien visibles */
 .form-check-input {
     width: 1.5em;
@@ -127,21 +216,89 @@ include __DIR__ . '/../../partials/sidebar.php';
     padding-left: 0.5rem;
     font-weight: 500;
 }
-/* Style pour les lignes de checkbox dans les sections */
-.checkbox-row {
-    background-color: #f8f9fa;
-    border-radius: 0.5rem;
+
+/* Mobile: stack checkbox rows vertically */
+@media (max-width: 767.98px) {
+    .checkbox-row .row {
+        flex-direction: column;
+    }
+    .checkbox-row .row > [class*="col-"] {
+        width: 100%;
+        max-width: 100%;
+        padding: 0.25rem 0;
+    }
+    /* Checkbox label first, then fields stacked below */
+    .checkbox-row .form-check-label {
+        font-size: 15px;
+    }
+    /* Select and input full width with larger size */
+    .checkbox-row select,
+    .checkbox-row input[type="text"] {
+        width: 100% !important;
+        min-height: 48px !important;
+        margin-top: 0.25rem;
+    }
+    /* Label for mobile fields */
+    .checkbox-row .mobile-label {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+}
+@media (min-width: 768px) {
+    .checkbox-row .mobile-label {
+        display: none;
+    }
+}
+
+/* ========================================== */
+/* PLAN ACTION - MOBILE                       */
+/* ========================================== */
+@media (max-width: 767.98px) {
+    .card-body .row > [class*="col-"] {
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    .card-body input,
+    .card-body textarea {
+        min-height: 48px !important;
+    }
+    /* Zone/Cible textarea larger */
+    .card-body input[placeholder="Zone / Cible"] {
+        min-height: 60px !important;
+    }
+}
+
+/* ========================================== */
+/* BOUTON SUBMIT FIXE                         */
+/* ========================================== */
+.section-title {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, #4a6cf7 100%);
+    color: white;
     padding: 0.75rem 1rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid #e9ecef;
-    transition: all 0.2s;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
 }
-.checkbox-row:hover {
-    background-color: #e9ecef;
-    border-color: #0d6efd;
+.btn-submit-fixed {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 1rem;
+    background: white;
+    border-top: 1px solid #dee2e6;
+    z-index: 1050;
 }
-.checkbox-row .form-check {
-    margin-bottom: 0;
+@media (min-width: 768px) {
+    .btn-submit-fixed {
+        position: static;
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
 }
 </style>
 
@@ -222,7 +379,7 @@ include __DIR__ . '/../../partials/sidebar.php';
                 <div id="section2" class="accordion-collapse collapse" data-bs-parent="#accordionReporting">
                     <div class="accordion-body p-2 p-md-3">
                         <div class="table-responsive">
-                            <table class="table table-sm table-bordered mb-0">
+                            <table class="table table-sm table-bordered mb-0 table-mobile-stack">
                                 <thead class="table-light">
                                     <tr>
                                         <th style="width:60px;">Jour</th>
@@ -234,21 +391,21 @@ include __DIR__ . '/../../partials/sidebar.php';
                                 <tbody>
                                     <?php foreach ($jours as $jour): ?>
                                     <tr>
-                                        <td class="fw-bold text-center align-middle"><?= $jour ?></td>
-                                        <td>
-                                            <input type="text" class="form-control form-control-sm" 
+                                        <td class="jour-cell"><?= $jour ?></td>
+                                        <td data-label="Zone / Quartier">
+                                            <input type="text" class="form-control" 
                                                    name="zones[<?= $jour ?>][zone_quartier]" 
-                                                   placeholder="Zone visitée">
+                                                   placeholder="Ex: Akwa, Bonamoussadi...">
                                         </td>
-                                        <td>
-                                            <select class="form-select form-select-sm" name="zones[<?= $jour ?>][type_cible]">
+                                        <td data-label="Type de cible">
+                                            <select class="form-select" name="zones[<?= $jour ?>][type_cible]">
                                                 <option value="Quincaillerie">Quincaillerie</option>
                                                 <option value="Menuiserie">Menuiserie</option>
                                                 <option value="Autre">Autre</option>
                                             </select>
                                         </td>
-                                        <td>
-                                            <input type="number" class="form-control form-control-sm text-center" 
+                                        <td data-label="Points visités">
+                                            <input type="number" class="form-control text-center" 
                                                    name="zones[<?= $jour ?>][nb_points]" min="0" value="0">
                                         </td>
                                     </tr>
@@ -273,7 +430,7 @@ include __DIR__ . '/../../partials/sidebar.php';
                 <div id="section3" class="accordion-collapse collapse" data-bs-parent="#accordionReporting">
                     <div class="accordion-body p-2 p-md-3">
                         <div class="table-responsive">
-                            <table class="table table-sm table-bordered mb-0">
+                            <table class="table table-sm table-bordered mb-0 table-mobile-stack">
                                 <thead class="table-light">
                                     <tr>
                                         <th style="width:50px;">Jour</th>
@@ -287,25 +444,31 @@ include __DIR__ . '/../../partials/sidebar.php';
                                 <tbody>
                                     <?php foreach ($jours as $jour): ?>
                                     <tr>
-                                        <td class="fw-bold text-center align-middle"><?= $jour ?></td>
-                                        <td>
-                                            <input type="number" class="form-control form-control-sm text-center" 
+                                        <td class="jour-cell"><?= $jour ?></td>
+                                        <td data-label="Contacts qualifiés">
+                                            <input type="number" class="form-control text-center" 
                                                    name="activite[<?= $jour ?>][contacts_qualifies]" min="0" value="0">
                                         </td>
-                                        <td>
-                                            <input type="number" class="form-control form-control-sm text-center" 
+                                        <td data-label="Décideurs rencontrés">
+                                            <input type="number" class="form-control text-center" 
                                                    name="activite[<?= $jour ?>][decideurs_rencontres]" min="0" value="0">
                                         </td>
-                                        <td class="text-center align-middle">
-                                            <input type="checkbox" class="form-check-input" 
-                                                   name="activite[<?= $jour ?>][echantillons_presentes]" value="1">
+                                        <td data-label="Échantillons présentés">
+                                            <div class="form-check d-flex align-items-center justify-content-center" style="min-height:48px;">
+                                                <input type="checkbox" class="form-check-input" 
+                                                       name="activite[<?= $jour ?>][echantillons_presentes]" value="1">
+                                                <label class="form-check-label ms-2 d-md-none">Oui</label>
+                                            </div>
                                         </td>
-                                        <td class="text-center align-middle">
-                                            <input type="checkbox" class="form-check-input" 
-                                                   name="activite[<?= $jour ?>][grille_prix_remise]" value="1">
+                                        <td data-label="Grille prix remise">
+                                            <div class="form-check d-flex align-items-center justify-content-center" style="min-height:48px;">
+                                                <input type="checkbox" class="form-check-input" 
+                                                       name="activite[<?= $jour ?>][grille_prix_remise]" value="1">
+                                                <label class="form-check-label ms-2 d-md-none">Oui</label>
+                                            </div>
                                         </td>
-                                        <td>
-                                            <input type="number" class="form-control form-control-sm text-center" 
+                                        <td data-label="RDV obtenus">
+                                            <input type="number" class="form-control text-center" 
                                                    name="activite[<?= $jour ?>][rdv_obtenus]" min="0" value="0">
                                         </td>
                                     </tr>
@@ -331,7 +494,7 @@ include __DIR__ . '/../../partials/sidebar.php';
                 <div id="section4" class="accordion-collapse collapse" data-bs-parent="#accordionReporting">
                     <div class="accordion-body p-2 p-md-3">
                         <div class="table-responsive">
-                            <table class="table table-sm table-bordered mb-0">
+                            <table class="table table-sm table-bordered mb-0 table-mobile-stack">
                                 <thead class="table-light">
                                     <tr>
                                         <th>Indicateur</th>
@@ -343,19 +506,19 @@ include __DIR__ . '/../../partials/sidebar.php';
                                 <tbody>
                                     <?php foreach ($indicateurs as $code => $label): ?>
                                     <tr>
-                                        <td class="align-middle"><?= $label ?></td>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control form-control-sm text-end obj-input" 
+                                        <td class="jour-cell"><?= $label ?></td>
+                                        <td data-label="Objectif">
+                                            <input type="number" step="0.01" class="form-control text-end obj-input" 
                                                    name="resultats[<?= $code ?>][objectif]" min="0" value="0" 
                                                    data-indicateur="<?= $code ?>">
                                         </td>
-                                        <td>
-                                            <input type="number" step="0.01" class="form-control form-control-sm text-end real-input" 
+                                        <td data-label="Réalisé">
+                                            <input type="number" step="0.01" class="form-control text-end real-input" 
                                                    name="resultats[<?= $code ?>][realise]" min="0" value="0"
                                                    data-indicateur="<?= $code ?>">
                                         </td>
-                                        <td>
-                                            <input type="text" class="form-control form-control-sm text-end ecart-display" 
+                                        <td data-label="Écart">
+                                            <input type="text" class="form-control text-end ecart-display" 
                                                    id="ecart_<?= $code ?>" readonly value="0">
                                         </td>
                                     </tr>
@@ -382,7 +545,7 @@ include __DIR__ . '/../../partials/sidebar.php';
                         <?php foreach ($objections_list as $code => $label): ?>
                         <div class="checkbox-row">
                             <div class="row g-2 align-items-center">
-                                <div class="col-12 col-md-4">
+                                <div class="col-12">
                                     <div class="form-check d-flex align-items-center">
                                         <input type="checkbox" class="form-check-input objection-check me-2" 
                                                id="obj_<?= $code ?>" name="objections[<?= $code ?>][active]" value="1"
@@ -392,22 +555,24 @@ include __DIR__ . '/../../partials/sidebar.php';
                                         </label>
                                     </div>
                                 </div>
-                                    <div class="col-6 col-md-3">
-                                        <select class="form-select form-select-sm" name="objections[<?= $code ?>][frequence]">
-                                            <option value="Faible">Faible</option>
-                                            <option value="Moyenne" selected>Moyenne</option>
-                                            <option value="Élevée">Élevée</option>
-                                        </select>
-                                    </div>
-                                <div class="col-6 col-md-5">
+                                <div class="col-12 col-md-4">
+                                    <span class="mobile-label">Fréquence</span>
+                                    <select class="form-select" name="objections[<?= $code ?>][frequence]">
+                                        <option value="Faible">Faible</option>
+                                        <option value="Moyenne" selected>Moyenne</option>
+                                        <option value="Élevée">Élevée</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-8">
+                                    <span class="mobile-label">Commentaire</span>
                                     <?php if ($code === 'autre'): ?>
-                                        <input type="text" class="form-control form-control-sm" 
+                                        <textarea class="form-control" rows="2"
                                                name="objections[<?= $code ?>][autre_texte]" 
-                                               placeholder="Précisez...">
+                                               placeholder="Précisez l'objection rencontrée..."></textarea>
                                     <?php else: ?>
-                                        <input type="text" class="form-control form-control-sm" 
+                                        <textarea class="form-control" rows="2"
                                                name="objections[<?= $code ?>][commentaire]" 
-                                               placeholder="Commentaire">
+                                               placeholder="Détails, contexte, remarques..."></textarea>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -432,7 +597,7 @@ include __DIR__ . '/../../partials/sidebar.php';
                         <?php foreach ($arguments_list as $code => $label): ?>
                         <div class="checkbox-row">
                             <div class="row g-2 align-items-center">
-                                <div class="col-12 col-md-4">
+                                <div class="col-12">
                                     <div class="form-check d-flex align-items-center">
                                         <input type="checkbox" class="form-check-input me-2" 
                                                id="arg_<?= $code ?>" name="arguments[<?= $code ?>][active]" value="1"
@@ -442,22 +607,24 @@ include __DIR__ . '/../../partials/sidebar.php';
                                         </label>
                                     </div>
                                 </div>
-                                    <div class="col-6 col-md-2">
-                                        <select class="form-select form-select-sm" name="arguments[<?= $code ?>][impact]">
-                                            <option value="Faible">Faible</option>
-                                            <option value="Moyen" selected>Moyen</option>
-                                            <option value="Fort">Fort</option>
-                                        </select>
-                                    </div>
-                                <div class="col-6 col-md-6">
+                                <div class="col-12 col-md-3">
+                                    <span class="mobile-label">Impact</span>
+                                    <select class="form-select" name="arguments[<?= $code ?>][impact]">
+                                        <option value="Faible">Faible</option>
+                                        <option value="Moyen" selected>Moyen</option>
+                                        <option value="Fort">Fort</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 col-md-9">
+                                    <span class="mobile-label">Exemple / Contexte</span>
                                     <?php if ($code === 'autre'): ?>
-                                        <input type="text" class="form-control form-control-sm" 
+                                        <textarea class="form-control" rows="2"
                                                name="arguments[<?= $code ?>][autre_texte]" 
-                                               placeholder="Précisez l'argument">
+                                               placeholder="Précisez l'argument utilisé..."></textarea>
                                     <?php else: ?>
-                                        <input type="text" class="form-control form-control-sm" 
+                                        <textarea class="form-control" rows="2"
                                                name="arguments[<?= $code ?>][exemple_contexte]" 
-                                               placeholder="Exemple / contexte">
+                                               placeholder="Décrivez le contexte, l'exemple concret..."></textarea>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -480,23 +647,26 @@ include __DIR__ . '/../../partials/sidebar.php';
                 <div id="section7" class="accordion-collapse collapse" data-bs-parent="#accordionReporting">
                     <div class="accordion-body">
                         <?php for ($i = 1; $i <= 3; $i++): ?>
-                        <div class="card mb-2 border">
+                        <div class="card mb-3 border">
                             <div class="card-header bg-light py-2">
                                 <strong>Priorité <?= $i ?></strong>
                             </div>
-                            <div class="card-body p-2 p-md-3">
-                                <div class="row g-2">
-                                    <div class="col-12">
-                                        <input type="text" class="form-control" 
-                                               name="plan_action[<?= $i ?>][action_concrete]" 
-                                               placeholder="Action concrète à mener">
-                                    </div>
-                                    <div class="col-8 col-md-6">
+                            <div class="card-body p-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Action concrète à mener</label>
+                                    <textarea class="form-control" rows="2"
+                                           name="plan_action[<?= $i ?>][action_concrete]" 
+                                           placeholder="Décrivez l'action à réaliser..."></textarea>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label fw-semibold">Zone / Cible</label>
                                         <input type="text" class="form-control" 
                                                name="plan_action[<?= $i ?>][zone_cible]" 
-                                               placeholder="Zone / Cible">
+                                               placeholder="Ex: Akwa, Menuiseries...">
                                     </div>
-                                    <div class="col-4 col-md-6">
+                                    <div class="col-12 col-md-6">
+                                        <label class="form-label fw-semibold">Échéance</label>
                                         <input type="date" class="form-control" 
                                                name="plan_action[<?= $i ?>][echeance]">
                                     </div>
