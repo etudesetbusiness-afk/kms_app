@@ -24,8 +24,34 @@ verifierCsrf($_POST['csrf_token'] ?? '');
 try {
     $pdo->beginTransaction();
 
+    // Déterminer si c'est une création ou une modification
+    $reporting_id = intval($_POST['reporting_id'] ?? 0);
+    $isUpdate = $reporting_id > 0;
+
     // ════════════════════════════════════════════════════════════════════════
-    // 1. INSERT TABLE PRINCIPALE: terrain_reporting
+    // MODE ÉDITION: Vérifier l'accès au brouillon
+    // ════════════════════════════════════════════════════════════════════════
+    if ($isUpdate) {
+        $stmt = $pdo->prepare("SELECT user_id, statut FROM terrain_reporting WHERE id = ?");
+        $stmt->execute([$reporting_id]);
+        $existing = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$existing) {
+            throw new Exception('Reporting inexistant.');
+        }
+
+        $isAdmin = estAdmin(); // Utilise la fonction de security.php
+        if (!$isAdmin && $existing['user_id'] != $utilisateur['id']) {
+            throw new Exception('Accès refusé : vous n\'êtes pas propriétaire de ce reporting.');
+        }
+
+        if (($existing['statut'] ?? 'soumis') !== 'brouillon') {
+            throw new Exception('Ce reporting n\'est pas un brouillon et ne peut pas être modifié.');
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // 1. INSERT OU UPDATE TABLE PRINCIPALE: terrain_reporting
     // ════════════════════════════════════════════════════════════════════════
     $commercial_nom = trim($_POST['commercial_nom'] ?? $utilisateur['nom_complet'] ?? $utilisateur['login']);
     $semaine_debut = $_POST['semaine_debut'] ?? date('Y-m-d');
@@ -45,26 +71,62 @@ try {
         $synthese = substr($synthese, 0, 900);
     }
 
-    $stmt = $pdo->prepare("
-        INSERT INTO terrain_reporting 
-        (user_id, commercial_nom, semaine_debut, semaine_fin, ville, responsable_nom, synthese, signature_nom, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-    ");
-    $stmt->execute([
-        $utilisateur['id'],
-        $commercial_nom,
-        $semaine_debut,
-        $semaine_fin,
-        $ville ?: null,
-        $responsable_nom ?: null,
-        $synthese ?: null,
-        $signature_nom ?: null
-    ]);
-    $reporting_id = $pdo->lastInsertId();
+    if (!$isUpdate) {
+        // CRÉATION
+        $stmt = $pdo->prepare("
+            INSERT INTO terrain_reporting 
+            (user_id, commercial_nom, semaine_debut, semaine_fin, ville, responsable_nom, synthese, signature_nom, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        ");
+        $stmt->execute([
+            $utilisateur['id'],
+            $commercial_nom,
+            $semaine_debut,
+            $semaine_fin,
+            $ville ?: null,
+            $responsable_nom ?: null,
+            $synthese ?: null,
+            $signature_nom ?: null
+        ]);
+        $reporting_id = $pdo->lastInsertId();
+    } else {
+        // MODIFICATION
+        $stmt = $pdo->prepare("
+            UPDATE terrain_reporting 
+            SET commercial_nom = ?, semaine_debut = ?, semaine_fin = ?, ville = ?, 
+                responsable_nom = ?, synthese = ?, signature_nom = ?, updated_at = NOW()
+            WHERE id = ?
+        ");
+        $stmt->execute([
+            $commercial_nom,
+            $semaine_debut,
+            $semaine_fin,
+            $ville ?: null,
+            $responsable_nom ?: null,
+            $synthese ?: null,
+            $signature_nom ?: null,
+            $reporting_id
+        ]);
+    }
+
+    // Déterminer le statut (brouillon/soumis)
+    $action = $_POST['action'] ?? 'save';
+    $statut = ($action === 'submit') ? 'soumis' : 'brouillon';
+    // Tenter de mettre à jour le statut si la colonne existe
+    try {
+        $pdo->prepare("UPDATE terrain_reporting SET statut = ? WHERE id = ?")->execute([$statut, $reporting_id]);
+    } catch (Throwable $ignored) {
+        // Colonne absente en base: un script de migration ajoutera `statut`
+    }
 
     // ════════════════════════════════════════════════════════════════════════
-    // 2. INSERT ZONES & CIBLES (terrain_reporting_zones)
+    // 2. INSERT OU REMPLACER ZONES & CIBLES (terrain_reporting_zones)
     // ════════════════════════════════════════════════════════════════════════
+    // En mode édition, supprimer les anciennes zones
+    if ($isUpdate) {
+        $pdo->prepare("DELETE FROM terrain_reporting_zones WHERE reporting_id = ?")->execute([$reporting_id]);
+    }
+    
     $jours = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
     $zones = $_POST['zones'] ?? [];
     
@@ -78,7 +140,15 @@ try {
         if (isset($zones[$jour])) {
             $z = $zones[$jour];
             $zone_quartier = trim($z['zone_quartier'] ?? '');
-            $type_cible = $z['type_cible'] ?? 'Quincaillerie';
+            
+            // Traiter les checkboxes multiples de type_cible
+            $typeCiblesArray = $z['type_cible'] ?? [];
+            if (!is_array($typeCiblesArray)) {
+                $typeCiblesArray = [$typeCiblesArray];
+            }
+            $typeCiblesArray = array_filter(array_map('trim', $typeCiblesArray));
+            $type_cible = !empty($typeCiblesArray) ? implode(',', $typeCiblesArray) : null;
+            
             $nb_points = intval($z['nb_points'] ?? 0);
             
             // On insère même si vide, pour maintenir la structure
@@ -93,8 +163,13 @@ try {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // 3. INSERT ACTIVITÉ JOURNALIÈRE (terrain_reporting_activite)
+    // 3. INSERT OU REMPLACER ACTIVITÉ JOURNALIÈRE (terrain_reporting_activite)
     // ════════════════════════════════════════════════════════════════════════
+    // En mode édition, supprimer les anciennes activités
+    if ($isUpdate) {
+        $pdo->prepare("DELETE FROM terrain_reporting_activite WHERE reporting_id = ?")->execute([$reporting_id]);
+    }
+    
     $activites = $_POST['activite'] ?? [];
     
     $stmtAct = $pdo->prepare("
@@ -119,8 +194,13 @@ try {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // 4. INSERT RÉSULTATS COMMERCIAUX (terrain_reporting_resultats)
+    // 4. INSERT OU REMPLACER RÉSULTATS COMMERCIAUX (terrain_reporting_resultats)
     // ════════════════════════════════════════════════════════════════════════
+    // En mode édition, supprimer les anciens résultats
+    if ($isUpdate) {
+        $pdo->prepare("DELETE FROM terrain_reporting_resultats WHERE reporting_id = ?")->execute([$reporting_id]);
+    }
+    
     $resultats = $_POST['resultats'] ?? [];
     $indicateurs = [
         'visites_terrain',
@@ -153,8 +233,13 @@ try {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // 5. INSERT OBJECTIONS (terrain_reporting_objections)
+    // 5. INSERT OU REMPLACER OBJECTIONS (terrain_reporting_objections)
     // ════════════════════════════════════════════════════════════════════════
+    // En mode édition, supprimer les anciennes objections
+    if ($isUpdate) {
+        $pdo->prepare("DELETE FROM terrain_reporting_objections WHERE reporting_id = ?")->execute([$reporting_id]);
+    }
+    
     $objections = $_POST['objections'] ?? [];
     $objections_list = [
         'prix_eleve',
@@ -189,8 +274,13 @@ try {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // 6. INSERT ARGUMENTS (terrain_reporting_arguments)
+    // 6. INSERT OU REMPLACER ARGUMENTS (terrain_reporting_arguments)
     // ════════════════════════════════════════════════════════════════════════
+    // En mode édition, supprimer les anciens arguments
+    if ($isUpdate) {
+        $pdo->prepare("DELETE FROM terrain_reporting_arguments WHERE reporting_id = ?")->execute([$reporting_id]);
+    }
+    
     $arguments = $_POST['arguments'] ?? [];
     $arguments_list = [
         'qualite_durabilite',
@@ -224,8 +314,13 @@ try {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    // 7. INSERT PLAN D'ACTION (terrain_reporting_plan_action)
+    // 7. INSERT OU REMPLACER PLAN D'ACTION (terrain_reporting_plan_action)
     // ════════════════════════════════════════════════════════════════════════
+    // En mode édition, supprimer les anciens plans
+    if ($isUpdate) {
+        $pdo->prepare("DELETE FROM terrain_reporting_plan_action WHERE reporting_id = ?")->execute([$reporting_id]);
+    }
+    
     $plan_actions = $_POST['plan_action'] ?? [];
     
     $stmtPlan = $pdo->prepare("
@@ -259,7 +354,15 @@ try {
     // ════════════════════════════════════════════════════════════════════════
     $pdo->commit();
 
-    $_SESSION['flash_success'] = 'Reporting hebdomadaire créé avec succès !';
+    if ($statut === 'soumis') {
+        $_SESSION['flash_success'] = ($isUpdate) 
+            ? 'Reporting modifié et soumis avec succès !' 
+            : 'Reporting créé et soumis avec succès !';
+    } else {
+        $_SESSION['flash_success'] = ($isUpdate)
+            ? 'Brouillon modifié et enregistré.'
+            : 'Reporting enregistré en brouillon.';
+    }
     header('Location: ' . url_for('commercial/reporting_terrain/show.php?id=' . $reporting_id));
     exit;
 
@@ -267,9 +370,13 @@ try {
     $pdo->rollBack();
     
     // Log l'erreur
-    error_log('Erreur création reporting terrain: ' . $e->getMessage());
+    error_log('Erreur création/modification reporting terrain: ' . $e->getMessage());
     
-    $_SESSION['flash_error'] = 'Erreur lors de la création du reporting : ' . htmlspecialchars($e->getMessage());
-    header('Location: ' . url_for('commercial/reporting_terrain/create.php'));
+    $_SESSION['flash_error'] = 'Erreur lors de l\'opération : ' . htmlspecialchars($e->getMessage());
+    if ($isUpdate) {
+        header('Location: ' . url_for('commercial/reporting_terrain/edit.php?id=' . $reporting_id));
+    } else {
+        header('Location: ' . url_for('commercial/reporting_terrain/create.php'));
+    }
     exit;
 }

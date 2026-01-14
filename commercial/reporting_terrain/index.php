@@ -9,7 +9,7 @@ exigerConnexion();
 
 global $pdo;
 $utilisateur = utilisateurConnecte();
-$isAdmin = ($utilisateur['login'] === 'admin') || in_array('ADMIN', $_SESSION['roles'] ?? []);
+$isAdmin = estAdmin(); // Utilise la fonction de security.php
 
 // Pagination
 $page = max(1, (int)($_GET['page'] ?? 1));
@@ -161,6 +161,12 @@ include __DIR__ . '/../../partials/sidebar.php';
                                        class="btn btn-sm btn-outline-secondary" title="Imprimer" target="_blank">
                                         <i class="bi bi-printer"></i>
                                     </a>
+                                    <?php if ((!$isAdmin && ($r['user_id'] ?? null) === $utilisateur['id'] && ($r['statut'] ?? 'soumis') === 'brouillon') || ($isAdmin && ($r['statut'] ?? 'soumis') === 'brouillon')): ?>
+                                        <a href="<?= url_for('commercial/reporting_terrain/edit.php?id=' . $r['id']) ?>" 
+                                           class="btn btn-sm btn-outline-warning" title="Modifier brouillon">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

@@ -36,7 +36,7 @@ if (!$reporting) {
 }
 
 // Vérifier les droits d'accès (admin ou propriétaire)
-$isAdmin = isset($_SESSION['role']) && $_SESSION['role'] === 'ADMIN';
+$isAdmin = estAdmin(); // Utilise la fonction de security.php
 if (!$isAdmin && $reporting['user_id'] != $utilisateur['id']) {
     $_SESSION['flash_error'] = 'Vous n\'avez pas accès à ce reporting.';
     header('Location: ' . url_for('commercial/reporting_terrain/'));
